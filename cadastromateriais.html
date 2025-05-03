@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/cadastromateriais.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <title>Materiais e Serviços</title>
+    <style>
+        /* Estilos Gerais e Adicionais (Modal, Botões, Busca) */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
+        .container { max-width: 1100px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        h1, h2 { color: #2c3e50; }
+        h2 { margin-top: 30px; margin-bottom: 15px; font-size: 1.3em; border-bottom: 1px solid #eee; padding-bottom: 5px;}
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95rem; }
+        th, td { text-align: left; padding: 12px; border: 1px solid #e2e8f0; }
+        th { background-color: #f1f5f9; color: #334155; font-weight: 600; text-transform: uppercase; font-size: 0.85em; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        tr:hover { background-color: #f1f5f9; }
+        td:last-child { text-align: center; } /* Centraliza botões de ação */
+
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        .search-container { margin-bottom: 25px; display: flex; align-items: center; gap: 10px; padding: 10px; background-color: #f8fafc; border-radius: 5px; }
+        .search-container label { font-weight: bold; font-size: 0.9em; color: #555; margin-right: 5px; }
+        #search-input { flex-grow: 1; padding: 10px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        #search-input:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+
+        /* Botão Adicionar Circular */
+        .add-button-circle { background-color: #2ecc71; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2em; display: flex; align-items: center; justify-content: center; padding: 0; transition: background-color 0.3s, transform 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+        .add-button-circle:hover { background-color: #27ae60; transform: scale(1.05); }
+
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: #fefefe; margin: 8% auto; padding: 25px; border: 1px solid #ddd; width: 90%; max-width: 550px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .modal-header h2 { margin: 0; font-size: 1.4em; }
+        .close-modal-btn { color: #aaa; background: none; border: none; font-size: 28px; font-weight: bold; cursor: pointer; padding: 0 5px; }
+        .close-modal-btn:hover, .close-modal-btn:focus { color: black; }
+        #form-material-modal label { display: block; margin-bottom: 5px; font-weight: bold; }
+        #form-material-modal input, #form-material-modal select { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        #form-material-modal button[type="submit"] { background-color: #3B82F6; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; width: 100%; }
+        #form-material-modal button[type="submit"]:hover { background-color: #2563EB; }
+        #edit-id { display: none; }
+
+        /* Botões de Ação Circulares na Tabela */
+        .action-button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; border: none; color: white; cursor: pointer; margin: 0 3px; padding: 0; font-size: 1em; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .action-button:hover { transform: scale(1.1); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+        .action-button i { font-size: inherit; }
+        .edit-button { background-color: #f39c12; }
+        .edit-button:hover { background-color: #e67e22; }
+        .delete-button { background-color: #e74c3c; }
+        .delete-button:hover { background-color: #c0392b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-actions">
+             <h1>Materiais e Serviços</h1>
+             <button id="open-modal-button" class="add-button-circle" title="Adicionar Novo Item">
+                 <i class="fas fa-plus"></i>
+             </button>
+        </div>
+
+        <div class="search-container">
+            <label for="search-input"><i class="fas fa-search"></i> Buscar:</label>
+            <input type="search" id="search-input" placeholder="Digite nome ou código do item...">
+        </div>
+
+        <h2>Materiais Cadastrados</h2>
+        <table id="tabela-materiais-lista">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Preço</th>
+                    <th>Unidade de Medida</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="5">Carregando materiais...</td></tr>
+            </tbody>
+        </table>
+
+        <hr style="margin: 30px 0;">
+
+        <h2>Serviços Cadastrados</h2>
+        <table id="tabela-servicos-lista">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Preço</th>
+                    <th>Unidade de Medida</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="5">Carregando serviços...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="item-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Adicionar Novo Item</h2>
+                <button id="close-modal-button" class="close-modal-btn">&times;</button>
+            </div>
+            <form id="form-material-modal">
+                 <input type="hidden" id="edit-id">
+                <div>
+                    <label for="tipo-modal">Tipo</label>
+                    <select id="tipo-modal" required> <option value="">Selecione...</option> <option value="material">Material</option> <option value="serviço">Serviço</option> </select>
+                </div>
+                <div>
+                    <label for="nome-modal">Nome</label>
+                    <input type="text" id="nome-modal" placeholder="Digite o nome" required>
+                </div>
+                <div>
+                    <label for="preco-modal">Preço</label>
+                    <input type="number" id="preco-modal" placeholder="Digite o preço (ex.: 100.00)" step="0.01" required>
+                </div>
+                <div>
+                    <label for="medida-modal">Unidade de Medida</label>
+                    <select id="medida-modal" required> <option value="">Selecione...</option> <option value="quilo">Quilo</option> <option value="unidade">Unidade</option> <option value="metro">Metro</option> <option value="horas">Horas</option> </select>
+                </div>
+                <button type="submit" id="save-button">Salvar Item</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importar funções do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, deleteDoc, doc, runTransaction, query, orderBy, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        // *** Configuração CORRETA do Firebase ***
+        const firebaseConfig = {
+          apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc",
+          authDomain: "testebosspro.firebaseapp.com",
+          projectId: "testebosspro",
+          storageBucket: "testebosspro.appspot.com", // Confirme se é .appspot.com ou .firebasestorage.app
+          messagingSenderId: "73684788134",
+          appId: "1:73684788134:web:7c8250c83f10a2df59e567",
+          measurementId: "G-1H29L5B830"
+        };
+        // ****************************************
+
+        // Inicializar Firebase e Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Elementos do DOM
+        const tabelaMateriaisBody = document.querySelector("#tabela-materiais-lista tbody");
+        const tabelaServicosBody = document.querySelector("#tabela-servicos-lista tbody");
+        const itemModal = document.getElementById("item-modal");
+        const openModalButton = document.getElementById("open-modal-button");
+        const closeModalButton = document.getElementById("close-modal-button");
+        const formMaterialModal = document.getElementById("form-material-modal");
+        const modalTitle = document.getElementById("modal-title");
+        const saveButton = document.getElementById("save-button");
+        const editIdInput = document.getElementById("edit-id");
+        const searchInput = document.getElementById("search-input");
+
+        // Variável para guardar os dados carregados
+        let todosOsItens = [];
+
+        // --- Funções do Modal ---
+        // Função para abrir modal para adicionar novo item
+        function openModalForAdd() {
+            formMaterialModal.reset();
+            editIdInput.value = "";
+            modalTitle.textContent = "Adicionar Novo Item";
+            saveButton.textContent = "Cadastrar Item";
+            itemModal.style.display = "block";
+        }
+
+        // Função para abrir modal para editar um item existente
+        async function openModalForEdit(itemId) {
+            formMaterialModal.reset();
+            try {
+                const docRef = doc(db, "materiais", itemId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const item = docSnap.data();
+                    document.getElementById("tipo-modal").value = item.tipo;
+                    document.getElementById("nome-modal").value = item.nome;
+                    document.getElementById("preco-modal").value = item.preco;
+                    document.getElementById("medida-modal").value = item.medida;
+                    editIdInput.value = itemId;
+                    modalTitle.textContent = "Editar Item";
+                    saveButton.textContent = "Salvar Alterações";
+                    itemModal.style.display = "block";
+                } else {
+                    console.error("Item não encontrado para edição:", itemId);
+                    alert("Erro: Item não encontrado.");
+                }
+            } catch (error) {
+                console.error("Erro ao buscar item para edição:", error);
+                alert("Erro ao carregar dados para edição.");
+            }
+        }
+
+        // Função para fechar o modal
+        function closeModal() {
+            itemModal.style.display = "none";
+            formMaterialModal.reset();
+            editIdInput.value = "";
+        }
+
+        // --- Funções CRUD ---
+
+        // Salvar (Adicionar ou Editar)
+        formMaterialModal.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const itemId = editIdInput.value;
+            const tipo = document.getElementById("tipo-modal").value;
+            const nome = document.getElementById("nome-modal").value.trim();
+            const preco = parseFloat(document.getElementById("preco-modal").value);
+            const medida = document.getElementById("medida-modal").value;
+
+            if (!tipo || !nome || isNaN(preco) || !medida) {
+                 alert("Por favor, preencha todos os campos corretamente.");
+                 return;
+            }
+
+            const dadosItem = { tipo, nome, preco, medida };
+
+            saveButton.disabled = true;
+            saveButton.textContent = itemId ? "Salvando..." : "Cadastrando...";
+
+            try {
+                if (itemId) { // Edição
+                    const itemRef = doc(db, "materiais", itemId);
+                    await updateDoc(itemRef, dadosItem);
+                    alert(`"${nome}" atualizado com sucesso!`);
+                } else { // Adição
+                    const novoCodigo = await runTransaction(db, async (transaction) => {
+                         const counterRef = doc(db, "metadata", "materialCounter");
+                         const counterSnap = await transaction.get(counterRef);
+                         let currentNumber = counterSnap.exists() ? counterSnap.data().lastMaterialNumber || 0 : 0;
+                         const nextNumber = currentNumber + 1;
+                         const codigoFormatado = String(nextNumber).padStart(2, '0');
+                         const novoMaterialRef = doc(collection(db, "materiais"));
+                         dadosItem.codigo = codigoFormatado;
+                         dadosItem.createdAt = new Date();
+                         transaction.set(novoMaterialRef, dadosItem);
+                         transaction.set(counterRef, { lastMaterialNumber: nextNumber }, { merge: true });
+                         return codigoFormatado;
+                    });
+                    alert(`"${nome}" (${tipo}) cadastrado com sucesso! Código: ${novoCodigo}`);
+                }
+                closeModal();
+                await carregarDadosIniciais(); // Recarrega os dados
+
+            } catch (error) {
+                console.error("Erro ao salvar item:", error);
+                alert("Erro ao salvar o item. Verifique o console.");
+            } finally {
+                 saveButton.disabled = false;
+                 // Reset button text based on mode (could be improved)
+                 saveButton.textContent = editIdInput.value ? "Salvar Alterações" : "Cadastrar Item";
+            }
+        });
+
+        // Carregar dados iniciais do Firestore e armazenar
+        async function carregarDadosIniciais() {
+             tabelaMateriaisBody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+             tabelaServicosBody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+             todosOsItens = [];
+
+             try {
+                 const q = query(collection(db, "materiais"), orderBy("codigo"));
+                 const querySnapshot = await getDocs(q);
+                 querySnapshot.forEach((doc) => {
+                     todosOsItens.push({ id: doc.id, ...doc.data() });
+                 });
+                 filtrarEExibirItens(); // Exibe com o filtro atual
+
+             } catch (error) {
+                 console.error("Erro ao carregar dados iniciais:", error);
+                 tabelaMateriaisBody.innerHTML = '<tr><td colspan="5">Erro ao carregar dados.</td></tr>';
+                 tabelaServicosBody.innerHTML = '<tr><td colspan="5">Erro ao carregar dados.</td></tr>';
+             }
+        }
+
+        // Filtrar e exibir itens nas tabelas corretas
+        function filtrarEExibirItens() {
+            const termoBusca = searchInput.value.toLowerCase().trim();
+            tabelaMateriaisBody.innerHTML = "";
+            tabelaServicosBody.innerHTML = "";
+            let hasMateriais = false;
+            let hasServicos = false;
+
+            const itensFiltrados = todosOsItens.filter(item => {
+                const nomeMatch = item.nome.toLowerCase().includes(termoBusca);
+                const codigoMatch = item.codigo && item.codigo.toLowerCase().includes(termoBusca);
+                return nomeMatch || codigoMatch;
+            });
+
+            itensFiltrados.forEach(item => {
+                const docId = item.id;
+                 const linha = `
+                        <td>${item.codigo || 'N/A'}</td>
+                        <td>${item.nome}</td>
+                        <td>R$ ${item.preco ? item.preco.toFixed(2) : '0.00'}</td>
+                        <td>${item.medida}</td>
+                        <td>
+                            <button class="action-button edit-button" onclick="window.abrirEdicao('${docId}')" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-button delete-button" onclick="window.excluirItem('${docId}', '${item.nome}')" title="Excluir">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    if (item.tipo === 'material') {
+                        tabelaMateriaisBody.innerHTML += `<tr>${linha}</tr>`;
+                        hasMateriais = true;
+                    } else if (item.tipo === 'serviço') {
+                        tabelaServicosBody.innerHTML += `<tr>${linha}</tr>`;
+                        hasServicos = true;
+                    }
+            });
+
+            if (!hasMateriais) {
+                tabelaMateriaisBody.innerHTML = `<tr><td colspan="5">${termoBusca ? 'Nenhum material encontrado para "' + searchInput.value + '".' : 'Nenhum material cadastrado.'}</td></tr>`;
+            }
+            if (!hasServicos) {
+                tabelaServicosBody.innerHTML = `<tr><td colspan="5">${termoBusca ? 'Nenhum serviço encontrado para "' + searchInput.value + '".' : 'Nenhum serviço cadastrado.'}</td></tr>`;
+            }
+        }
+
+        // Excluir Item (Tornada global)
+        window.excluirItem = async function (id, nome) {
+            if (confirm(`Tem certeza de que deseja excluir "${nome}"?`)) {
+                try {
+                    await deleteDoc(doc(db, "materiais", id));
+                    alert(`"${nome}" foi excluído com sucesso!`);
+                    await carregarDadosIniciais();
+                } catch (error) {
+                    console.error("Erro ao excluir item:", error);
+                    alert("Erro ao excluir o item.");
+                }
+            }
+        };
+
+        // Abrir Edição (Tornada global)
+        window.abrirEdicao = function(itemId) {
+             openModalForEdit(itemId);
+        };
+
+        // --- Event Listeners ---
+        // Listener para abrir modal (CORRIGIDO - conexão explícita)
+        openModalButton.addEventListener("click", openModalForAdd);
+        // Listeners para fechar modal
+        closeModalButton.addEventListener("click", closeModal);
+        window.addEventListener("click", (event) => { if (event.target == itemModal) { closeModal(); } });
+        // Listener da Busca
+        searchInput.addEventListener('input', filtrarEExibirItens);
+
+        // --- Inicialização da Página ---
+        window.addEventListener("load", carregarDadosIniciais);
+
+    </script>
+</body>
+</html>
