@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Orçamentos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* --- Reset Básico e Variáveis (Reutilizadas de telaorcamento.html) --- */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-color: #dee2e6;
+            --background-color: #eef1f5;
+            --card-background: #ffffff;
+            --text-color: #495057;
+            --text-muted: #6c757d;
+            --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            --border-radius: 0.375rem;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            font-size: 16px;
+            padding-bottom: 80px; /* Espaço para botão flutuante */
+        }
+
+        /* --- Botão Novo Orçamento Flutuante --- */
+        .add-budget-fab {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            z-index: 1000;
+            text-decoration: none; /* Para caso use <a> */
+        }
+        .add-budget-fab:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        /* --- Cabeçalho da Lista --- */
+        .list-header {
+            background-color: var(--card-background);
+            padding: 15px 25px;
+            box-shadow: var(--shadow-sm);
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+        .list-header h1 {
+            font-size: 1.6rem;
+            font-weight: 500;
+            color: var(--dark-color);
+            margin: 0 0 20px 0; /* Espaço abaixo do título */
+            text-align: center;
+        }
+
+        /* --- Controles de Filtro e Busca --- */
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap; /* Quebra linha em telas menores */
+            gap: 15px; /* Espaçamento entre controles */
+            align-items: flex-end; /* Alinha itens na base */
+            background-color: #f8f9fa; /* Fundo leve para destacar */
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+
+        .filter-controls > div {
+            flex: 1 1 180px; /* Flex-grow, flex-shrink, flex-basis */
+            min-width: 150px; /* Largura mínima */
+        }
+
+        .filter-controls label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .filter-controls select,
+        .filter-controls input[type="text"] {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            height: 38px; /* Altura consistente */
+        }
+
+        .filter-controls button {
+             padding: 8px 15px;
+             font-size: 0.9rem;
+             height: 38px; /* Mesma altura dos inputs */
+             flex-shrink: 0; /* Não encolher */
+        }
+
+         /* Estilo Botão (reutilizado) */
+         button, .button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            user-select: none;
+            border: 1px solid transparent;
+            border-radius: var(--border-radius);
+            transition: all 0.15s ease-in-out;
+            cursor: pointer;
+            text-decoration: none; /* Remove underline de links estilizados como botões */
+        }
+        button i, .button-link i { margin-right: 6px; }
+        button:disabled { opacity: 0.65; cursor: not-allowed; }
+
+        .btn-primary { color: #fff; background-color: var(--primary-color); border-color: var(--primary-color); }
+        .btn-primary:hover { background-color: #0056b3; border-color: #004085; }
+        .btn-secondary { color: #fff; background-color: var(--secondary-color); border-color: var(--secondary-color); }
+        .btn-secondary:hover { background-color: #5a6268; border-color: #545b62; }
+        .btn-danger { color: #fff; background-color: var(--danger-color); border-color: var(--danger-color); }
+        .btn-danger:hover { background-color: #c82333; border-color: #bd2130; }
+
+
+        /* --- Container Principal da Lista --- */
+        .list-container {
+            max-width: 1200px; /* Mais largo para tabela */
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* --- Tabela de Orçamentos --- */
+        .budgets-table-container {
+            background-color: var(--card-background);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            overflow-x: auto; /* Scroll horizontal se necessário */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0; /* Removido espaço extra */
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px 15px; /* Mais espaçamento */
+            text-align: left;
+            vertical-align: middle;
+            font-size: 0.95rem;
+        }
+        th {
+            background-color: var(--light-color);
+            font-weight: 500;
+            color: var(--text-muted);
+            white-space: nowrap; /* Evita quebra de linha no cabeçalho */
+        }
+        tbody tr:nth-child(even) { background-color: #fdfdfe; }
+        tbody tr:hover { background-color: #f1f1f1; }
+
+        /* Colunas Específicas */
+        .status-col { text-align: center; white-space: nowrap; }
+        .actions-col { text-align: center; white-space: nowrap; }
+        .actions-col a, .actions-col button {
+             margin: 0 3px; /* Pequeno espaço entre botões/links de ação */
+             padding: 4px 8px; /* Botões menores */
+             font-size: 0.8rem;
+        }
+
+        /* --- Estilos de Status --- */
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 12px; /* Mais arredondado */
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-aprovado {
+            background-color: var(--success-color);
+            color: white;
+            border: 1px solid #1e7e34;
+        }
+        .status-pendente {
+            background-color: var(--warning-color);
+            color: var(--dark-color);
+            border: 1px solid #d39e00;
+        }
+        .status-rejeitado { /* Exemplo de outro status */
+            background-color: var(--danger-color);
+            color: white;
+            border: 1px solid #bd2130;
+        }
+
+        /* --- Mensagem de Carregando/Vazio --- */
+        #loading-message, #empty-message {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+         #loading-message i { margin-right: 8px; }
+
+
+        /* --- Responsividade --- */
+        @media (max-width: 768px) {
+            .list-header h1 { font-size: 1.4rem; }
+            .filter-controls { flex-direction: column; align-items: stretch; }
+            .list-container { padding: 0 10px; }
+            .budgets-table-container { padding: 10px; }
+            th, td { padding: 8px 10px; font-size: 0.9em; }
+            .actions-col a, .actions-col button { font-size: 0.75rem; padding: 3px 6px; }
+            .add-budget-fab { width: 45px; height: 45px; font-size: 1.3rem; bottom: 15px; right: 15px; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <a href="telaorcamento.html" class="add-budget-fab" title="Novo Orçamento">
+        <i class="fas fa-plus"></i>
+    </a>
+
+    <header class="list-header">
+        <h1>Lista de Orçamentos</h1>
+    </header>
+
+    <main class="list-container">
+
+        <div class="filter-controls">
+            <div>
+                <label for="filtro-cliente">Filtrar por Cliente</label>
+                <select id="filtro-cliente">
+                    <option value="">Todos os Clientes</option>
+                    </select>
+            </div>
+            <div>
+                <label for="filtro-status">Filtrar por Status</label>
+                <select id="filtro-status">
+                    <option value="">Todos os Status</option>
+                    <option value="aprovado">Aprovado</option>
+                    <option value="pendente">Pendente</option>
+                    </select>
+            </div>
+            <div>
+                <label for="busca-numero">Buscar por Nº Orçamento</label>
+                <input type="text" id="busca-numero" placeholder="Digite o número...">
+            </div>
+             <button id="btn-limpar-filtros" class="btn-secondary">
+                <i class="fas fa-eraser"></i> Limpar
+             </button>
+        </div>
+
+        <div class="budgets-table-container">
+            <table id="tabela-orcamentos">
+                <thead>
+                    <tr>
+                        <th>Nº Orçamento</th>
+                        <th>Cliente</th>
+                        <th>Descrição (Primeiro Item)</th>
+                        <th class="status-col">Status</th>
+                        <th class="actions-col">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-orcamentos-body">
+                    </tbody>
+            </table>
+            <div id="loading-message" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i> Carregando orçamentos...
+            </div>
+            <div id="empty-message" style="display: none;">
+                Nenhum orçamento encontrado com os filtros selecionados.
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        // --- Importações Firebase ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, orderBy, doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        // --- Configuração Firebase ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc", // Proteja isso com Regras de Segurança
+            authDomain: "testebosspro.firebaseapp.com",
+            projectId: "testebosspro",
+            storageBucket: "testebosspro.appspot.com",
+            messagingSenderId: "73684788134",
+            appId: "1:73684788134:web:7c8250c83f10a2df59e567",
+            measurementId: "G-1H29L5B830"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- Elementos DOM ---
+        const filtroClienteSelect = document.getElementById('filtro-cliente');
+        const filtroStatusSelect = document.getElementById('filtro-status');
+        const buscaNumeroInput = document.getElementById('busca-numero');
+        const tabelaBody = document.getElementById('tabela-orcamentos-body');
+        const loadingMessage = document.getElementById('loading-message');
+        const emptyMessage = document.getElementById('empty-message');
+        const btnLimparFiltros = document.getElementById('btn-limpar-filtros');
+
+        let allOrcamentosData = []; // Guarda todos os orçamentos carregados para filtrar no cliente
+
+        // --- Funções ---
+
+        // Função para carregar Clientes no Filtro
+        async function carregarClientesFiltro() {
+            if (!db) return; // Só executa se Firebase estiver config
+            try {
+                 // Ordena pelo campo 'codigo' que parece existir na coleção clientes
+                 const q = query(collection(db, "clientes"), orderBy("codigo"));
+                 const querySnapshot = await getDocs(q);
+                 filtroClienteSelect.innerHTML = '<option value="">Todos os Clientes</option>'; // Reset
+                 querySnapshot.forEach((doc) => {
+                     const cliente = doc.data();
+                     const option = document.createElement("option");
+                     option.value = doc.id; // Usar ID do cliente como valor
+                     // Usar a mesma lógica de exibição de telaorcamento.html para consistência
+                     option.textContent = `(${cliente.codigo || 'S/C'}) ${cliente.empresa || cliente.nome || 'Cliente s/ nome'} ${cliente.comprador ? ' - ' + cliente.comprador : ''}`;
+                     filtroClienteSelect.appendChild(option);
+                 });
+                 console.log("Clientes carregados para filtro.");
+             } catch (error) {
+                 console.error("Erro ao carregar clientes para filtro:", error);
+            }
+        }
+
+        // Função para carregar Orçamentos da Base
+         async function carregarOrcamentos() {
+             loadingMessage.style.display = 'block';
+             emptyMessage.style.display = 'none';
+             tabelaBody.innerHTML = ''; // Limpa tabela
+
+             if (!db) { // Só executa se Firebase estiver config
+                 loadingMessage.style.display = 'none';
+                 emptyMessage.textContent = "Erro: Firebase não configurado.";
+                 emptyMessage.style.display = 'block';
+                 return;
+             }
+             try {
+                 // Busca ordenando pelo número do orçamento mais recente primeiro
+                 const q = query(collection(db, "orcamentos"), orderBy("numeroOrcamento", "desc"));
+                 const querySnapshot = await getDocs(q);
+                 allOrcamentosData = []; // Limpa dados anteriores
+                 if (querySnapshot.empty) {
+                     emptyMessage.textContent = "Nenhum orçamento encontrado no banco de dados.";
+                     emptyMessage.style.display = 'block';
+                 } else {
+                     querySnapshot.forEach((doc) => {
+                          // Adiciona o ID do documento junto com os dados
+                          allOrcamentosData.push({ id: doc.id, ...doc.data() });
+                     });
+                     console.log(`${allOrcamentosData.length} orçamentos carregados.`);
+                     aplicarFiltros(); // Aplica filtros (mostra todos inicialmente)
+                 }
+             } catch (error) {
+                 console.error("Erro ao carregar orçamentos:", error);
+                 emptyMessage.textContent = "Erro ao carregar dados dos orçamentos.";
+                 emptyMessage.style.display = 'block';
+             } finally {
+                 loadingMessage.style.display = 'none';
+             }
+        }
+
+        // Função para renderizar a tabela com base nos dados filtrados
+        function renderizarTabela(orcamentosFiltrados) {
+            tabelaBody.innerHTML = ''; // Limpa tabela
+            if (orcamentosFiltrados.length === 0) {
+                emptyMessage.style.display = 'block';
+                emptyMessage.textContent = "Nenhum orçamento encontrado com os filtros selecionados.";
+            } else {
+                emptyMessage.style.display = 'none';
+                orcamentosFiltrados.forEach(orc => {
+                    const row = document.createElement('tr');
+
+                    // Status Badge
+                    const status = orc.aprovado ? 'Aprovado' : 'Pendente';
+                    const statusClass = orc.aprovado ? 'status-aprovado' : 'status-pendente';
+                    const statusBadge = `<span class="status-badge ${statusClass}">${status}</span>`;
+
+                    // Descrição (Primeiro Item)
+                    let descricaoItem = 'N/A';
+                    if (orc.itens && orc.itens.length > 0) {
+                        descricaoItem = orc.itens[0].item || 'Item sem nome';
+                         if (orc.itens[0].descricao) {
+                            // Limita a descrição para não ficar muito longa na tabela
+                            let desc = orc.itens[0].descricao;
+                            if (desc.length > 30) desc = desc.substring(0, 30) + '...';
+                            descricaoItem += ` (${desc})`;
+                         }
+                    }
+
+                    // Botões de Ação
+                     const editUrl = `telaorcamento.html?orcamentoId=${orc.id}`;
+                     const actionButtons = `
+                        <a href="${editUrl}" class="button-link btn-primary" title="Ver/Editar">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <button class="btn-danger btn-excluir-orcamento" data-id="${orc.id}" data-numero="${orc.numeroOrcamento || 'S/N'}" title="Excluir">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    `;
+
+                    row.innerHTML = `
+                        <td>${orc.numeroOrcamento || 'S/N'}</td>
+                        <td>${orc.clienteNome || 'Cliente não informado'}</td>
+                        <td>${descricaoItem}</td>
+                        <td class="status-col">${statusBadge}</td>
+                        <td class="actions-col">${actionButtons}</td>
+                    `;
+                    tabelaBody.appendChild(row);
+                });
+
+                // Adiciona listeners aos botões de excluir DEPOIS de adicionar as linhas
+                document.querySelectorAll('.btn-excluir-orcamento').forEach(button => {
+                    button.addEventListener('click', handleExcluirOrcamento);
+                });
+            }
+        }
+
+        // Função para aplicar os filtros e a busca
+        function aplicarFiltros() {
+            const clienteId = filtroClienteSelect.value;
+            const status = filtroStatusSelect.value;
+            const numeroBusca = buscaNumeroInput.value.trim().toLowerCase();
+
+            let orcamentosFiltrados = allOrcamentosData.filter(orc => {
+                // Filtro Cliente
+                const matchCliente = !clienteId || orc.clienteId === clienteId;
+
+                // Filtro Status
+                let matchStatus = true;
+                if (status === 'aprovado') {
+                    matchStatus = orc.aprovado === true;
+                } else if (status === 'pendente') {
+                    // Considera tanto false quanto undefined/null como pendente
+                    matchStatus = orc.aprovado === false || orc.aprovado === undefined || orc.aprovado === null;
+                }
+
+                // Filtro Número (busca) - Verifica se o número existe antes de buscar
+                const matchNumero = !numeroBusca || (orc.numeroOrcamento && String(orc.numeroOrcamento).toLowerCase().includes(numeroBusca));
+
+
+                return matchCliente && matchStatus && matchNumero;
+            });
+
+            renderizarTabela(orcamentosFiltrados);
+        }
+
+        // Função para lidar com clique no botão Excluir
+        async function handleExcluirOrcamento(event) {
+             const button = event.currentTarget; // Pega o botão clicado
+             const orcamentoId = button.dataset.id;
+             const numeroOrcamento = button.dataset.numero || 'este orçamento';
+
+             if (!orcamentoId) {
+                console.error("ID do orçamento não encontrado no botão.");
+                alert("Erro ao tentar excluir: ID não encontrado.");
+                return;
+             }
+
+             if (!confirm(`Tem certeza que deseja excluir o orçamento Nº ${numeroOrcamento}? Esta ação não pode ser desfeita.`)) {
+                 return;
+             }
+
+             console.log(`Tentando excluir orçamento ID: ${orcamentoId}`);
+             button.disabled = true;
+             button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+             if (!db) {
+                 alert("Erro: Firebase não configurado para exclusão.");
+                 button.disabled = false; // Reabilita botão
+                 button.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                 return;
+             }
+             try {
+                 const orcamentoRef = doc(db, "orcamentos", orcamentoId);
+                 await deleteDoc(orcamentoRef);
+                 console.log(`Orçamento ${orcamentoId} excluído com sucesso.`);
+
+                 // Remove a linha da tabela visualmente
+                 button.closest('tr').remove();
+
+                 // Remove do array local para que a filtragem futura não o inclua mais
+                 allOrcamentosData = allOrcamentosData.filter(orc => orc.id !== orcamentoId);
+
+                 // Verifica se a tabela ficou vazia após exclusão
+                 if (tabelaBody.rows.length === 0) {
+                     // Verifica se há filtros ativos para dar a mensagem correta
+                     if (filtroClienteSelect.value || filtroStatusSelect.value || buscaNumeroInput.value) {
+                         emptyMessage.textContent = "Nenhum orçamento encontrado com os filtros selecionados.";
+                     } else {
+                         emptyMessage.textContent = "Nenhum orçamento cadastrado.";
+                     }
+                     emptyMessage.style.display = 'block';
+                 }
+                 alert(`Orçamento Nº ${numeroOrcamento} excluído com sucesso!`);
+
+             } catch (error) {
+                 console.error(`Erro ao excluir orçamento ${orcamentoId}:`, error);
+                 alert(`Erro ao excluir o orçamento Nº ${numeroOrcamento}. Tente novamente.`);
+                 button.disabled = false; // Reabilita botão em caso de erro
+                 button.innerHTML = '<i class="fas fa-trash-alt"></i>';
+             }
+         }
+
+        // --- Event Listeners ---
+        filtroClienteSelect.addEventListener('change', aplicarFiltros);
+        filtroStatusSelect.addEventListener('change', aplicarFiltros);
+        // Aplica filtro ao digitar ou colar no campo de busca
+        buscaNumeroInput.addEventListener('input', aplicarFiltros);
+        btnLimparFiltros.addEventListener('click', () => {
+            filtroClienteSelect.value = '';
+            filtroStatusSelect.value = '';
+            buscaNumeroInput.value = '';
+            aplicarFiltros(); // Aplica com campos limpos
+        });
+
+        // --- Inicialização ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM carregado. Iniciando carregamento de dados da lista...");
+            carregarClientesFiltro(); // Carrega clientes para o dropdown de filtro
+            carregarOrcamentos();   // Carrega a lista inicial de orçamentos do Firebase
+        });
+
+    </script>
+
+</body>
+</html>

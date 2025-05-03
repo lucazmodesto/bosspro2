@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento Focado - Edição Direta V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* --- Estilos (Base anterior + Modal de Busca) --- */
+        :root {
+            --primary-color: #007bff; --secondary-color: #6c757d; --success-color: #28a745;
+            --danger-color: #dc3545; --warning-color: #ffc107; --info-color: #17a2b8;
+            --light-color: #f8f9fa; --dark-color: #343a40; --border-color: #dee2e6;
+            --background-color: #eef1f5; --card-background: #ffffff; --text-color: #495057;
+            --text-muted: #6c757d; --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.1); --border-radius: 0.375rem;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--background-color); color: var(--text-color); line-height: 1.6; font-size: 16px; }
+        /* --- Estilos de Cabeçalho, FAB, Container, Card, Seções, Inputs, Botões (mantidos) --- */
+        .new-budget-fab { position: fixed; bottom: 25px; right: 25px; width: 50px; height: 50px; background-color: var(--success-color); color: white; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: var(--shadow-md); transition: background-color 0.3s ease, transform 0.2s ease; z-index: 1000; }
+        .new-budget-fab:hover { background-color: #218838; transform: scale(1.05); }
+        .app-header { background-color: var(--card-background); padding: 15px 25px; box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 999; border-bottom: 1px solid var(--border-color); }
+        .header-title { display: flex; align-items: baseline; gap: 15px; }
+        .header-title h1 { font-size: 1.6rem; font-weight: 500; color: var(--dark-color); margin: 0; }
+        #budget-number-display { font-size: 1.8rem; font-weight: 700; color: var(--primary-color); background-color: #e7f1ff; padding: 2px 10px; border-radius: var(--border-radius); }
+        #budget-number-display:empty::before { content: "Novo"; color: var(--text-muted); font-weight: 400; font-size: 1.4rem; background-color: transparent; }
+        .header-search { display: flex; align-items: center; gap: 8px; }
+        #search-toggle-btn { background: none; border: none; color: var(--secondary-color); font-size: 1.2rem; cursor: pointer; padding: 5px; }
+        #search-toggle-btn:hover { color: var(--dark-color); }
+        #search-input-container { display: none; }
+        #numero-orcamento-busca { padding: 6px 10px; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.9rem; min-width: 100px; }
+        #search-input-container.visible { display: block; }
+        .main-container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        .budget-card { background-color: var(--card-background); padding: 25px 30px; border-radius: var(--border-radius); box-shadow: var(--shadow-md); margin-bottom: 30px; }
+        .budget-section { margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+        .budget-section:last-of-type { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+        .budget-section h2 { font-size: 1.2rem; font-weight: 500; color: var(--dark-color); margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-muted); font-size: 0.9rem; }
+        select, input[type="text"], input[type="number"], input[type="date"] { display: block; width: 100%; padding: 10px 12px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 1rem; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+        select:focus, input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); outline: none; }
+
+        /* Tabela de Itens */
+        .items-table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid var(--border-color); padding: 10px 12px; text-align: left; vertical-align: middle; }
+        th { background-color: var(--light-color); font-weight: 500; font-size: 0.85rem; color: var(--text-muted); white-space: nowrap;}
+        tbody tr:nth-child(even) { background-color: #fdfdfe; }
+        tbody tr:hover { background-color: #f1f1f1; }
+        tfoot { background-color: #f9fafb; }
+        tfoot td { border-top: 2px solid var(--border-color); padding-top: 15px; padding-bottom: 15px; vertical-align: top; /* Alinha ao topo */}
+
+        /* Linha de Entrada e Inputs da Tabela */
+        #linha-entrada-item .input-group { display: flex; align-items: center; gap: 5px;} /* Agrupa código e botão busca */
+        .table-item-input, #linha-entrada-item input { width: 100%; padding: 6px 8px; font-size: 0.9em; margin: 0; border: 1px solid #ccc; border-radius: 3px; box-sizing: border-box;}
+        #input-codigo { flex-grow: 1; } /* Input código ocupa espaço */
+        .btn-buscar-item-modal { padding: 4px 8px; font-size: 0.8em; height: calc(1.8em + 12px + 2px); /* Alinha altura com input */ flex-shrink: 0; }
+        .input-quantidade { text-align: right;}
+        .input-preco { text-align: right;}
+        .cell-subtotal, .cell-actions { text-align: center; }
+        .cell-subtotal { font-weight: 500; }
+        .btn-tabela { padding: 4px 8px; font-size: 0.8em; margin: 0 2px; }
+        #linha-entrada-item input[readonly] { background-color: #e9ecef; cursor: not-allowed; } /* Indica campos não editáveis */
+
+        /* Totais */
+        .totals-section { text-align: right; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); }
+        .totals-section strong { font-size: 1.3rem; color: var(--dark-color); }
+        #total-geral { color: var(--primary-color); font-weight: 700; }
+
+        /* Botões de Ação Principais */
+        .action-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 30px; padding: 20px; background-color: var(--card-background); border-radius: var(--border-radius); box-shadow: var(--shadow-sm); flex-wrap: wrap; }
+        button { display: inline-block; padding: 10px 20px; font-size: 0.95rem; font-weight: 500; text-align: center; white-space: nowrap; vertical-align: middle; user-select: none; border: 1px solid transparent; border-radius: var(--border-radius); transition: all 0.15s ease-in-out; cursor: pointer; }
+        button i { margin-right: 6px; }
+        button:disabled { opacity: 0.65; cursor: not-allowed; }
+        .btn-primary { color: #fff; background-color: var(--primary-color); border-color: var(--primary-color); } .btn-primary:hover { background-color: #0056b3; border-color: #004085; }
+        .btn-success { color: #fff; background-color: var(--success-color); border-color: var(--success-color); } .btn-success:hover { background-color: #218838; border-color: #1e7e34; }
+        .btn-info { color: #fff; background-color: var(--info-color); border-color: var(--info-color); } .btn-info:hover { background-color: #138496; border-color: #117a8b; }
+        .btn-danger { color: #fff; background-color: var(--danger-color); border-color: var(--danger-color); } .btn-danger:hover { background-color: #c82333; border-color: #bd2130; }
+        .btn-warning { color: #212529; background-color: var(--warning-color); border-color: var(--warning-color); } .btn-warning:hover { background-color: #e0a800; border-color: #d39e00; }
+        .btn-whatsapp { color: #fff; background-color: #25D366; border-color: #25D366; } .btn-whatsapp:hover { background-color: #1da851; border-color: #1da851; }
+
+
+        /* --- Estilos do Modal de Busca de Itens --- */
+        .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #ddd; width: 90%; max-width: 700px; /* Maior */ border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .modal-header h2 { margin: 0; font-size: 1.4em; }
+        .close-modal-btn { color: #aaa; background: none; border: none; font-size: 28px; font-weight: bold; cursor: pointer; padding: 0 5px; }
+        .close-modal-btn:hover, .close-modal-btn:focus { color: black; }
+        #modal-search-input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        #modal-item-list-container { max-height: 400px; overflow-y: auto; border: 1px solid #eee; margin-bottom: 15px;}
+        #modal-item-list-container table { width: 100%; border-collapse: collapse; font-size: 0.9rem;}
+        #modal-item-list-container th, #modal-item-list-container td { padding: 8px 10px; border-bottom: 1px solid #eee; text-align: left; }
+        #modal-item-list-container th { background-color: #f1f5f9; position: sticky; top: 0; }
+        #modal-item-list-container tr { cursor: pointer; }
+        #modal-item-list-container tr:hover { background-color: #e2e8f0; }
+        #modal-item-list-container .item-codigo { font-weight: bold; color: var(--primary-color); }
+        #modal-item-list-container .item-preco { text-align: right; }
+        .modal-footer { text-align: right; padding-top: 15px; border-top: 1px solid #eee;}
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+             /* ... outros estilos responsivos ... */
+             .modal-content { width: 95%; margin: 10% auto;}
+             th, td { font-size: 0.85em; } /* Ajuste geral tamanho fonte tabela */
+             #linha-entrada-item td { padding: 8px 5px; } /* Menos padding na linha de entrada */
+             .table-item-input, #linha-entrada-item input { font-size: 0.85em; }
+        }
+    </style>
+</head>
+<body>
+
+    <button id="new-budget-btn" class="new-budget-fab" title="Novo Orçamento">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <header class="app-header">
+        <div class="header-title">
+            <h1>Orçamento</h1>
+            <span id="budget-number-display"></span>
+        </div>
+        <div class="header-search">
+             <div id="search-input-container">
+                 <input type="text" id="numero-orcamento-busca" placeholder="Buscar Nº">
+             </div>
+             <button id="search-toggle-btn" title="Buscar Orçamento">
+                 <i class="fas fa-search"></i>
+             </button>
+        </div>
+    </header>
+
+    <main class="main-container">
+
+        <div class="budget-card">
+
+            <section class="budget-section client-section">
+                <h2>Cliente</h2>
+                <label for="cliente">Selecionar Cliente</label>
+                <select id="cliente" required>
+                    <option value="">Selecione um cliente...</option>
+                </select>
+            </section>
+
+            <section class="budget-section items-table-section">
+                <h2>Itens do Orçamento</h2>
+                <div class="items-table-container">
+                    <table id="tabela-orcamento">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">Código</th>
+                                <th style="width: 30%;">Descrição</th>
+                                <th style="width: 10%;">Un. Medida</th>
+                                <th style="width: 10%;">Qtd</th>
+                                <th style="width: 15%;">Preço Unit.</th>
+                                <th style="width: 15%;">Subtotal</th>
+                                <th style="width: 10%;" class="cell-actions">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-orcamento-body">
+                            </tbody>
+                        <tfoot>
+                            <tr id="linha-entrada-item">
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text" id="input-codigo" class="table-item-input" placeholder="Código">
+                                        <button id="btn-buscar-item-modal" class="btn-info btn-tabela" title="Buscar Item Cadastrado">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td><input type="text" id="input-descricao" class="table-item-input" placeholder="Descrição Manual" readonly></td>
+                                <td><input type="text" id="input-unidade" class="table-item-input" placeholder="Unidade" readonly></td>
+                                <td><input type="number" id="input-quantidade" class="input-quantidade table-item-input" placeholder="Qtd" min="0.01" step="any"></td>
+                                <td><input type="number" id="input-preco" class="input-preco table-item-input" placeholder="Preço" step="0.01" min="0" readonly></td>
+                                <td id="cell-subtotal-entrada" class="cell-subtotal">R$ 0.00</td>
+                                <td class="cell-actions">
+                                    <button id="adicionar-item-tabela" class="btn-success btn-tabela" title="Adicionar Item à Tabela">
+                                        <i class="fas fa-plus"></i> Add
+                                    </button>
+                                    <button id="limpar-linha-entrada" class="btn-secondary btn-tabela" title="Limpar Campos">
+                                        <i class="fas fa-eraser"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+
+            <section class="totals-section">
+                 <strong>Total Geral: R$ <span id="total-geral">0.00</span></strong>
+             </section>
+
+            <section class="budget-section terms-section">
+                 <h2>Condições</h2>
+                 <div> <label for="prazo-entrega-text">Prazo de Entrega:</label> <input type="text" id="prazo-entrega-text" placeholder="Ex: 30 dias úteis"> </div>
+                 <div> <label for="prazo-pagamento-text">Condição de Pagamento:</label> <input type="text" id="prazo-pagamento-text" placeholder="Ex: 50% Sinal + 50% Entrega"> </div>
+            </section>
+        </div>
+
+        <div class="action-buttons">
+             <button id="salvar-orcamento" class="btn-primary"><i class="fas fa-save"></i> Salvar Orçamento</button>
+            <button id="btn-aprovar-orcamento" class="btn-warning" style="display: none;"><i class="fas fa-check-circle"></i> Aprovar Orçamento</button>
+            <button id="gerar-pdf" class="btn-danger"><i class="fas fa-file-pdf"></i> Gerar PDF</button>
+            <button id="enviar-whatsapp" class="btn-whatsapp"><i class="fab fa-whatsapp"></i> Enviar WhatsApp</button>
+        </div>
+    </main>
+
+    <div id="item-search-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Buscar Item Cadastrado</h2>
+                <button id="close-modal-button" class="close-modal-btn">&times;</button>
+            </div>
+            <input type="text" id="modal-search-input" placeholder="Buscar por código ou nome...">
+            <div id="modal-item-list-container">
+                <table id="modal-item-list-table">
+                     <thead><tr><th>Código</th><th>Nome</th><th>Un.</th><th>Preço</th></tr></thead>
+                     <tbody id="modal-item-list">
+                         <tr><td colspan="4">Carregando itens...</td></tr>
+                     </tbody>
+                 </table>
+            </div>
+             <div class="modal-footer">
+                 <button id="cancel-modal-button" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // Imports Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, query, orderBy, limit, deleteDoc, runTransaction, where } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        // Configuração Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc", authDomain: "testebosspro.firebaseapp.com", projectId: "testebosspro",
+            storageBucket: "testebosspro.appspot.com", messagingSenderId: "73684788134", appId: "1:73684788134:web:7c8250c83f10a2df59e567",
+            measurementId: "G-1H29L5B830"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- Variáveis Globais ---
+        let orcamentoId = null; let modoEdicao = false; let orcamentoAprovado = false; let numeroOrcamentoAtual = null;
+        let materiaisMap = new Map(); // Mapa código -> item
+        let todosMateriaisArray = []; // Array para popular modal
+
+        // --- Elementos DOM ---
+        const newBudgetBtn = document.getElementById('new-budget-btn');
+        const budgetNumberDisplay = document.getElementById('budget-number-display');
+        const searchToggleBtn = document.getElementById('search-toggle-btn');
+        const searchInputContainer = document.getElementById('search-input-container');
+        const numeroOrcamentoBuscaInput = document.getElementById('numero-orcamento-busca');
+        const clienteSelect = document.getElementById("cliente");
+        const tabelaOrcamentoBody = document.querySelector("#tabela-orcamento tbody");
+        const totalGeralElement = document.getElementById("total-geral");
+        const prazoEntregaInput = document.getElementById("prazo-entrega-text");
+        const prazoPagamentoInput = document.getElementById("prazo-pagamento-text");
+        const salvarOrcamentoBtn = document.getElementById("salvar-orcamento");
+        const gerarPdfBtn = document.getElementById("gerar-pdf");
+        const enviarWhatsappBtn = document.getElementById("enviar-whatsapp");
+        const btnAprovarOrcamento = document.getElementById('btn-aprovar-orcamento');
+
+        // Elementos da Linha de Entrada
+        const linhaEntradaItem = document.getElementById('linha-entrada-item');
+        const inputCodigo = document.getElementById('input-codigo');
+        const btnBuscarItemModal = document.getElementById('btn-buscar-item-modal');
+        const inputDescricao = document.getElementById('input-descricao');
+        const inputUnidade = document.getElementById('input-unidade');
+        const inputQuantidade = document.getElementById('input-quantidade');
+        const inputPreco = document.getElementById('input-preco');
+        const cellSubtotalEntrada = document.getElementById('cell-subtotal-entrada');
+        const adicionarItemTabelaBtn = document.getElementById('adicionar-item-tabela');
+        const limparLinhaEntradaBtn = document.getElementById('limpar-linha-entrada');
+
+        // Elementos do Modal de Busca
+        const itemSearchModal = document.getElementById('item-search-modal');
+        const closeModalButton = document.getElementById('close-modal-button');
+        const cancelModalButton = document.getElementById('cancel-modal-button');
+        const modalSearchInput = document.getElementById('modal-search-input');
+        const modalItemList = document.getElementById('modal-item-list');
+
+        // --- Funções ---
+
+        // Carregar Clientes (sem alterações)
+        async function carregarClientes() { /* ...código igual ao anterior... */
+            clienteSelect.innerHTML = '<option value="">Selecione um cliente...</option>';
+             try {
+                 const q = query(collection(db, "clientes"), orderBy("codigo"));
+                 const querySnapshot = await getDocs(q);
+                 querySnapshot.forEach((doc) => {
+                     const cliente = doc.data();
+                     const option = document.createElement("option");
+                     option.value = JSON.stringify({ id: doc.id, nome: cliente.empresa || cliente.nome, codigo: cliente.codigo, telefone: cliente.telefone || '' });
+                     option.textContent = `(${cliente.codigo || 'S/C'}) ${cliente.empresa || cliente.nome || 'Cliente s/ nome'} ${cliente.comprador ? ' - ' + cliente.comprador : ''}`;
+                     clienteSelect.appendChild(option);
+                 });
+                 console.log("Clientes carregados.");
+             } catch (error) { console.error("Erro ao carregar clientes:", error); }
+        }
+
+        // Carregar Materiais/Serviços para Mapa e Array
+        async function carregarTodosMateriaisParaBusca() {
+            materiaisMap = new Map();
+            todosMateriaisArray = [];
+            try {
+                const q = query(collection(db, "materiais"), orderBy("codigo"));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    const item = { id: doc.id, ...doc.data() };
+                    if (item.codigo) { // Só processa se tiver código
+                        const itemData = {
+                            id: doc.id,
+                            nome: item.nome || 'Sem Nome',
+                            preco: parseFloat(item.preco) || 0,
+                            medida: item.medida || 'un',
+                            tipo: item.tipo || 'material',
+                            codigo: item.codigo // Mantém o código original
+                        };
+                        materiaisMap.set(item.codigo.toLowerCase(), itemData);
+                        todosMateriaisArray.push(itemData);
+                    }
+                });
+                console.log(`${materiaisMap.size} itens carregados para busca.`);
+            } catch (error) {
+                console.error("Erro ao carregar materiais/serviços:", error);
+                alert("Erro ao carregar lista de itens.");
+            }
+        }
+
+        // Popular Tabela do Modal de Busca
+        function popularModalItens(filtro = '') {
+            modalItemList.innerHTML = ''; // Limpa lista atual
+            const termoBusca = filtro.toLowerCase().trim();
+            const itensFiltrados = todosMateriaisArray.filter(item =>
+                item.nome.toLowerCase().includes(termoBusca) ||
+                item.codigo.toLowerCase().includes(termoBusca)
+            );
+
+            if (itensFiltrados.length === 0) {
+                 modalItemList.innerHTML = '<tr><td colspan="4">Nenhum item encontrado.</td></tr>';
+                 return;
+            }
+
+            itensFiltrados.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="item-codigo">${item.codigo}</td>
+                    <td>${item.nome}</td>
+                    <td>${item.medida}</td>
+                    <td class="item-preco">R$ ${item.preco.toFixed(2)}</td>
+                `;
+                tr.addEventListener('click', () => selecionarItemDoModal(item.codigo));
+                modalItemList.appendChild(tr);
+            });
+        }
+
+        // Ação ao selecionar item no modal
+        function selecionarItemDoModal(codigoItem) {
+            const item = materiaisMap.get(codigoItem.toLowerCase());
+            if (item) {
+                inputCodigo.value = item.codigo;
+                inputDescricao.value = item.nome;
+                inputUnidade.value = item.medida;
+                inputPreco.value = item.preco.toFixed(2);
+                inputQuantidade.value = '1'; // Default quantidade
+
+                // Bloqueia campos preenchidos automaticamente
+                inputDescricao.readOnly = true;
+                inputUnidade.readOnly = true;
+                inputPreco.readOnly = true;
+
+                closeItemSearchModal();
+                actualizarSubtotalEntrada();
+                inputQuantidade.focus(); // Foca na quantidade
+            } else {
+                console.error("Item selecionado no modal não encontrado no map:", codigoItem);
+                alert("Erro ao selecionar o item.");
+            }
+        }
+
+        // Abrir/Fechar Modal de Busca
+        function openItemSearchModal() {
+            modalSearchInput.value = ''; // Limpa busca anterior
+            popularModalItens(); // Popula com todos os itens
+            itemSearchModal.style.display = 'block';
+            modalSearchInput.focus();
+        }
+        function closeItemSearchModal() {
+            itemSearchModal.style.display = 'none';
+        }
+
+
+        // Adiciona linha de item ao tbody da tabela principal
+        function adicionarLinhaTabela(codigo, descricao, unidade, quantidade, precoUnitario, isManual = false) {
+            if (!tabelaOrcamentoBody) { console.error("tbody não encontrado!"); return; }
+            const novaLinha = document.createElement("tr");
+            quantidade = parseFloat(quantidade) || 1;
+            precoUnitario = parseFloat(precoUnitario) || 0;
+            const subtotal = quantidade * precoUnitario;
+
+             // Marca a linha como manual ou não para referência futura, se necessário
+             novaLinha.dataset.manual = isManual;
+             // Decide se o preço na linha adicionada pode ser editado
+             const isPrecoLinhaEditable = isManual;
+
+            novaLinha.innerHTML = `
+                <td>${codigo || 'Manual'}</td>
+                <td>${descricao || (isManual ? 'Descrição Manual' : 'N/A')}</td>
+                <td>${unidade || (isManual ? 'un' : 'N/A')}</td>
+                <td><input type="number" value="${quantidade.toFixed(2)}" min="0.01" step="any" class="input-quantidade table-item-input"></td>
+                <td><input type="number" value="${precoUnitario.toFixed(2)}" step="0.01" min="0" class="input-preco table-item-input" ${isPrecoLinhaEditable ? '' : 'readonly'}></td>
+                <td class="cell-subtotal">R$ ${subtotal.toFixed(2)}</td>
+                <td class="cell-actions">
+                    <button class="remover-item-tabela btn-danger btn-tabela" title="Remover Item"> <i class="fas fa-trash-alt"></i> </button>
+                </td>
+             `;
+             tabelaOrcamentoBody.appendChild(novaLinha);
+
+             // Listeners para inputs da linha adicionada
+             novaLinha.querySelector(".input-quantidade").addEventListener("input", actualizarTotalGeral);
+             novaLinha.querySelector(".input-preco").addEventListener("input", actualizarTotalGeral);
+             novaLinha.querySelector(".remover-item-tabela").addEventListener("click", (e) => {
+                 e.currentTarget.closest('tr').remove();
+                 actualizarTotalGeral();
+             });
+
+             actualizarTotalGeral();
+        }
+
+        // Limpar a linha de entrada de item
+        function limparLinhaEntrada() {
+            inputCodigo.value = '';
+            inputDescricao.value = ''; inputDescricao.readOnly = false; // Permite manual
+            inputUnidade.value = ''; inputUnidade.readOnly = false; // Permite manual
+            inputQuantidade.value = '';
+            inputPreco.value = ''; inputPreco.readOnly = false; // Permite manual
+            cellSubtotalEntrada.textContent = 'R$ 0.00';
+            inputCodigo.focus();
+        }
+
+        // Calcula e atualiza o subtotal na linha de entrada
+        function actualizarSubtotalEntrada() {
+            const qtd = parseFloat(inputQuantidade.value) || 0;
+            const preco = parseFloat(inputPreco.value) || 0;
+            cellSubtotalEntrada.textContent = `R$ ${(qtd * preco).toFixed(2)}`;
+        }
+
+        // Atualizar Total Geral (lendo do tbody)
+        function actualizarTotalGeral() {
+            let totalGeral = 0;
+            const linhas = tabelaOrcamentoBody.querySelectorAll("tr");
+            linhas.forEach((linha) => {
+                const quantidadeInput = linha.querySelector(".input-quantidade");
+                const precoUnitarioInput = linha.querySelector(".input-preco");
+                const subtotalCell = linha.querySelector(".cell-subtotal");
+                if(quantidadeInput && precoUnitarioInput && subtotalCell){
+                     const quantidade = parseFloat(quantidadeInput.value) || 0;
+                     const precoUnitario = parseFloat(precoUnitarioInput.value) || 0;
+                     const subtotal = quantidade * precoUnitario;
+                     subtotalCell.textContent = `R$ ${subtotal.toFixed(2)}`; // Atualiza subtotal da linha
+                     totalGeral += subtotal;
+                }
+            });
+            totalGeralElement.textContent = totalGeral.toFixed(2);
+            // Atualiza subtotal da linha de entrada também
+             actualizarSubtotalEntrada();
+        }
+
+        // --- Funções de Busca/Preenchimento de Orçamento (iguais) ---
+        async function buscarOrcamentoPorNumero(numero) { /* ...código igual... */
+            console.log("Buscando orçamento nº:", numero);
+             if (!numero || !numero.trim()) { alert("Digite o número."); return; }
+             searchToggleBtn.disabled = true;
+             const numeroFormatado = String(numero).padStart(4, '0'); // Ajustar padding
+             try {
+                 const q = query(collection(db, "orcamentos"), where("numeroOrcamento", "==", numeroFormatado), limit(1));
+                 const querySnapshot = await getDocs(q);
+                 if (querySnapshot.empty) { alert(`Orçamento ${numeroFormatado} não encontrado.`); }
+                 else {
+                     const docSnap = querySnapshot.docs[0];
+                     preencherFormularioComDados(docSnap.id, docSnap.data());
+                     searchInputContainer.classList.remove('visible'); numeroOrcamentoBuscaInput.value = '';
+                 }
+             } catch (error) { console.error("Erro buscar orçamento:", error); alert("Erro buscar orçamento."); }
+             finally { searchToggleBtn.disabled = false; }
+        }
+
+        function preencherFormularioComDados(id, dados) { /* ...código igual, mas chama a nova adicionarLinhaTabela... */
+            console.log("Preenchendo formulário com dados:", id, dados);
+            limparFormulario(false);
+            orcamentoId = id; modoEdicao = true; orcamentoAprovado = dados.aprovado || false;
+            numeroOrcamentoAtual = dados.numeroOrcamento || null;
+            budgetNumberDisplay.textContent = numeroOrcamentoAtual ? `#${numeroOrcamentoAtual}` : '';
+            prazoEntregaInput.value = dados.prazoEntrega || ""; prazoPagamentoInput.value = dados.prazoPagamento || "";
+
+            // Botão Aprovar
+            if (modoEdicao && !orcamentoAprovado && (dados.numeroPedido === null || dados.numeroPedido === undefined)) {
+                btnAprovarOrcamento.style.display = 'inline-block'; btnAprovarOrcamento.disabled = false;
+            } else { btnAprovarOrcamento.style.display = 'none'; }
+
+            // Desabilitar campos se aprovado
+             const inputsToDisable = document.querySelectorAll('.budget-card input:not(#numero-orcamento-busca), .budget-card select, .action-buttons button:not(#gerar-pdf):not(#enviar-whatsapp), #adicionar-item-tabela, #limpar-linha-entrada, #btn-buscar-item-modal');
+             if(orcamentoAprovado) { inputsToDisable.forEach(el => el.disabled = true); gerarPdfBtn.disabled = false; enviarWhatsappBtn.disabled = false; searchToggleBtn.disabled = false; }
+             else { inputsToDisable.forEach(el => el.disabled = false); if (!(modoEdicao && !orcamentoAprovado && (dados.numeroPedido === null || dados.numeroPedido === undefined))) btnAprovarOrcamento.style.display = 'none'; }
+
+            // Seleciona cliente
+            const tentarSelecionarCliente = () => { /* ... igual ... */
+                let clienteEncontrado = false; [...clienteSelect.options].forEach(opt => { if (opt.value) { try { const c = JSON.parse(opt.value); if (c.id === dados.clienteId) { opt.selected = true; clienteEncontrado = true; } } catch(e) {} } }); if (!clienteEncontrado && dados.clienteId) console.warn("Cliente ID:", dados.clienteId, "não encontrado.");
+            };
+            if (clienteSelect.options.length > 1) tentarSelecionarCliente(); else setTimeout(tentarSelecionarCliente, 800);
+
+            // Preenche itens
+            tabelaOrcamentoBody.innerHTML = "";
+            if (dados.itens && Array.isArray(dados.itens)) {
+                dados.itens.forEach(item => {
+                    adicionarLinhaTabela( item.codigo, item.item, item.medida, item.quantidade, item.precoUnitario, !item.codigo ); // Passa isManual = true se não tiver código
+                });
+            }
+            actualizarTotalGeral();
+        }
+
+        // Limpar Formulário (Atualizado para limpar inputs da linha de entrada)
+        function limparFormulario(resetId = true) { /* ...código igual, mas chama limparLinhaEntrada... */
+            console.log("Limpando formulário...");
+            clienteSelect.value = ""; tabelaOrcamentoBody.innerHTML = "";
+            limparLinhaEntrada(); // *** Limpa a linha de entrada ***
+            totalGeralElement.textContent = "0.00"; prazoEntregaInput.value = ""; prazoPagamentoInput.value = "";
+            numeroOrcamentoBuscaInput.value = ""; budgetNumberDisplay.textContent = ""; btnAprovarOrcamento.style.display = 'none';
+            if (resetId) { orcamentoId = null; modoEdicao = false; orcamentoAprovado = false; numeroOrcamentoAtual = null; }
+             // Reabilita campos
+             const allInputs = document.querySelectorAll('.budget-card input:not(#numero-orcamento-busca), .budget-card select, .action-buttons button, #adicionar-item-tabela, #limpar-linha-entrada, #btn-buscar-item-modal');
+             allInputs.forEach(el => el.disabled = false); btnAprovarOrcamento.style.display = 'none';
+             console.log("Formulário limpo."); window.scrollTo({ top: 0, behavior: 'smooth' }); clienteSelect.focus();
+        }
+
+        // --- Funções de Ação (SALVAR, PDF, WHATSAPP, APROVAR - Atualizadas para ler tabela) ---
+
+        // SALVAR
+        salvarOrcamentoBtn.addEventListener("click", async () => { /* ...lógica igual, lendo das células corretas no tbody... */
+            console.log("Salvando...");
+            const clienteSelectValue = clienteSelect.value; if (!clienteSelectValue) { alert("Selecione cliente."); return; }
+            let cliente = {}; try { cliente = JSON.parse(clienteSelectValue); } catch(e) { alert("Erro cliente."); return; }
+            const itens = []; const linhas = tabelaOrcamentoBody.querySelectorAll("tr"); if (linhas.length === 0) { alert("Adicione itens."); return; }
+            let itemInvalido = false;
+            linhas.forEach((linha) => {
+                const codigo = linha.cells[0].textContent.trim();
+                const descricao = linha.cells[1].textContent.trim(); // Pega texto
+                const unidade = linha.cells[2].textContent.trim(); // Pega texto
+                const qtdInput = linha.querySelector(".input-quantidade");
+                const puInput = linha.querySelector(".input-preco");
+                if (!qtdInput || !puInput) { itemInvalido = true; return; }
+                const qtd = parseFloat(qtdInput.value) || 0; const pu = parseFloat(puInput.value) || 0;
+                if (qtd <= 0 || pu < 0) { alert(`Item "${descricao}" inválido.`); itemInvalido = true; }
+                itens.push({ codigo: codigo === 'Manual' ? null : codigo, item: descricao, medida: unidade, quantidade: qtd, precoUnitario: pu, descricao: "" }); // Salva item como descrição
+            });
+            if (itemInvalido) return;
+            const totalGeral = parseFloat(totalGeralElement.textContent) || 0;
+            const prazoEntrega = prazoEntregaInput.value.trim(); const prazoPagamento = prazoPagamentoInput.value.trim();
+            salvarOrcamentoBtn.disabled = true; salvarOrcamentoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            try {
+                if (modoEdicao && orcamentoId) { // EDIÇÃO
+                    const orcamentoRef = doc(db, "orcamentos", orcamentoId);
+                    const updateData = { clienteId: cliente.id, clienteNome: cliente.nome, itens, totalGeral, prazoEntrega, prazoPagamento, dataAtualizacao: new Date().toISOString() };
+                    await updateDoc(orcamentoRef, updateData); alert("Orçamento atualizado!");
+                } else { // NOVO
+                     const dadosOrcamentoBase = { clienteId: cliente.id, clienteNome: cliente.nome, itens, totalGeral, prazoEntrega, prazoPagamento, dataCriacao: new Date().toISOString(), aprovado: false, numeroPedido: null, pedidoId: null };
+                     const { novoId, novoNumero } = await runTransaction(db, async (t) => {
+                         const counterRef = doc(db, "metadata", "orcamentoCounter"); const cSnap = await t.get(counterRef); let cNum = cSnap.exists() ? cSnap.data().lastOrcamentoNumber || 0 : 0; const nNum = cNum + 1; const codF = String(nNum).padStart(4, '0'); const novoORef = doc(collection(db, "orcamentos")); t.set(novoORef, { ...dadosOrcamentoBase, numeroOrcamento: codF }); t.set(counterRef, { lastOrcamentoNumber: nNum }, { merge: true }); return { novoId: novoORef.id, novoNumero: codF };
+                     });
+                     alert(`Orçamento salvo! Número: ${novoNumero}`);
+                     orcamentoId = novoId; modoEdicao = true; orcamentoAprovado = false; numeroOrcamentoAtual = novoNumero; budgetNumberDisplay.textContent = `#${novoNumero}`; btnAprovarOrcamento.style.display = 'inline-block'; btnAprovarOrcamento.disabled = false;
+                }
+            } catch (error) { console.error("Erro ao salvar:", error); alert("Erro ao salvar."); }
+            finally { salvarOrcamentoBtn.disabled = false; salvarOrcamentoBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Orçamento'; }
+        });
+
+        // GERAR PDF
+        gerarPdfBtn.addEventListener("click", async () => { /* ...lógica igual, lendo das células corretas no tbody... */
+             console.log("Gerando PDF..."); if (!clienteSelect.value) { alert("Selecione cliente."); return; } if (tabelaOrcamentoBody.rows.length === 0) { alert("Adicione itens."); return; }
+             const { jsPDF } = window.jspdf; if (typeof jsPDF.API.autoTable !== 'function') { alert("Erro jsPDF-AutoTable."); return; } const doc = new jsPDF();
+             // Empresa e Cliente (igual)
+             const companyName = "JS FER FERRAMENTARIA"; const companyAddress1 = "Rua Argentina, 1300 galpão 3"; const companyAddress2 = "Bairro Guarau - Salto - SP CEP: 13324-200"; const companyCNPJ = "CNPJ: 31.886.382/0001-26"; const companyIE = "I.E. 600.248.772.115"; const companyPhone = "Fone: (11) 97501-8042";
+             let clienteData = {}; let clienteNomeExibicao = "Cliente"; try { clienteData = JSON.parse(clienteSelect.value); clienteNomeExibicao = clienteData.nome || "Cliente"; } catch(e) {}
+             const marginLeft = 15; const marginRight = doc.internal.pageSize.getWidth() - marginLeft; let currentY = 20;
+             // Cabeçalho, Título, Data, Cliente (igual)
+             doc.setFontSize(12); doc.setFont(undefined, 'bold'); doc.text(companyName, marginLeft, currentY); currentY += 6; doc.setFontSize(9); doc.setFont(undefined, 'normal'); doc.text(companyAddress1, marginLeft, currentY); currentY += 4; doc.text(companyAddress2, marginLeft, currentY); currentY += 4; doc.text(companyPhone, marginLeft, currentY); currentY += 6; doc.text(companyCNPJ, marginLeft, currentY); currentY += 4; doc.text(companyIE, marginLeft, currentY); let rightY = 20; doc.setFontSize(18); doc.setFont(undefined, 'bold'); doc.text("ORÇAMENTO", marginRight, rightY, { align: 'right' }); rightY += 8; doc.setFontSize(10); doc.setFont(undefined, 'normal'); const now = new Date(); doc.text(`DATA: ${now.toLocaleDateString('pt-BR')}`, marginRight, rightY, { align: 'right' }); rightY += 5; const numPDF = numeroOrcamentoAtual || 'NOVO'; doc.setFontSize(11); doc.setFont(undefined, 'bold'); doc.text(`Nº: ${numPDF}`, marginRight, rightY, { align: 'right' }); rightY += 7; currentY = Math.max(currentY, rightY) + 10; doc.setDrawColor(200); doc.line(marginLeft, currentY, marginRight, currentY); currentY += 8; doc.setFontSize(10); doc.setFont(undefined, 'bold'); doc.text("CLIENTE:", marginLeft, currentY); doc.setFont(undefined, 'normal'); doc.text(clienteNomeExibicao, marginLeft + 20, currentY); currentY += 7;
+             // Tabela (ler células do tbody)
+             const head = [['Código', 'Descrição', 'Und', 'Qtd', 'V. Unit.', 'Subtotal']]; const body = []; const linhas = tabelaOrcamentoBody.querySelectorAll("tr");
+             linhas.forEach(linha => { const cod = linha.cells[0].textContent; const desc = linha.cells[1].textContent; const und = linha.cells[2].textContent; const qtd = linha.cells[3].querySelector('input')?.value || '0'; const vU = parseFloat(linha.cells[4].querySelector('input')?.value || 0); const sub = parseFloat(qtd) * vU; body.push([cod === 'Manual' ? '' : cod, desc, und, qtd, `R$ ${vU.toFixed(2)}`, `R$ ${sub.toFixed(2)}`]); });
+             doc.autoTable({ head, body, startY: currentY, theme: 'grid', headStyles: { fillColor: [230, 230, 230], textColor: 30, fontStyle: 'bold', fontSize: 8.5 }, bodyStyles: { fontSize: 8, cellPadding: 1.5 }, columnStyles: { 0: { cellWidth: 15 }, 1: { cellWidth: 'auto' }, 2: { cellWidth: 15, halign: 'center' }, 3: { cellWidth: 15, halign: 'right' }, 4: { cellWidth: 25, halign: 'right' }, 5: { cellWidth: 25, halign: 'right' } }, margin: { left: marginLeft, right: marginLeft }}); currentY = doc.autoTable.previous.finalY + 10;
+             // Total, Condições, Rodapé (igual)
+             doc.setFontSize(11); doc.setFont(undefined, 'bold'); doc.text(`TOTAL GERAL: R$ ${totalGeralElement.textContent}`, marginRight, currentY, { align: 'right' }); doc.setFont(undefined, 'normal'); currentY += 10; const pE = prazoEntregaInput.value.trim(); const pP = prazoPagamentoInput.value.trim(); doc.setFontSize(9); if (pE || pP) { doc.setFont(undefined, 'bold'); doc.text("CONDIÇÕES:", marginLeft, currentY); currentY += 5; doc.setFont(undefined, 'normal'); } if (pE) { doc.text(`Prazo Entrega: ${pE}`, marginLeft, currentY); currentY += 4; } if (pP) { doc.text(`Cond. Pagamento: ${pP}`, marginLeft, currentY); currentY += 8; } const pageH = doc.internal.pageSize.getHeight(); const footY = pageH - 30; doc.setFontSize(8); doc.text("Válido por 10 dias.", marginLeft, footY); doc.text("Sem valor fiscal.", marginLeft, footY + 4); const sigY = pageH - 15; doc.line(marginLeft + 5, sigY, marginLeft + 65, sigY); doc.text("Vendedor", marginLeft + 25, sigY + 4); doc.line(marginRight - 65, sigY, marginRight - 5, sigY); doc.text("Cliente (Aceite)", marginRight - 45, sigY + 4); const pCount = doc.internal.getNumberOfPages(); for (let i = 1; i <= pCount; i++) { doc.setPage(i); doc.setFontSize(8); doc.text(`Página ${i}/${pCount}`, marginRight, pageH - 10, { align: 'right' }); }
+             const safeCN = clienteNomeExibicao.replace(/[^a-zA-Z0-9]/g,'_'); const safeNO = numPDF.replace(/[^a-zA-Z0-9]/g,''); const fn = `Orcamento_${safeNO}_${safeCN}_${now.toISOString().split('T')[0]}.pdf`; doc.save(fn);
+        });
+
+        // ENVIAR WHATSAPP
+        enviarWhatsappBtn.addEventListener("click", () => { /* ...lógica igual, lendo das células corretas no tbody... */
+            console.log("WhatsApp..."); if (!clienteSelect.value) { alert("Selecione cliente."); return; } if (tabelaOrcamentoBody.rows.length === 0) { alert("Orçamento vazio."); return; }
+            let cData = {}; let cNome = "Cliente"; let cTel = ""; try { cData = JSON.parse(clienteSelect.value); cNome = cData.nome || "Cliente"; cTel = cData.telefone ? cData.telefone.replace(/\D/g, '') : ''; } catch(e) { alert("Erro cliente WhatsApp."); return; }
+            const numMsg = numeroOrcamentoAtual || 'Novo'; let msg = `*ORÇAMENTO JS FER #${numMsg}*\n\n*Cliente:* ${cNome}\n*Data:* ${new Date().toLocaleDateString('pt-BR')}\n\n*ITENS:*\n`; const linhas = tabelaOrcamentoBody.querySelectorAll("tr");
+            linhas.forEach((l) => { const cod = l.cells[0].textContent.trim(); const desc = l.cells[1].textContent.trim(); const und = l.cells[2].textContent.trim(); const qtd = l.cells[3].querySelector('input')?.value || 0; const pu = parseFloat(l.cells[4].querySelector('input')?.value || 0).toFixed(2); const sub = l.cells[5].textContent.trim(); msg += `- ${cod !== 'Manual' ? '['+cod+'] ' : ''}${desc} (${und}): ${qtd} x R$${pu} = ${sub}\n`; });
+            msg += `\n*TOTAL GERAL: R$ ${totalGeralElement.textContent}*\n\n`; const pE = prazoEntregaInput.value.trim(); const pP = prazoPagamentoInput.value.trim(); if (pE) msg += `*Prazo Entrega:* ${pE}\n`; if (pP) msg += `*Cond. Pagamento:* ${pP}\n`; msg += "\nAtt,\nJS Fer Ferramentaria";
+            const encMsg = encodeURIComponent(msg); let wUrl = `https://wa.me/`;
+            if (cTel) { if (!cTel.startsWith('55') && (cTel.length === 10 || cTel.length === 11)) wUrl += `55${cTel}`; else wUrl += cTel; wUrl += `?text=${encMsg}`; }
+            else { wUrl += `?text=${encMsg}`; alert("Telefone não encontrado."); } window.open(wUrl, '_blank');
+        });
+
+        // APROVAR ORÇAMENTO
+        btnAprovarOrcamento.addEventListener('click', async () => { /* ...lógica igual, lendo das células corretas no tbody... */
+            console.log("Aprovando..."); if (!modoEdicao || !orcamentoId || orcamentoAprovado) { alert("Não pode aprovar."); return; } if (!numeroOrcamentoAtual) { alert("Salve primeiro."); return; } if (!confirm(`Aprovar orçamento #${numeroOrcamentoAtual} e gerar pedido?`)) return;
+            btnAprovarOrcamento.disabled = true; btnAprovarOrcamento.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aprovando...';
+            const cVal = clienteSelect.value; if (!cVal) { alert("Cliente?"); btnAprovarOrcamento.disabled = false; /*...*/ return; } const cli = JSON.parse(cVal); const its = []; const lins = tabelaOrcamentoBody.querySelectorAll("tr"); if (lins.length === 0) { alert("Sem itens!"); btnAprovarOrcamento.disabled = false; /*...*/ return; }
+            lins.forEach((l) => { const cd = l.cells[0].textContent.trim(); const ds = l.cells[1].textContent.trim(); const un = l.cells[2].textContent.trim(); const qt = parseFloat(l.querySelector(".input-quantidade")?.value) || 0; const pu = parseFloat(l.querySelector(".input-preco")?.value) || 0; its.push({ codigo: cd === 'Manual' ? null : cd, item: ds, medida: un, quantidade: qt, precoUnitario: pu, descricao: "" }); });
+            const tot = parseFloat(totalGeralElement.textContent) || 0; const pE = prazoEntregaInput.value.trim(); const pP = prazoPagamentoInput.value.trim();
+            try {
+                const { newPedidoNumber, newPedidoId } = await runTransaction(db, async (t) => { const oRefV = doc(db, "orcamentos", orcamentoId); const oSnpV = await t.get(oRefV); if (!oSnpV.exists() || oSnpV.data().aprovado) throw new Error("Orçamento já aprovado/inexistente."); const pCntRef = doc(db, "metadata", "pedidoCounter"); const pCntSnp = await t.get(pCntRef); let curPNum = pCntSnp.exists() ? pCntSnp.data().lastPedidoNumber || 0 : 0; const nxtPNum = curPNum + 1; const pNumF = String(nxtPNum).padStart(4, '0'); const nvoPRef = doc(collection(db, "pedidos")); const dPed = { numeroPedido: pNumF, orcamentoId, numeroOrcamento: numeroOrcamentoAtual, clienteId: cli.id, clienteNome: cli.nome, itens: its, totalGeral: tot, prazoEntrega: pE, prazoPagamento: pP, dataCriacao: new Date().toISOString(), status: 'Aberto' }; t.set(nvoPRef, dPed); const oRefA = doc(db, "orcamentos", orcamentoId); t.update(oRefA, { aprovado: true, pedidoId: nvoPRef.id, numeroPedido: pNumF, dataAprovacao: new Date().toISOString(), clienteId: cli.id, clienteNome: cli.nome, itens: its, totalGeral: tot, prazoEntrega: pE, prazoPagamento: pP }); t.set(pCntRef, { lastPedidoNumber: nxtPNum }, { merge: true }); return { newPedidoNumber: pNumF, newPedidoId: nvoPRef.id }; });
+                alert(`Orçamento #${numeroOrcamentoAtual} aprovado! Pedido #${newPedidoNumber} gerado.`); orcamentoAprovado = true; btnAprovarOrcamento.style.display = 'none';
+                preencherFormularioComDados(orcamentoId, { aprovado: true, numeroOrcamento: numeroOrcamentoAtual, clienteId: cli.id, itens: its, totalGeral: tot, prazoEntrega: pE, prazoPagamento: pP, numeroPedido: newPedidoNumber });
+            } catch (error) { console.error("Erro aprovação:", error); alert(`Erro: ${error.message}`); btnAprovarOrcamento.disabled = false; btnAprovarOrcamento.innerHTML = '<i class="fas fa-check-circle"></i> Aprovar Orçamento'; }
+        });
+
+        // --- Event Listeners Iniciais e da Linha de Entrada ---
+
+        // Novo Orçamento (+)
+        newBudgetBtn.addEventListener('click', () => limparFormulario(true));
+
+        // Busca de Orçamento (Header)
+        searchToggleBtn.addEventListener('click', () => { searchInputContainer.classList.toggle('visible'); if (searchInputContainer.classList.contains('visible')) numeroOrcamentoBuscaInput.focus(); });
+        numeroOrcamentoBuscaInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); buscarOrcamentoPorNumero(numeroOrcamentoBuscaInput.value); } });
+
+        // Botão Buscar Item (abre Modal)
+        btnBuscarItemModal.addEventListener('click', openItemSearchModal);
+
+        // Listeners da Linha de Entrada
+        inputQuantidade.addEventListener('input', actualizarSubtotalEntrada);
+        inputPreco.addEventListener('input', actualizarSubtotalEntrada);
+        limparLinhaEntradaBtn.addEventListener('click', limparLinhaEntrada);
+
+        // Adicionar Item da Linha de Entrada à Tabela Principal
+        adicionarItemTabelaBtn.addEventListener('click', () => {
+            const codigo = inputCodigo.value.trim();
+            const desc = inputDescricao.value.trim();
+            const unidade = inputUnidade.value.trim();
+            const qtd = parseFloat(inputQuantidade.value) || 0;
+            const preco = parseFloat(inputPreco.value) || 0;
+            const isManual = !inputDescricao.readOnly; // É manual se descrição está editável
+
+            // Validações
+            if (qtd <= 0) { alert("Quantidade deve ser maior que zero."); inputQuantidade.focus(); return; }
+            if (preco < 0) { alert("Preço não pode ser negativo."); inputPreco.focus(); return; }
+            if (!desc) { alert("Descrição não pode estar vazia."); inputDescricao.focus(); return; }
+            if (!unidade) { alert("Unidade de medida não pode estar vazia."); inputUnidade.focus(); return; }
+
+            // Adiciona a linha ao tbody
+            adicionarLinhaTabela(codigo, desc, unidade, qtd, preco, isManual);
+
+            // Limpa a linha de entrada
+            limparLinhaEntrada();
+        });
+
+        // Listeners do Modal de Busca
+        closeModalButton.addEventListener('click', closeItemSearchModal);
+        cancelModalButton.addEventListener('click', closeItemSearchModal);
+        window.addEventListener('click', (event) => { if (event.target == itemSearchModal) closeItemSearchModal(); });
+        modalSearchInput.addEventListener('input', (e) => popularModalItens(e.target.value));
+
+        // --- Inicialização da Página ---
+        window.addEventListener("load", async () => {
+            console.log("Página carregada. Iniciando V2...");
+            try {
+                await Promise.all([carregarClientes(), carregarTodosMateriaisParaBusca()]);
+                console.log("Clientes e Itens carregados.");
+                // Lógica URL (igual)
+                const params = new URLSearchParams(window.location.search); const urlOId = params.get("orcamentoId");
+                if (urlOId) { const dRef = doc(db, "orcamentos", urlOId); const dSnp = await getDoc(dRef); if (dSnp.exists()) preencherFormularioComDados(urlOId, dSnp.data()); else { alert("URL: Orçamento não encontrado!"); limparFormulario(true); } }
+                else { limparFormulario(true); }
+            } catch (error) { console.error("Erro inicial:", error); alert("Erro ao carregar dados."); }
+            finally { console.log("Carregamento V2 finalizado."); }
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Financeiro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db; /* Blue */
+            --secondary-color: #9b59b6; /* Purple */
+            --success-color: #2ecc71; /* Green */
+            --danger-color: #e74c3c; /* Red */
+            --warning-color: #f1c40f; /* Yellow */
+            --info-color: #5dade2; /* Light Blue */
+            --light-color: #f8f9fa;
+            --dark-color: #34495e; /* Dark Blue/Gray */
+            --border-color: #dfe6e9;
+            --background-color: #f4f7f6;
+            --card-background: #ffffff;
+            --text-color: #2c3e50;
+            --text-muted: #7f8c8d;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 5px 15px rgba(0,0,0,0.08);
+            --border-radius: 8px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--dark-color);
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        /* --- Controls Bar --- */
+        .controls-bar {
+            background-color: var(--card-background);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+        .controls-bar label {
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-right: 5px;
+            font-size: 0.9rem;
+        }
+        .controls-bar select, .controls-bar input[type="date"] {
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            min-width: 150px;
+        }
+        .controls-bar button {
+             padding: 8px 15px;
+             border: none;
+             border-radius: 6px;
+             background-color: var(--primary-color);
+             color: white;
+             cursor: pointer;
+             font-weight: 500;
+             transition: background-color 0.2s ease;
+        }
+        .controls-bar button:hover { background-color: #2980b9; }
+
+        /* --- Card Styles --- */
+        .card {
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #ecf0f1;
+        }
+        .card-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-header i { color: var(--primary-color); }
+
+        /* --- KPI Grid --- */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+        }
+        .kpi-item {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+        .kpi-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 3px;
+        }
+        .kpi-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+         /* KPI Colors */
+        .kpi-recebido .kpi-value { color: var(--success-color); }
+        .kpi-pago .kpi-value { color: var(--danger-color); }
+        .kpi-saldo.positive .kpi-value { color: var(--success-color); }
+        .kpi-saldo.negative .kpi-value { color: var(--danger-color); }
+        .kpi-a-receber .kpi-value { color: var(--primary-color); }
+        .kpi-a-pagar .kpi-value { color: var(--warning-color); }
+
+
+        /* --- Charts Grid --- */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .chart-container { padding: 15px; } /* Padding within the card */
+        .chart-container h3 {
+            text-align: center; margin-bottom: 15px; font-size: 1rem;
+            color: var(--text-muted); font-weight: 500;
+        }
+        .chart-canvas-container { /* Ensure canvas is responsive */
+             position: relative;
+             height: 280px; /* Adjust height as needed */
+             width: 100%;
+        }
+
+
+        /* --- Tables/Lists --- */
+        .list-container { max-height: 350px; overflow-y: auto; }
+        .data-list { list-style: none; padding: 0; }
+        .data-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 5px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            gap: 10px;
+        }
+        .data-list li:last-child { border-bottom: none; }
+        .data-list .description { flex-grow: 1; color: var(--text-muted); }
+        .data-list .date { font-size: 0.85rem; color: var(--text-muted); min-width: 80px; text-align: right;}
+        .data-list .value { font-weight: bold; min-width: 100px; text-align: right; }
+        .data-list .receipt .value { color: var(--success-color); }
+        .data-list .payment .value { color: var(--danger-color); }
+        .data-list .overdue .date { color: var(--danger-color); font-weight: bold; }
+
+        /* Placeholder */
+        .placeholder { text-align: center; padding: 20px; color: var(--text-muted); }
+
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            h1 { font-size: 1.5rem; }
+            .controls-bar { flex-direction: column; align-items: stretch; }
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+             .kpi-grid { grid-template-columns: 1fr; }
+             .kpi-value { font-size: 1.4rem; }
+             .kpi-label { font-size: 0.8rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1><i class="fas fa-chart-line"></i> Painel Financeiro</h1>
+
+        <div class="controls-bar">
+            <div>
+                <label for="period-select">Período:</label>
+                <select id="period-select">
+                    <option value="current_month" selected>Mês Atual</option>
+                    <option value="last_month">Mês Anterior</option>
+                    <option value="last_30_days">Últimos 30 Dias</option>
+                    <option value="current_year">Ano Atual</option>
+                    <option value="custom">Personalizado</option>
+                </select>
+            </div>
+            <div id="custom-period-inputs" style="display: none;">
+                <label for="start-date">De:</label>
+                <input type="date" id="start-date">
+                <label for="end-date" style="margin-left: 10px;">Até:</label>
+                <input type="date" id="end-date">
+            </div>
+            <button id="btn-update-view"><i class="fas fa-sync-alt"></i> Atualizar</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-tachometer-alt"></i> Indicadores Chave (<span id="kpi-period-label">Mês Atual</span>)</div>
+            <div class="kpi-grid">
+                <div class="kpi-item kpi-recebido">
+                    <span class="kpi-value" id="kpi-total-recebido">R$ 0,00</span>
+                    <span class="kpi-label">Total Recebido</span>
+                </div>
+                <div class="kpi-item kpi-pago">
+                    <span class="kpi-value" id="kpi-total-pago">R$ 0,00</span>
+                    <span class="kpi-label">Total Pago</span>
+                </div>
+                <div class="kpi-item kpi-saldo" id="kpi-saldo-item">
+                    <span class="kpi-value" id="kpi-saldo">R$ 0,00</span>
+                    <span class="kpi-label">Saldo (Rec - Pag)</span>
+                </div>
+                 <div class="kpi-item kpi-a-receber">
+                    <span class="kpi-value" id="kpi-pendente-receber">R$ 0,00</span>
+                    <span class="kpi-label">Pendente Receber</span>
+                </div>
+                <div class="kpi-item kpi-a-pagar">
+                    <span class="kpi-value" id="kpi-pendente-pagar">R$ 0,00</span>
+                    <span class="kpi-label">Pendente Pagar</span>
+                </div>
+                 <div class="kpi-item"> <span class="kpi-value" id="kpi-vencido">R$ 0,00</span>
+                    <span class="kpi-label">Total Vencido</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+             <div class="card-header"><i class="fas fa-chart-bar"></i> Gráficos</div>
+             <div class="charts-grid">
+                 <div class="chart-container">
+                    <h3>Receitas x Despesas Pagas (Período)</h3>
+                    <div class="chart-canvas-container">
+                         <canvas id="chart-rec-pag"></canvas>
+                    </div>
+                 </div>
+                 <div class="chart-container">
+                    <h3>Próximos Vencimentos (30 dias)</h3>
+                     <div class="chart-canvas-container">
+                        <canvas id="chart-vencimentos"></canvas>
+                     </div>
+                 </div>
+             </div>
+         </div>
+
+        <div class="card">
+             <div class="card-header"><i class="fas fa-list-alt"></i> Lançamentos Recentes e Vencidos</div>
+             <div class="charts-grid"> <div>
+                     <h3><i class="fas fa-history"></i> Últimos Lançamentos (Pago/Recebido)</h3>
+                     <div class="list-container">
+                         <ul class="data-list" id="list-recentes">
+                            <li class="placeholder">Carregando...</li>
+                         </ul>
+                     </div>
+                 </div>
+                 <div>
+                    <h3><i class="fas fa-exclamation-triangle"></i> Lançamentos Vencidos (Não Pagos)</h3>
+                     <div class="list-container">
+                         <ul class="data-list" id="list-vencidos">
+                             <li class="placeholder">Carregando...</li>
+                         </ul>
+                    </div>
+                 </div>
+             </div>
+         </div>
+
+    </div>
+
+
+    <script type="module">
+        // --- Firebase SDK Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        // --- Firebase Configuration ---
+        // !!! REPLACE WITH YOUR ACTUAL FIREBASE CONFIGURATION !!!
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc", // Substitua pela sua chave
+            authDomain: "testebosspro.firebaseapp.com",
+            projectId: "testebosspro",
+            storageBucket: "testebosspro.appspot.com",
+            messagingSenderId: "73684788134",
+            appId: "1:73684788134:web:7c8250c83f10a2df59e567",
+            measurementId: "G-1H29L5B830"
+        };
+
+        // --- Firebase Initialization ---
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- Global Variables & State ---
+        let allPayments = [];
+        let allReceipts = [];
+        let chartRecPag = null; // Chart instances
+        let chartVencimentos = null;
+
+        // --- DOM Elements ---
+        const periodSelect = document.getElementById('period-select');
+        const customPeriodInputs = document.getElementById('custom-period-inputs');
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        const btnUpdateView = document.getElementById('btn-update-view');
+        const kpiPeriodLabel = document.getElementById('kpi-period-label');
+        // KPIs
+        const kpiTotalRecebidoEl = document.getElementById('kpi-total-recebido');
+        const kpiTotalPagoEl = document.getElementById('kpi-total-pago');
+        const kpiSaldoItemEl = document.getElementById('kpi-saldo-item');
+        const kpiSaldoEl = document.getElementById('kpi-saldo');
+        const kpiPendenteReceberEl = document.getElementById('kpi-pendente-receber');
+        const kpiPendentePagarEl = document.getElementById('kpi-pendente-pagar');
+        const kpiVencidoEl = document.getElementById('kpi-vencido');
+        // Charts
+        const chartRecPagCtx = document.getElementById('chart-rec-pag')?.getContext('2d');
+        const chartVencimentosCtx = document.getElementById('chart-vencimentos')?.getContext('2d');
+        // Lists
+        const listRecentesEl = document.getElementById('list-recentes');
+        const listVencidosEl = document.getElementById('list-vencidos');
+
+        // --- Utility Functions ---
+        function formatCurrency(value) {
+            if (isNaN(value)) return 'R$ 0,00';
+            return `R$ ${Number(value).toFixed(2).replace('.', ',')}`;
+        }
+        function formatDateShort(dateString) { // Output DD/MM
+            if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return 'N/A';
+            const [, month, day] = dateString.split('-');
+            return `${day}/${month}`;
+        }
+         function formatDateFull(dateString) { // Output DD/MM/YYYY
+            if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return 'N/A';
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+        function parseDate(dateString) { // Input YYYY-MM-DD -> Date object (UTC midnight)
+            if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return null;
+            const [year, month, day] = dateString.split('-');
+            return new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+        }
+        function toISODateString(date) { // Input Date object -> YYYY-MM-DD
+            if (!date || !(date instanceof Date)) return '';
+             const year = date.getUTCFullYear(); // Use UTC methods
+             const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+             const day = date.getUTCDate().toString().padStart(2, '0');
+             return `${year}-${month}-${day}`;
+        }
+
+        // --- Data Fetching ---
+        async function fetchData() {
+            console.log("Fetching data from Firebase...");
+            try {
+                const paymentsQuery = query(collection(db, "pagamentos"), orderBy("dataPagamento"));
+                const receiptsQuery = query(collection(db, "recebimentos"), orderBy("dataPagamento"));
+
+                const [paymentsSnapshot, receiptsSnapshot] = await Promise.all([
+                    getDocs(paymentsQuery),
+                    getDocs(receiptsQuery)
+                ]);
+
+                allPayments = paymentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), type: 'payment' }));
+                allReceipts = receiptsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), type: 'receipt' }));
+
+                console.log(`Workspaceed ${allPayments.length} payments and ${allReceipts.length} receipts.`);
+                updateDashboard(); // Initial update after fetching
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                alert("Erro ao buscar dados do Firebase. Verifique o console.");
+                // Display error message in UI?
+                listRecentesEl.innerHTML = '<li class="placeholder error">Erro ao carregar dados.</li>';
+                listVencidosEl.innerHTML = '<li class="placeholder error">Erro ao carregar dados.</li>';
+            }
+        }
+
+        // --- Dashboard Update Logic ---
+        function updateDashboard() {
+            const { startDate, endDate, periodLabel } = getSelectedPeriod();
+            kpiPeriodLabel.textContent = periodLabel; // Update KPI period label
+            console.log(`Updating dashboard for period: ${startDate} to ${endDate}`);
+
+            const today = toISODateString(new Date()); // YYYY-MM-DD format for today
+
+            let totalRecebidoPeriodo = 0;
+            let totalPagoPeriodo = 0;
+            let pendenteReceberPeriodo = 0;
+            let pendentePagarPeriodo = 0;
+            let totalVencido = 0;
+
+            const combinedEntries = [...allReceipts, ...allPayments];
+            const recentPaidEntries = [];
+            const overdueUnpaidEntries = [];
+
+            combinedEntries.forEach(entry => {
+                 if (!entry.dataPagamento || typeof entry.dataPagamento !== 'string') return; // Skip invalid entries
+
+                 const entryDate = entry.dataPagamento; // YYYY-MM-DD
+
+                 // Check if entry falls within the selected period for KPIs
+                 const isInPeriod = (!startDate || entryDate >= startDate) && (!endDate || entryDate <= endDate);
+
+                 if (isInPeriod) {
+                     if (entry.type === 'receipt') {
+                         if (entry.pago) {
+                             totalRecebidoPeriodo += entry.valor || 0;
+                         } else {
+                             pendenteReceberPeriodo += entry.valor || 0;
+                         }
+                     } else if (entry.type === 'payment') {
+                         if (entry.pago) {
+                             totalPagoPeriodo += entry.valor || 0;
+                         } else {
+                             pendentePagarPeriodo += entry.valor || 0;
+                         }
+                     }
+                 }
+
+                 // Check for Recent Paid/Received (last 30 days maybe, independent of period filter?)
+                 // Let's simplify: Recent = Paid/Received within the *selected* period for now
+                 if (isInPeriod && entry.pago) {
+                     recentPaidEntries.push(entry);
+                 }
+
+                 // Check for Overdue UNPAID items (Date < Today AND Not Paid)
+                 if (!entry.pago && entryDate < today) {
+                     totalVencido += entry.valor || 0;
+                     overdueUnpaidEntries.push(entry);
+                 }
+            });
+
+            // Update KPIs
+            const saldoPeriodo = totalRecebidoPeriodo - totalPagoPeriodo;
+            kpiTotalRecebidoEl.textContent = formatCurrency(totalRecebidoPeriodo);
+            kpiTotalPagoEl.textContent = formatCurrency(totalPagoPeriodo);
+            kpiSaldoEl.textContent = formatCurrency(saldoPeriodo);
+            kpiSaldoItemEl.className = `kpi-item kpi-saldo ${saldoPeriodo >= 0 ? 'positive' : 'negative'}`;
+            kpiPendenteReceberEl.textContent = formatCurrency(pendenteReceberPeriodo);
+            kpiPendentePagarEl.textContent = formatCurrency(pendentePagarPeriodo);
+            kpiVencidoEl.textContent = formatCurrency(totalVencido);
+
+            // Update Lists
+            updateRecentList(recentPaidEntries);
+            updateOverdueList(overdueUnpaidEntries);
+
+            // Update Charts
+            updateCharts(startDate, endDate);
+        }
+
+        function getSelectedPeriod() {
+            const selection = periodSelect.value;
+            const today = new Date();
+            today.setUTCHours(0, 0, 0, 0); // Use UTC for date calculations
+            let startDate = null;
+            let endDate = null;
+            let periodLabel = '';
+
+             const firstDayCurrentMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
+             const lastDayCurrentMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0));
+             const firstDayLastMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 1, 1));
+             const lastDayLastMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 0));
+             const firstDayCurrentYear = new Date(Date.UTC(today.getUTCFullYear(), 0, 1));
+             const lastDayCurrentYear = new Date(Date.UTC(today.getUTCFullYear(), 11, 31));
+             const thirtyDaysAgo = new Date(today);
+             thirtyDaysAgo.setUTCDate(today.getUTCDate() - 30);
+
+
+            switch (selection) {
+                case 'current_month':
+                    startDate = toISODateString(firstDayCurrentMonth);
+                    endDate = toISODateString(lastDayCurrentMonth);
+                    periodLabel = 'Mês Atual';
+                    break;
+                case 'last_month':
+                    startDate = toISODateString(firstDayLastMonth);
+                    endDate = toISODateString(lastDayLastMonth);
+                    periodLabel = 'Mês Anterior';
+                    break;
+                case 'last_30_days':
+                     startDate = toISODateString(thirtyDaysAgo);
+                     endDate = toISODateString(today); // Include today
+                     periodLabel = 'Últimos 30 Dias';
+                    break;
+                case 'current_year':
+                     startDate = toISODateString(firstDayCurrentYear);
+                     endDate = toISODateString(lastDayCurrentYear);
+                     periodLabel = 'Ano Atual';
+                    break;
+                case 'custom':
+                    startDate = startDateInput.value;
+                    endDate = endDateInput.value;
+                     periodLabel = `Período: ${startDate ? formatDateFull(startDate) : '?'} a ${endDate ? formatDateFull(endDate) : '?'}`;
+                     // Basic validation for custom dates
+                     if (!startDate || !endDate || startDate > endDate) {
+                         alert("Por favor, selecione um período personalizado válido.");
+                         // Optionally revert to a default period or disable update
+                         startDate = null; endDate = null; periodLabel = 'Erro Período';
+                     }
+                    break;
+            }
+            return { startDate, endDate, periodLabel };
+        }
+
+        // --- Update UI List Functions ---
+        function updateRecentList(entries) {
+            listRecentesEl.innerHTML = ''; // Clear list
+            if (!entries || entries.length === 0) {
+                listRecentesEl.innerHTML = '<li class="placeholder">Nenhum lançamento recente pago/recebido no período.</li>';
+                return;
+            }
+            // Sort by date descending (most recent first)
+            entries.sort((a, b) => b.dataPagamento.localeCompare(a.dataPagamento));
+            // Limit to latest N entries (e.g., 10)
+            const recentLimit = 10;
+            entries.slice(0, recentLimit).forEach(entry => {
+                const li = document.createElement('li');
+                li.classList.add(entry.type); // 'receipt' or 'payment'
+                li.innerHTML = `
+                    <span class="description">${entry.descricao || 'Sem descrição'}</span>
+                    <span class="date">${formatDateFull(entry.dataPagamento)}</span>
+                    <span class="value">${formatCurrency(entry.valor || 0)}</span>
+                `;
+                listRecentesEl.appendChild(li);
+            });
+        }
+
+        function updateOverdueList(entries) {
+            listVencidosEl.innerHTML = ''; // Clear list
+             if (!entries || entries.length === 0) {
+                listVencidosEl.innerHTML = '<li class="placeholder">Nenhum lançamento vencido.</li>';
+                return;
+            }
+             // Sort by date ascending (oldest overdue first)
+             entries.sort((a, b) => a.dataPagamento.localeCompare(b.dataPagamento));
+             entries.forEach(entry => {
+                const li = document.createElement('li');
+                li.classList.add(entry.type, 'overdue'); // Mark as overdue
+                li.innerHTML = `
+                    <span class="description">${entry.descricao || 'Sem descrição'} (${entry.type === 'receipt' ? 'Receber' : 'Pagar'})</span>
+                    <span class="date">${formatDateFull(entry.dataPagamento)}</span>
+                    <span class="value">${formatCurrency(entry.valor || 0)}</span>
+                `;
+                listVencidosEl.appendChild(li);
+            });
+        }
+
+        // --- Chart Update Functions ---
+        function updateCharts(startDate, endDate) {
+             console.log("Updating charts...");
+            // --- Chart 1: Receitas x Despesas Pagas (Período Selecionado) ---
+             const paidReceiptsPeriod = allReceipts.filter(r => r.pago && r.dataPagamento >= startDate && r.dataPagamento <= endDate);
+             const paidPaymentsPeriod = allPayments.filter(p => p.pago && p.dataPagamento >= startDate && p.dataPagamento <= endDate);
+
+             // Simple sum for the period (Could be broken down by month/week if needed)
+             const totalRecebidoChart = paidReceiptsPeriod.reduce((sum, r) => sum + (r.valor || 0), 0);
+             const totalPagoChart = paidPaymentsPeriod.reduce((sum, p) => sum + (p.valor || 0), 0);
+
+             if (chartRecPag) chartRecPag.destroy(); // Destroy previous instance
+             if (chartRecPagCtx) {
+                chartRecPag = new Chart(chartRecPagCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Período Selecionado'],
+                        datasets: [
+                            { label: 'Recebido', data: [totalRecebidoChart], backgroundColor: 'rgba(46, 204, 113, 0.7)' },
+                            { label: 'Pago', data: [totalPagoChart], backgroundColor: 'rgba(231, 76, 60, 0.7)' }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                });
+             }
+
+             // --- Chart 2: Próximos Vencimentos (Receber vs Pagar - Próximos 30 dias) ---
+             const today = new Date(); today.setUTCHours(0,0,0,0);
+             const thirtyDaysLater = new Date(today);
+             thirtyDaysLater.setUTCDate(today.getUTCDate() + 30);
+             const next30StartDate = toISODateString(today);
+             const next30EndDate = toISODateString(thirtyDaysLater);
+
+            let proxReceber = 0;
+            let proxPagar = 0;
+
+             allReceipts.forEach(r => {
+                 if (!r.pago && r.dataPagamento >= next30StartDate && r.dataPagamento <= next30EndDate) {
+                     proxReceber += r.valor || 0;
+                 }
+             });
+             allPayments.forEach(p => {
+                 if (!p.pago && p.dataPagamento >= next30StartDate && p.dataPagamento <= next30EndDate) {
+                     proxPagar += p.valor || 0;
+                 }
+             });
+
+             if (chartVencimentos) chartVencimentos.destroy(); // Destroy previous instance
+             if (chartVencimentosCtx) {
+                 chartVencimentos = new Chart(chartVencimentosCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['A Receber (30d)', 'A Pagar (30d)'],
+                        datasets: [{
+                            label: 'Próximos Vencimentos',
+                            data: [proxReceber, proxPagar],
+                            backgroundColor: ['rgba(52, 152, 219, 0.7)', 'rgba(241, 196, 15, 0.7)'] // Blue, Yellow
+                        }]
+                    },
+                     options: { responsive: true, maintainAspectRatio: false }
+                });
+             }
+             console.log("Charts updated.");
+        }
+
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+             // Set default dates for custom period (optional)
+            const todayStr = toISODateString(new Date());
+            startDateInput.value = todayStr;
+            endDateInput.value = todayStr;
+
+            // Handle period selection change
+            periodSelect.addEventListener('change', () => {
+                customPeriodInputs.style.display = periodSelect.value === 'custom' ? 'flex' : 'none';
+                if(periodSelect.value !== 'custom') {
+                     updateDashboard(); // Update immediately if not custom
+                }
+            });
+
+            // Handle update button click
+            btnUpdateView.addEventListener('click', updateDashboard);
+
+            // Initial data fetch
+            fetchData();
+        });
+
+    </script>
+
+</body>
+</html>

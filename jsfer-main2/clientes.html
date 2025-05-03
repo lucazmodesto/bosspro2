@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes e Orçamentos (v2 - Fix)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <style>
+        /* Estilos gerais */
+        body {
+            font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px; margin: 0 auto; background-color: white;
+            padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 { color: #333; }
+
+        /* Estilos para a lista de clientes */
+        .clientes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        #lista-clientes { list-style-type: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        #lista-clientes li { background-color: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 15px; cursor: pointer; transition: all 0.3s; position: relative; }
+        #lista-clientes li:hover { background-color: #f0f0f0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .cliente-info { margin-bottom: 10px; }
+        .cliente-codigo { font-weight: bold; font-size: 0.9em; color: #555; margin-bottom: 5px; }
+        .cliente-nome { font-weight: bold; font-size: 1.1em; color: #2c3e50; }
+        .cliente-contato { color: #7f8c8d; font-size: 0.9em; margin-top: 5px; }
+        .cliente-email { color: #7f8c8d; font-size: 0.9em; margin-top: 5px; word-break: break-all; }
+        .delete-cliente-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #e74c3c; font-size: 1.1em; cursor: pointer; padding: 5px; opacity: 0.7; transition: opacity 0.3s; }
+        .delete-cliente-btn:hover { opacity: 1; color: #c0392b; }
+
+        /* Estilos para a seção de orçamentos */
+        #orcamentos-cliente { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+        #tabela-orcamentos { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        #tabela-orcamentos th, #tabela-orcamentos td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        #tabela-orcamentos th { background-color: #f2f2f2; }
+        #tabela-orcamentos tr:nth-child(even) { background-color: #f9f9f9; }
+        #tabela-orcamentos tr:hover { background-color: #f1f1f1; }
+        .status-pendente { color: #f39c12; font-weight: bold; }
+        .status-aprovado { color: #27ae60; font-weight: bold; }
+        .status-finalizado { color: #3498db; font-weight: bold; }
+
+        /* Botões */
+        button { padding: 8px 15px; border-radius: 4px; border: none; cursor: pointer; transition: background-color 0.3s; margin-right: 5px; font-size: 0.9em; }
+        #abrir-modal-cliente, #novo-orcamento-btn { background-color: #2ecc71; color: white; }
+        #abrir-modal-cliente:hover, #novo-orcamento-btn:hover { background-color: #27ae60; }
+        .btn-editar { background-color: #3498db; color: white; }
+        .btn-editar:hover { background-color: #2980b9; }
+        .btn-visualizar { background-color: #95a5a6; color: white; }
+        .btn-visualizar:hover { background-color: #7f8c8d; }
+        .btn-ver-pedido { background-color: #8e44ad; color: white; } /* Cor exemplo para Ver Pedido */
+        .btn-ver-pedido:hover { background-color: #732d91; }
+
+        /* Filtros e busca */
+        .filtros { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+        .filtros select, .filtros input { padding: 8px; border-radius: 4px; border: 1px solid #ddd; }
+        .filtros label { font-weight: bold; margin-right: 5px; }
+
+        /* --- Estilos do Modal de Cadastro (mantidos) --- */
+        .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 25px; border: 1px solid #ddd; width: 90%; max-width: 500px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .modal-header h2 { margin: 0; font-size: 1.4em; color: #333; }
+        .close-modal-btn { color: #aaa; background: none; border: none; font-size: 28px; font-weight: bold; cursor: pointer; padding: 0 5px; }
+        .close-modal-btn:hover, .close-modal-btn:focus { color: black; text-decoration: none; }
+        #form-cliente-modal label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
+        #form-cliente-modal input[type="text"], #form-cliente-modal input[type="email"], #form-cliente-modal input[type="tel"] { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        #form-cliente-modal button[type="submit"] { background-color: #2ecc71; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; width: 100%; }
+        #form-cliente-modal button[type="submit"]:hover { background-color: #27ae60; }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            #lista-clientes { grid-template-columns: 1fr; }
+            .filtros { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="clientes-header">
+            <h1>Clientes</h1>
+            <button id="abrir-modal-cliente"><i class="fas fa-plus"></i> Novo Cliente</button>
+        </div>
+
+        <div class="filtros">
+            <div>
+                <label for="busca-cliente">Buscar Cliente:</label>
+                <input type="text" id="busca-cliente" placeholder="Nome ou código...">
+            </div>
+            </div>
+
+        <div>
+            <ul id="lista-clientes">
+                <li>Carregando clientes...</li>
+            </ul>
+        </div>
+
+        <div id="orcamentos-cliente" style="display: none;">
+            <h2>Orçamentos de <span id="nome-cliente-selecionado"></span></h2>
+             <button id="novo-orcamento-btn"><i class="fas fa-plus"></i> Novo Orçamento para este Cliente</button>
+            <table id="tabela-orcamentos" >
+                <thead>
+                    <tr>
+                        <th>Número Orç.</th>
+                        <th>Data</th>
+                        <th>Valor Total</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-cadastro-cliente" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                 <h2>Cadastrar Novo Cliente</h2>
+                 <button class="close-modal-btn" id="fechar-modal-cliente">&times;</button>
+             </div>
+            <form id="form-cliente-modal">
+                 <div> <label for="empresa-modal">Nome da Empresa</label> <input type="text" id="empresa-modal" required> </div>
+                 <div> <label for="email-modal">E-mail</label> <input type="email" id="email-modal" required> </div>
+                 <div> <label for="telefone-modal">Telefone</label> <input type="tel" id="telefone-modal" pattern="^\+55\s\(\d{2}\)\s9\d{4}-\d{4}$" required> </div>
+                 <div> <label for="comprador-modal">Nome do Comprador</label> <input type="text" id="comprador-modal" required> </div>
+                 <button type="submit">Cadastrar Cliente</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, runTransaction, orderBy } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+           const firebaseConfig = {
+             apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc", authDomain: "testebosspro.firebaseapp.com", projectId: "testebosspro",
+             storageBucket: "testebosspro.appspot.com", messagingSenderId: "73684788134", appId: "1:73684788134:web:7c8250c83f10a2df59e567",
+             measurementId: "G-1H29L5B830"
+           };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Elementos DOM (iguais)
+        const listaClientesElement = document.getElementById("lista-clientes");
+        const orcamentosDiv = document.getElementById("orcamentos-cliente");
+        const tabelaOrcamentos = document.getElementById("tabela-orcamentos");
+        const tbodyOrcamentos = tabelaOrcamentos.querySelector("tbody");
+        const nomeClienteSelecionadoSpan = document.getElementById("nome-cliente-selecionado");
+        const novoOrcamentoBtn = document.getElementById("novo-orcamento-btn");
+        const buscaClienteInput = document.getElementById("busca-cliente");
+        const modalCadastro = document.getElementById("modal-cadastro-cliente");
+        const abrirModalBtn = document.getElementById("abrir-modal-cliente");
+        const fecharModalBtn = document.getElementById("fechar-modal-cliente");
+        const formClienteModal = document.getElementById("form-cliente-modal");
+        const telefoneModalInput = document.getElementById("telefone-modal");
+
+        // Variáveis globais (iguais)
+        let clientesData = [];
+        let clienteSelecionadoId = null;
+
+        // --- Funções de Cliente (iguais à versão anterior) ---
+        async function carregarClientes(termoBusca = '') { /* ...código igual... */
+            listaClientesElement.innerHTML = "<li>Carregando...</li>";
+            try {
+                const q = query(collection(db, "clientes"), orderBy("codigo"));
+                const querySnapshot = await getDocs(q);
+                clientesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                filtrarEExibirClientes(termoBusca);
+            } catch (error) { console.error("Erro carregar clientes:", error); listaClientesElement.innerHTML = "<li>Erro ao carregar.</li>"; }
+        }
+        function filtrarEExibirClientes(termoBusca = '') { /* ...código igual... */
+            listaClientesElement.innerHTML = ""; const termo = termoBusca.toLowerCase();
+            const clientesFiltrados = clientesData.filter(c => (c.empresa?.toLowerCase() || '').includes(termo) || (c.codigo?.toLowerCase() || '').includes(termo) || (c.comprador?.toLowerCase() || '').includes(termo));
+            if (clientesFiltrados.length === 0) { listaClientesElement.innerHTML = "<li>Nenhum cliente encontrado.</li>"; orcamentosDiv.style.display = 'none'; return; }
+            clientesFiltrados.forEach(cliente => { const li = document.createElement("li"); li.dataset.clienteId = cliente.id; li.innerHTML = `<button class="delete-cliente-btn" title="Excluir Cliente"><i class="fas fa-trash-alt"></i></button><div class="cliente-info"><div class="cliente-codigo">Código: ${cliente.codigo || 'N/A'}</div><div class="cliente-nome">${cliente.empresa}</div><div class="cliente-contato">Contato: ${cliente.comprador || 'N/A'}</div><div class="cliente-contato">Tel: ${cliente.telefone || 'N/A'}</div><div class="cliente-email">Email: ${cliente.email || 'N/A'}</div></div>`; li.addEventListener("click", (event) => { if (event.target.closest('.delete-cliente-btn')) return; document.querySelectorAll("#lista-clientes li").forEach(item => item.style.border = "1px solid #ddd"); li.style.border = "2px solid #3498db"; clienteSelecionadoId = cliente.id; carregarOrcamentos(cliente.id, cliente.empresa); }); const deleteBtn = li.querySelector('.delete-cliente-btn'); deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); excluirCliente(cliente.id, cliente.empresa); }); listaClientesElement.appendChild(li); });
+             if (clienteSelecionadoId) { const itemSel = listaClientesElement.querySelector(`li[data-cliente-id="${clienteSelecionadoId}"]`); if (itemSel) itemSel.style.border = "2px solid #3498db"; else { clienteSelecionadoId = null; orcamentosDiv.style.display = 'none'; } } else orcamentosDiv.style.display = 'none';
+        }
+        async function excluirCliente(clienteId, clienteNome) { /* ...código igual... */
+            if (confirm(`Excluir cliente "${clienteNome}"?`)) { try { await deleteDoc(doc(db, "clientes", clienteId)); alert(`Cliente "${clienteNome}" excluído.`); if (clienteSelecionadoId === clienteId) { clienteSelecionadoId = null; orcamentosDiv.style.display = 'none'; } carregarClientes(buscaClienteInput.value); } catch (error) { console.error("Erro excluir cliente:", error); alert("Erro ao excluir."); } }
+        }
+
+        // --- Funções de Orçamento (MODIFICADA A CONSULTA E ADICIONADA ORDENAÇÃO JS) ---
+        async function carregarOrcamentos(clienteId, clienteNome) {
+            tbodyOrcamentos.innerHTML = "<tr><td colspan='5'>Carregando orçamentos...</td></tr>";
+            orcamentosDiv.style.display = "block";
+            nomeClienteSelecionadoSpan.textContent = clienteNome;
+            novoOrcamentoBtn.onclick = () => { window.location.href = `telaorcamento.html?clienteId=${clienteId}`; };
+
+            try {
+                // *** MODIFICAÇÃO AQUI: Remove o orderBy da consulta ***
+                const q = query(collection(db, "orcamentos"), where("clienteId", "==", clienteId));
+                console.log("Executando query de orçamentos SEM orderBy..."); // Log para debug
+                const querySnapshot = await getDocs(q);
+
+                tbodyOrcamentos.innerHTML = ""; // Limpa a tabela
+
+                if (querySnapshot.empty) {
+                    console.log("Nenhum orçamento encontrado para clienteId:", clienteId); // Log para debug
+                    tbodyOrcamentos.innerHTML = "<tr><td colspan='5'>Nenhum orçamento encontrado para este cliente.</td></tr>";
+                    return;
+                }
+
+                // *** ADIÇÃO AQUI: Ordena os resultados no JavaScript ***
+                let orcamentosArray = [];
+                querySnapshot.forEach(doc => {
+                    orcamentosArray.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Ordena pelo campo dataCriacao (string ISO) em ordem decrescente (mais recente primeiro)
+                 orcamentosArray.sort((a, b) => {
+                     const dateA = a.dataCriacao ? new Date(a.dataCriacao) : 0; // Trata casos sem data
+                     const dateB = b.dataCriacao ? new Date(b.dataCriacao) : 0;
+                     return dateB - dateA; // Ordena decrescente
+                 });
+                 console.log(`${orcamentosArray.length} orçamentos encontrados e ordenados.`); // Log para debug
+
+                // Itera sobre o array ordenado para exibir
+                orcamentosArray.forEach((orcamentoData) => {
+                    const docId = orcamentoData.id; // Pega o ID do documento
+                    const orcamento = orcamentoData; // Dados já estão aqui
+
+                    const dataFormatada = orcamento.dataCriacao ? new Date(orcamento.dataCriacao).toLocaleDateString() : 'N/A';
+                    const numeroOrcamento = orcamento.numeroOrcamento || docId.substring(0,6).toUpperCase();
+
+                    let status = 'Pendente'; let statusClass = 'status-pendente';
+                    if (orcamento.aprovado) { status = 'Aprovado'; statusClass = 'status-aprovado'; }
+
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${numeroOrcamento}</td>
+                        <td>${dataFormatada}</td>
+                        <td>R$ ${orcamento.totalGeral ? orcamento.totalGeral.toFixed(2) : '0.00'}</td>
+                        <td class="${statusClass}">${status}</td>
+                        <td>
+                            <button class="btn-editar" data-orcamento-id="${docId}"><i class="fas fa-edit"></i> Editar</button>
+                            <button class="btn-visualizar" data-orcamento-id="${docId}"><i class="fas fa-eye"></i> Visualizar</button>
+                            ${orcamento.aprovado && orcamento.pedidoId ? `<button class="btn-ver-pedido" data-pedido-id="${orcamento.pedidoId}"><i class="fas fa-receipt"></i> Ver Pedido</button>` : ''}
+                        </td>
+                    `;
+                    tbodyOrcamentos.appendChild(tr);
+                });
+
+                adicionarListenersBotoesOrcamento();
+
+            } catch (error) {
+                console.error("Erro ao carregar orçamentos:", error);
+                tbodyOrcamentos.innerHTML = "<tr><td colspan='5'>Erro ao carregar orçamentos. Verifique o console.</td></tr>";
+                 // Verifica se o erro é de permissão ou índice (útil para diagnóstico)
+                 if (error.code === 'permission-denied') {
+                     alert('Erro: Permissão negada para ler os orçamentos. Verifique as regras de segurança do Firestore.');
+                 } else if (error.code === 'failed-precondition') {
+                      // Mesmo sem orderBy, pode haver erro se where exigir índice (menos comum)
+                      alert('Erro: A consulta pode requerer um índice. Verifique o console do navegador para mais detalhes.');
+                 }
+            }
+        }
+
+        // Adiciona listeners aos botões de ação dos orçamentos (igual)
+        function adicionarListenersBotoesOrcamento() { /* ...código igual... */
+             document.querySelectorAll(".btn-editar").forEach(btn => { btn.onclick = (e) => { const oId = e.currentTarget.dataset.orcamentoId; window.location.href = `telaorcamento.html?orcamentoId=${oId}`; }; });
+             document.querySelectorAll(".btn-visualizar").forEach(btn => { btn.onclick = async (e) => { const oId = e.currentTarget.dataset.orcamentoId; alert(`Visualizar ID: ${oId} (impl modal)`); }; });
+             document.querySelectorAll(".btn-ver-pedido").forEach(btn => { btn.onclick = (e) => { const pId = e.currentTarget.dataset.pedidoId; window.open('pedidos.html', '_blank'); alert(`Redirect pedidos (Pedido ID: ${pId})`); }; });
+        }
+
+        // --- Funções do Modal de Cadastro (iguais) ---
+        abrirModalBtn.onclick = () => { modalCadastro.style.display = "block"; formClienteModal.reset(); };
+        fecharModalBtn.onclick = () => { modalCadastro.style.display = "none"; };
+        window.onclick = (event) => { if (event.target == modalCadastro) modalCadastro.style.display = "none"; };
+        formClienteModal.addEventListener("submit", async (event) => { /* ...código igual... */
+            event.preventDefault(); const emp = document.getElementById("empresa-modal").value.trim(); const eml = document.getElementById("email-modal").value.trim(); const tel = telefoneModalInput.value.trim(); const cmp = document.getElementById("comprador-modal").value.trim(); if (!emp || !eml || !tel || !cmp) { alert("Preencha todos os campos."); return; } try { const nCod = await runTransaction(db, async (t) => { const cRef = doc(db, "metadata", "clienteCounter"); const cSnp = await t.get(cRef); let cNum = cSnp.exists() ? cSnp.data().lastClienteNumber || 0 : 0; const nNum = cNum + 1; const codF = String(nNum).padStart(2, '0'); const nCliRef = doc(collection(db, "clientes")); t.set(nCliRef, { codigo: codF, empresa: emp, email: eml, telefone: tel, comprador: cmp, createdAt: new Date() }); t.set(cRef, { lastClienteNumber: nNum }, { merge: true }); return codF; }); alert(`Cliente "${emp}" cadastrado! Código: ${nCod}`); modalCadastro.style.display = "none"; formClienteModal.reset(); carregarClientes(buscaClienteInput.value); } catch (error) { console.error("Erro cadastrar cliente:", error); alert("Erro ao cadastrar."); }
+        });
+        telefoneModalInput.addEventListener("input", function (e) { /* ...código igual... */
+            let input = e.target.value.replace(/\D/g, ""); if (input.startsWith("55")) input = input.slice(2); if (input.length > 11) input = input.slice(0, 11); let formatted = "+55 "; if (input.length > 0) formatted += "(" + input.slice(0, 2); if (input.length >= 2) formatted += ") "; if (input.length >= 3) formatted += input.slice(2, 7); if (input.length >= 7) formatted += "-" + input.slice(7); e.target.value = formatted;
+        });
+
+        // --- Inicialização (igual) ---
+        buscaClienteInput.addEventListener("input", (e) => {
+            // Não recarrega do DB a cada letra, apenas filtra o array local
+            filtrarEExibirClientes(e.target.value);
+        });
+        window.addEventListener("load", () => {
+            carregarClientes(); // Carrega todos os clientes inicialmente
+        });
+    </script>
+</body>
+</html>
