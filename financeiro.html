@@ -3,210 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Financeiro</title>
+    <title>Painel Financeiro Essencial</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* Estilos CSS básicos e limpos (semelhantes aos anteriores) */
         :root {
-            --primary-color: #3498db; /* Blue */
-            --secondary-color: #9b59b6; /* Purple */
-            --success-color: #2ecc71; /* Green */
-            --danger-color: #e74c3c; /* Red */
-            --warning-color: #f1c40f; /* Yellow */
-            --info-color: #5dade2; /* Light Blue */
-            --light-color: #f8f9fa;
-            --dark-color: #34495e; /* Dark Blue/Gray */
-            --border-color: #dfe6e9;
-            --background-color: #f4f7f6;
-            --card-background: #ffffff;
-            --text-color: #2c3e50;
-            --text-muted: #7f8c8d;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-            --shadow-md: 0 5px 15px rgba(0,0,0,0.08);
-            --border-radius: 8px;
+            --primary-color: #3498db; --secondary-color: #9b59b6;
+            --success-color: #2ecc71; --danger-color: #e74c3c;
+            --warning-color: #f1c40f; --info-color: #5dade2;
+            --light-color: #f8f9fa; --dark-color: #34495e;
+            --border-color: #dfe6e9; --background-color: #f4f7f6;
+            --card-background: #ffffff; --text-color: #2c3e50;
+            --text-muted: #7f8c8d; --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 5px 15px rgba(0,0,0,0.08); --border-radius: 8px;
         }
-
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            text-align: center;
-            color: var(--dark-color);
-            margin-bottom: 25px;
-            font-size: 1.8rem;
-            font-weight: 600;
-        }
-
-        /* --- Controls Bar --- */
-        .controls-bar {
-            background-color: var(--card-background);
-            padding: 15px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 25px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-        }
-        .controls-bar label {
-            font-weight: 500;
-            color: var(--text-muted);
-            margin-right: 5px;
-            font-size: 0.9rem;
-        }
-        .controls-bar select, .controls-bar input[type="date"] {
-            padding: 8px 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 0.95rem;
-            min-width: 150px;
-        }
-        .controls-bar button {
-             padding: 8px 15px;
-             border: none;
-             border-radius: 6px;
-             background-color: var(--primary-color);
-             color: white;
-             cursor: pointer;
-             font-weight: 500;
-             transition: background-color 0.2s ease;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--background-color); color: var(--text-color); line-height: 1.6; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; color: var(--dark-color); margin-bottom: 25px; font-size: 1.8rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        h1 i { color: var(--primary-color); }
+        .card { background-color: var(--card-background); border-radius: var(--border-radius); box-shadow: var(--shadow-sm); margin-bottom: 25px; padding: 20px; border: 1px solid #ecf0f1; }
+        .card-header { font-size: 1.2rem; font-weight: 600; color: var(--dark-color); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .card-header i { color: var(--primary-color); margin-right: 5px;}
+        .card-header .filter-info { font-size: 0.85rem; font-weight: normal; color: var(--text-muted); margin-left: auto; text-align: right;}
+        .controls-bar { background-color: var(--card-background); padding: 15px; border-radius: var(--border-radius); box-shadow: var(--shadow-sm); margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); align-items: end; gap: 15px; }
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        .controls-bar label { font-weight: 500; color: var(--text-muted); font-size: 0.85rem; }
+        .controls-bar select, .controls-bar input[type="date"] { padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.95rem; width: 100%; height: 40px; }
+        #custom-period-inputs { display: none; display: flex; gap: 10px; align-items: center; }
+        #custom-period-inputs label { width: auto; margin-bottom: 0; font-size: 0.85rem; }
+        #custom-period-inputs input[type="date"] { width: auto; flex-grow: 1;}
+        .controls-bar button { padding: 0 15px; border: none; border-radius: 6px; background-color: var(--primary-color); color: white; cursor: pointer; font-weight: 500; transition: background-color 0.2s ease; height: 40px; display: flex; align-items: center; justify-content: center; gap: 5px; }
         .controls-bar button:hover { background-color: #2980b9; }
-
-        /* --- Card Styles --- */
-        .card {
-            background-color: var(--card-background);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 25px;
-            padding: 20px;
-            border: 1px solid #ecf0f1;
-        }
-        .card-header {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--dark-color);
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .card-header i { color: var(--primary-color); }
-
-        /* --- KPI Grid --- */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 15px;
-        }
-        .kpi-item {
-            background-color: var(--light-color);
-            padding: 15px;
-            border-radius: 6px;
-            text-align: center;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-        }
-        .kpi-value {
-            font-size: 1.6rem;
-            font-weight: 700;
-            display: block;
-            margin-bottom: 3px;
-        }
-        .kpi-label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-         /* KPI Colors */
+        .controls-bar button i { font-size: 1rem; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; } /* 6 KPIs devem caber bem */
+        .kpi-item { background-color: var(--light-color); padding: 15px; border-radius: 6px; text-align: center; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
+        .kpi-label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-top: 5px; }
+        .kpi-value { font-size: 1.6rem; font-weight: 700; display: block; min-height: 30px; line-height: 1.1; color: var(--dark-color); }
         .kpi-recebido .kpi-value { color: var(--success-color); }
         .kpi-pago .kpi-value { color: var(--danger-color); }
         .kpi-saldo.positive .kpi-value { color: var(--success-color); }
         .kpi-saldo.negative .kpi-value { color: var(--danger-color); }
-        .kpi-a-receber .kpi-value { color: var(--primary-color); }
-        .kpi-a-pagar .kpi-value { color: var(--warning-color); }
-
-
-        /* --- Charts Grid --- */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        .chart-container { padding: 15px; } /* Padding within the card */
-        .chart-container h3 {
-            text-align: center; margin-bottom: 15px; font-size: 1rem;
-            color: var(--text-muted); font-weight: 500;
-        }
-        .chart-canvas-container { /* Ensure canvas is responsive */
-             position: relative;
-             height: 280px; /* Adjust height as needed */
-             width: 100%;
-        }
-
-
-        /* --- Tables/Lists --- */
-        .list-container { max-height: 350px; overflow-y: auto; }
+        .kpi-a-receber .kpi-value { color: var(--info-color); } /* A receber em azul claro */
+        .kpi-a-pagar .kpi-value { color: var(--warning-color); } /* A pagar em amarelo/laranja */
+        .kpi-vencido .kpi-value { color: var(--danger-color); }
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .chart-container { padding: 15px; }
+        .chart-container h3 { text-align: center; margin-bottom: 15px; font-size: 1rem; color: var(--text-muted); font-weight: 500; }
+        .chart-canvas-container { position: relative; height: 250px; width: 100%; } /* Altura um pouco menor */
+        .list-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; } /* Grid para listas */
+        .list-container { max-height: 380px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px; padding: 15px; background-color: #fff; }
+        .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .list-header h3 { margin-bottom: 0; font-size: 1.1rem; color: var(--dark-color); display: flex; align-items: center; gap: 8px; }
+        .list-header h3 i { color: var(--primary-color); font-size: 0.9em;}
+        .pdf-button { background-color: var(--secondary-color); color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 0.8rem; cursor: pointer; transition: background-color 0.2s ease; }
+        .pdf-button:hover { background-color: #8e44ad; }
+        .pdf-button i { margin-right: 5px; }
         .data-list { list-style: none; padding: 0; }
-        .data-list li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 5px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.9rem;
-            gap: 10px;
-        }
+        .data-list li { display: grid; grid-template-columns: 1fr auto auto; align-items: center; padding: 10px 5px; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; gap: 10px; }
         .data-list li:last-child { border-bottom: none; }
-        .data-list .description { flex-grow: 1; color: var(--text-muted); }
+        .data-list .description { color: var(--text-muted); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+        .data-list .client-name { font-size: 0.85rem; color: var(--secondary-color); font-style: italic; white-space: nowrap; margin-left: 5px; display: inline;}
         .data-list .date { font-size: 0.85rem; color: var(--text-muted); min-width: 80px; text-align: right;}
         .data-list .value { font-weight: bold; min-width: 100px; text-align: right; }
         .data-list .receipt .value { color: var(--success-color); }
         .data-list .payment .value { color: var(--danger-color); }
         .data-list .overdue .date { color: var(--danger-color); font-weight: bold; }
-
-        /* Placeholder */
+        .data-list li.payment .client-name { display: none; }
         .placeholder { text-align: center; padding: 20px; color: var(--text-muted); }
+        .placeholder.error { color: var(--danger-color); font-weight: bold; }
 
-
-        /* Responsive */
+        /* Responsividade Simplificada */
+        @media (max-width: 992px) {
+             .controls-bar { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+             .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+        }
         @media (max-width: 768px) {
-            body { padding: 15px; }
-            h1 { font-size: 1.5rem; }
-            .controls-bar { flex-direction: column; align-items: stretch; }
-            .kpi-grid { grid-template-columns: 1fr 1fr; }
-            .charts-grid { grid-template-columns: 1fr; }
+             body { padding: 15px; }
+             h1 { font-size: 1.6rem; }
+             .controls-bar { grid-template-columns: 1fr 1fr; }
+             #custom-period-inputs { grid-column: span 2; }
+             .controls-bar button { grid-column: span 2; }
+             .kpi-grid { grid-template-columns: 1fr 1fr 1fr; } /* Tenta 3 KPIs */
+             .charts-grid, .list-grid { grid-template-columns: 1fr; }
+             .card-header .filter-info { font-size: 0.8rem;}
+             .data-list li { grid-template-columns: 1fr auto; }
+             .data-list .date { grid-column: 2; grid-row: 2; font-size: 0.8rem;}
+             .data-list .value { grid-column: 2; grid-row: 1; }
+             .data-list .description { grid-column: 1; grid-row: 1 / span 2; }
+             .data-list .client-name { display: block; margin-left: 0; }
         }
-        @media (max-width: 480px) {
-             .kpi-grid { grid-template-columns: 1fr; }
-             .kpi-value { font-size: 1.4rem; }
-             .kpi-label { font-size: 0.8rem; }
-        }
-
+         @media (max-width: 576px) {
+            .kpi-grid { grid-template-columns: 1fr 1fr; } /* 2 KPIs em telas pequenas */
+            .controls-bar { grid-template-columns: 1fr; }
+            #custom-period-inputs { grid-column: span 1; flex-direction: column; align-items: stretch; }
+         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1><i class="fas fa-chart-line"></i> Painel Financeiro</h1>
+        <h1><i class="fas fa-cash-register"></i> Painel Financeiro Essencial</h1>
 
         <div class="controls-bar">
-            <div>
+            <div class="control-group">
                 <label for="period-select">Período:</label>
                 <select id="period-select">
                     <option value="current_month" selected>Mês Atual</option>
@@ -216,446 +120,500 @@
                     <option value="custom">Personalizado</option>
                 </select>
             </div>
-            <div id="custom-period-inputs" style="display: none;">
-                <label for="start-date">De:</label>
-                <input type="date" id="start-date">
-                <label for="end-date" style="margin-left: 10px;">Até:</label>
-                <input type="date" id="end-date">
+             <div id="custom-period-inputs" class="control-group">
+                 <label for="start-date">De:</label> <input type="date" id="start-date">
+                 <label for="end-date">Até:</label> <input type="date" id="end-date">
             </div>
-            <button id="btn-update-view"><i class="fas fa-sync-alt"></i> Atualizar</button>
+            <div class="control-group">
+                 <label for="client-select">Cliente:</label>
+                 <select id="client-select">
+                     <option value="all" selected>Todos os Clientes</option>
+                     </select>
+            </div>
+            <button id="btn-update-view" title="Atualizar Visualização"><i class="fas fa-sync-alt"></i></button>
         </div>
 
         <div class="card">
-            <div class="card-header"><i class="fas fa-tachometer-alt"></i> Indicadores Chave (<span id="kpi-period-label">Mês Atual</span>)</div>
+            <div class="card-header">
+                <i class="fas fa-chart-pie"></i> Resumo Financeiro
+                <span class="filter-info" id="kpi-filter-info">(Mês Atual | Todos Clientes)</span>
+            </div>
             <div class="kpi-grid">
-                <div class="kpi-item kpi-recebido">
-                    <span class="kpi-value" id="kpi-total-recebido">R$ 0,00</span>
-                    <span class="kpi-label">Total Recebido</span>
-                </div>
-                <div class="kpi-item kpi-pago">
-                    <span class="kpi-value" id="kpi-total-pago">R$ 0,00</span>
-                    <span class="kpi-label">Total Pago</span>
-                </div>
-                <div class="kpi-item kpi-saldo" id="kpi-saldo-item">
-                    <span class="kpi-value" id="kpi-saldo">R$ 0,00</span>
-                    <span class="kpi-label">Saldo (Rec - Pag)</span>
-                </div>
-                 <div class="kpi-item kpi-a-receber">
-                    <span class="kpi-value" id="kpi-pendente-receber">R$ 0,00</span>
-                    <span class="kpi-label">Pendente Receber</span>
-                </div>
-                <div class="kpi-item kpi-a-pagar">
-                    <span class="kpi-value" id="kpi-pendente-pagar">R$ 0,00</span>
-                    <span class="kpi-label">Pendente Pagar</span>
-                </div>
-                 <div class="kpi-item"> <span class="kpi-value" id="kpi-vencido">R$ 0,00</span>
-                    <span class="kpi-label">Total Vencido</span>
-                </div>
+                <div class="kpi-item kpi-recebido"><span class="kpi-value" id="kpi-total-recebido">R$ 0,00</span><span class="kpi-label">Recebido Período</span></div>
+                <div class="kpi-item kpi-a-receber"><span class="kpi-value" id="kpi-pendente-receber">R$ 0,00</span><span class="kpi-label">A Receber Total</span></div>
+                <div class="kpi-item kpi-pago"><span class="kpi-value" id="kpi-total-pago">R$ 0,00</span><span class="kpi-label">Pago Período</span></div>
+                <div class="kpi-item kpi-a-pagar"><span class="kpi-value" id="kpi-pendente-pagar">R$ 0,00</span><span class="kpi-label">A Pagar Total</span></div>
+                <div class="kpi-item kpi-saldo" id="kpi-saldo-item"><span class="kpi-value" id="kpi-saldo">R$ 0,00</span><span class="kpi-label">Saldo Período</span></div>
+                <div class="kpi-item kpi-vencido"><span class="kpi-value" id="kpi-total-vencido">R$ 0,00</span><span class="kpi-label">Vencido Total</span></div>
             </div>
         </div>
 
         <div class="card">
-             <div class="card-header"><i class="fas fa-chart-bar"></i> Gráficos</div>
+             <div class="card-header"><i class="fas fa-chart-bar"></i> Visualização Gráfica</div>
              <div class="charts-grid">
                  <div class="chart-container">
-                    <h3>Receitas x Despesas Pagas (Período)</h3>
-                    <div class="chart-canvas-container">
-                         <canvas id="chart-rec-pag"></canvas>
-                    </div>
+                     <h3>Recebido vs. Pago (Período)</h3>
+                     <div class="chart-canvas-container"><canvas id="chart-rec-pag"></canvas></div>
                  </div>
                  <div class="chart-container">
-                    <h3>Próximos Vencimentos (30 dias)</h3>
-                     <div class="chart-canvas-container">
-                        <canvas id="chart-vencimentos"></canvas>
-                     </div>
+                     <h3>Valores Vencidos (Total)</h3>
+                     <div class="chart-canvas-container"><canvas id="chart-vencidos-total"></canvas></div>
                  </div>
              </div>
          </div>
 
-        <div class="card">
-             <div class="card-header"><i class="fas fa-list-alt"></i> Lançamentos Recentes e Vencidos</div>
-             <div class="charts-grid"> <div>
-                     <h3><i class="fas fa-history"></i> Últimos Lançamentos (Pago/Recebido)</h3>
-                     <div class="list-container">
-                         <ul class="data-list" id="list-recentes">
-                            <li class="placeholder">Carregando...</li>
-                         </ul>
-                     </div>
+        <div class="list-grid">
+             <div class="list-container">
+                 <div class="list-header">
+                     <h3><i class="fas fa-check-circle"></i> Realizados no Período</h3>
+                     <button class="pdf-button" id="btn-pdf-realizados" title="Exportar para PDF"><i class="fas fa-file-pdf"></i> PDF</button>
                  </div>
-                 <div>
-                    <h3><i class="fas fa-exclamation-triangle"></i> Lançamentos Vencidos (Não Pagos)</h3>
-                     <div class="list-container">
-                         <ul class="data-list" id="list-vencidos">
-                             <li class="placeholder">Carregando...</li>
-                         </ul>
-                    </div>
-                 </div>
+                 <ul class="data-list" id="list-realizados">
+                     <li class="placeholder">Carregando...</li>
+                 </ul>
+             </div>
+             <div class="list-container">
+                  <div class="list-header">
+                     <h3><i class="fas fa-exclamation-triangle"></i> Lançamentos Vencidos</h3>
+                     <button class="pdf-button" id="btn-pdf-vencidos" title="Exportar para PDF"><i class="fas fa-file-pdf"></i> PDF</button>
+                  </div>
+                 <ul class="data-list" id="list-vencidos">
+                      <li class="placeholder">Carregando...</li>
+                 </ul>
              </div>
          </div>
 
-    </div>
-
-
-    <script type="module">
-        // --- Firebase SDK Imports ---
+    </div> <script type="module">
+        // --- Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, orderBy, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { format, parseISO, startOfMonth, endOfMonth, subMonths, addMonths, startOfYear, endOfYear, subDays, addDays, isBefore, isEqual, isValid, endOfDay, startOfDay, differenceInDays } from 'https://cdn.jsdelivr.net/npm/date-fns@3.6.0/+esm';
+        import { ptBR } from 'https://cdn.jsdelivr.net/npm/date-fns@3.6.0/locale/pt-BR/+esm';
 
-        // --- Firebase Configuration ---
-        // !!! REPLACE WITH YOUR ACTUAL FIREBASE CONFIGURATION !!!
-        const firebaseConfig = {
-            apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc", // Substitua pela sua chave
-            authDomain: "testebosspro.firebaseapp.com",
-            projectId: "testebosspro",
-            storageBucket: "testebosspro.appspot.com",
-            messagingSenderId: "73684788134",
-            appId: "1:73684788134:web:7c8250c83f10a2df59e567",
-            measurementId: "G-1H29L5B830"
-        };
+        // --- jsPDF e AutoTable (já incluídos via script tag) ---
+        const { jsPDF } = window.jspdf; // Acessa do escopo global
 
-        // --- Firebase Initialization ---
+        // --- Firebase Config ---
+         const firebaseConfig = {
+             apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc", // Sua chave
+             authDomain: "testebosspro.firebaseapp.com",
+             projectId: "testebosspro",
+             storageBucket: "testebosspro.appspot.com",
+             messagingSenderId: "73684788134",
+             appId: "1:73684788134:web:7c8250c83f10a2df59e567",
+             measurementId: "G-1H29L5B830"
+         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Global Variables & State ---
+        // --- Globals ---
         let allPayments = [];
         let allReceipts = [];
-        let chartRecPag = null; // Chart instances
-        let chartVencimentos = null;
+        let allClients = {};
+        let chartRecPag = null;
+        let chartVencidosTotal = null;
+        // Variáveis para guardar dados das listas para PDF
+        let currentRealizadosData = [];
+        let currentVencidosData = [];
+
 
         // --- DOM Elements ---
         const periodSelect = document.getElementById('period-select');
         const customPeriodInputs = document.getElementById('custom-period-inputs');
         const startDateInput = document.getElementById('start-date');
         const endDateInput = document.getElementById('end-date');
+        const clientSelect = document.getElementById('client-select');
         const btnUpdateView = document.getElementById('btn-update-view');
-        const kpiPeriodLabel = document.getElementById('kpi-period-label');
-        // KPIs
+        const kpiFilterInfoEl = document.getElementById('kpi-filter-info');
         const kpiTotalRecebidoEl = document.getElementById('kpi-total-recebido');
+        const kpiPendenteReceberEl = document.getElementById('kpi-pendente-receber');
         const kpiTotalPagoEl = document.getElementById('kpi-total-pago');
+        const kpiPendentePagarEl = document.getElementById('kpi-pendente-pagar');
         const kpiSaldoItemEl = document.getElementById('kpi-saldo-item');
         const kpiSaldoEl = document.getElementById('kpi-saldo');
-        const kpiPendenteReceberEl = document.getElementById('kpi-pendente-receber');
-        const kpiPendentePagarEl = document.getElementById('kpi-pendente-pagar');
-        const kpiVencidoEl = document.getElementById('kpi-vencido');
-        // Charts
+        const kpiTotalVencidoEl = document.getElementById('kpi-total-vencido');
         const chartRecPagCtx = document.getElementById('chart-rec-pag')?.getContext('2d');
-        const chartVencimentosCtx = document.getElementById('chart-vencimentos')?.getContext('2d');
-        // Lists
-        const listRecentesEl = document.getElementById('list-recentes');
+        const chartVencidosTotalCtx = document.getElementById('chart-vencidos-total')?.getContext('2d');
+        const listRealizadosEl = document.getElementById('list-realizados');
         const listVencidosEl = document.getElementById('list-vencidos');
+        const btnPdfRealizados = document.getElementById('btn-pdf-realizados');
+        const btnPdfVencidos = document.getElementById('btn-pdf-vencidos');
 
-        // --- Utility Functions ---
-        function formatCurrency(value) {
-            if (isNaN(value)) return 'R$ 0,00';
-            return `R$ ${Number(value).toFixed(2).replace('.', ',')}`;
-        }
-        function formatDateShort(dateString) { // Output DD/MM
-            if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return 'N/A';
-            const [, month, day] = dateString.split('-');
-            return `${day}/${month}`;
-        }
-         function formatDateFull(dateString) { // Output DD/MM/YYYY
-            if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return 'N/A';
-            const [year, month, day] = dateString.split('-');
-            return `${day}/${month}/${year}`;
-        }
-        function parseDate(dateString) { // Input YYYY-MM-DD -> Date object (UTC midnight)
-            if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return null;
-            const [year, month, day] = dateString.split('-');
-            return new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
-        }
-        function toISODateString(date) { // Input Date object -> YYYY-MM-DD
-            if (!date || !(date instanceof Date)) return '';
-             const year = date.getUTCFullYear(); // Use UTC methods
-             const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-             const day = date.getUTCDate().toString().padStart(2, '0');
-             return `${year}-${month}-${day}`;
-        }
+        // --- Utils ---
+        const CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+        const safeFormatCurrency = (value) => isNaN(value) ? 'R$ 0,00' : CURRENCY_FORMATTER.format(value);
+        const formatDate = (date, formatStr = 'dd/MM/yyyy') => (date && isValid(date)) ? format(date, formatStr, { locale: ptBR }) : '--';
+        const parseDataString = (dateString) => {
+             if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return null;
+             try { const d = parseISO(dateString + 'T00:00:00Z'); return isValid(d) ? d : null; } catch (e) { return null; }
+         };
+        const convertFirebaseTimestamp = (timestamp) => {
+             if (timestamp?.toDate) { try { const d=timestamp.toDate(); return isValid(d)?d:null; } catch(e){ return null;} }
+             if (typeof timestamp === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(timestamp)) { return parseDataString(timestamp); }
+             if (timestamp instanceof Date) { return isValid(timestamp)?timestamp:null; }
+             if (timestamp != null) { console.warn("Formato TS inválido:", timestamp); }
+             return null;
+         };
 
         // --- Data Fetching ---
+        async function loadClients() { /* ... (igual anterior, sem mudanças) ... */
+             try {
+                 const q = query(collection(db, "clientes"), orderBy("empresa"));
+                 const querySnapshot = await getDocs(q);
+                 allClients = {};
+                 clientSelect.innerHTML = '<option value="all" selected>Todos os Clientes</option>';
+                 querySnapshot.forEach((doc) => {
+                     allClients[doc.id] = doc.data();
+                     const option = document.createElement('option');
+                     option.value = doc.id;
+                     option.textContent = `${doc.data().empresa || doc.data().nome || 'Desconhecido'} (${doc.data().codigo || 'S/C'})`;
+                     clientSelect.appendChild(option);
+                 });
+                 console.log("Clientes carregados:", Object.keys(allClients).length);
+             } catch (error) {
+                 console.error("Erro ao carregar clientes:", error);
+                 clientSelect.innerHTML = '<option value="all" selected>Erro</option>';
+             }
+         }
+
         async function fetchData() {
-            console.log("Fetching data from Firebase...");
+            console.log("Buscando dados...");
+            setLoadingState(true);
+            const clientLoadPromise = loadClients();
+
             try {
-                const paymentsQuery = query(collection(db, "pagamentos"), orderBy("dataPagamento"));
-                const receiptsQuery = query(collection(db, "recebimentos"), orderBy("dataPagamento"));
+                const paymentsQuery = query(collection(db, "pagamentos"));
+                const receiptsQuery = query(collection(db, "recebimentos"));
+                const [paymentsSnapshot, receiptsSnapshot] = await Promise.all([getDocs(paymentsQuery), getDocs(receiptsQuery)]);
 
-                const [paymentsSnapshot, receiptsSnapshot] = await Promise.all([
-                    getDocs(paymentsQuery),
-                    getDocs(receiptsQuery)
-                ]);
+                allPayments = paymentsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const dataVencimento = convertFirebaseTimestamp(data.dataVencimento || data.dataPagamento); // Usa vencimento ou pagto como fallback
+                    const dataRealizado = convertFirebaseTimestamp(data.dataRealizado);
+                    if (!dataVencimento && !dataRealizado) return null; // Precisa de pelo menos uma data
+                    return { id: doc.id, ...data, type: 'payment', valor: Number(data.valor) || 0, pago: Boolean(data.pago), dataVencimento, dataRealizado };
+                }).filter(p => p !== null);
 
-                allPayments = paymentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), type: 'payment' }));
-                allReceipts = receiptsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), type: 'receipt' }));
+                allReceipts = receiptsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const dataVencimento = convertFirebaseTimestamp(data.dataVencimento || data.dataPagamento); // Usa vencimento ou pagto como fallback
+                    const dataRealizado = convertFirebaseTimestamp(data.dataRealizado);
+                     if (!dataVencimento && !dataRealizado) return null;
+                    return { id: doc.id, ...data, type: 'receipt', valor: Number(data.valor) || 0, pago: Boolean(data.pago), clienteId: data.clienteId, clienteNome: data.clienteNome, dataVencimento, dataRealizado };
+                }).filter(r => r !== null);
 
-                console.log(`Workspaceed ${allPayments.length} payments and ${allReceipts.length} receipts.`);
-                updateDashboard(); // Initial update after fetching
+                await clientLoadPromise;
+
+                allReceipts.forEach(r => { // Preenche nome do cliente
+                    if ((!r.clienteNome || r.clienteNome === 'Desconhecido') && r.clienteId && allClients[r.clienteId]) {
+                        r.clienteNome = allClients[r.clienteId]?.empresa || allClients[r.clienteId]?.nome || 'Desconhecido';
+                    } else if (!r.clienteNome) { r.clienteNome = 'Desconhecido'; }
+                });
+
+                console.log(`Dados processados: ${allPayments.length} pagamentos, ${allReceipts.length} recebimentos.`);
+                updateDashboard(); // Atualização inicial
 
             } catch (error) {
-                console.error("Error fetching data:", error);
+                console.error("Erro crítico ao buscar dados:", error);
                 alert("Erro ao buscar dados do Firebase. Verifique o console.");
-                // Display error message in UI?
-                listRecentesEl.innerHTML = '<li class="placeholder error">Erro ao carregar dados.</li>';
-                listVencidosEl.innerHTML = '<li class="placeholder error">Erro ao carregar dados.</li>';
+                clearUIOnError();
+            } finally {
+                setLoadingState(false);
             }
         }
 
-        // --- Dashboard Update Logic ---
+        // --- Período ---
+        function getSelectedPeriod() { /* ... (igual anterior, sem mudanças significativas) ... */
+             const selection = periodSelect.value;
+             const today = new Date();
+             let startDate = null, endDate = null;
+             let periodLabel = '';
+             try {
+                 switch (selection) {
+                     case 'current_month': startDate = startOfMonth(today); endDate = endOfMonth(today); periodLabel = 'Mês Atual'; break;
+                     case 'last_month': const lm = startOfMonth(subMonths(today, 1)); startDate = lm; endDate = endOfMonth(lm); periodLabel = 'Mês Anterior'; break;
+                     case 'last_30_days': endDate = endOfDay(today); startDate = startOfDay(subDays(today, 29)); periodLabel = 'Últimos 30 Dias'; break;
+                     case 'current_year': startDate = startOfYear(today); endDate = endOfYear(today); periodLabel = 'Ano Atual'; break;
+                     case 'custom':
+                         startDate = parseDataString(startDateInput.value); endDate = parseDataString(endDateInput.value);
+                         if (!startDate || !endDate || isBefore(endDate, startDate)) { throw new Error("Período customizado inválido"); }
+                         periodLabel = `${formatDate(startDate, 'dd/MM/yy')} a ${formatDate(endDate, 'dd/MM/yy')}`;
+                         endDate = endOfDay(endDate); // Inclui fim do dia
+                         break;
+                     default: throw new Error(`Seleção de período desconhecida: ${selection}`);
+                 }
+                  if (selection !== 'custom' && selection !== 'last_30_days' && endDate) { endDate = endOfDay(endDate); }
+
+             } catch (e) {
+                  console.error("Erro ao obter período:", e.message);
+                  alert(e.message || "Erro ao definir período. Usando Mês Atual.");
+                  const fallback = getSelectedPeriodFallback(); // Usa Mês Atual se der erro
+                  return fallback;
+             }
+             return { startDate, endDate, periodLabel };
+         }
+         // Fallback seguro para período
+         function getSelectedPeriodFallback() {
+             const today = new Date();
+             const startDate = startOfMonth(today);
+             const endDate = endOfDay(endOfMonth(today));
+             return { startDate, endDate, periodLabel: 'Mês Atual' };
+         }
+
+
+        // --- Dashboard Update ---
         function updateDashboard() {
-            const { startDate, endDate, periodLabel } = getSelectedPeriod();
-            kpiPeriodLabel.textContent = periodLabel; // Update KPI period label
-            console.log(`Updating dashboard for period: ${startDate} to ${endDate}`);
+            console.log("Atualizando Dashboard...");
+            const loadingStart = performance.now();
+            setLoadingState(true);
 
-            const today = toISODateString(new Date()); // YYYY-MM-DD format for today
+            try {
+                const { startDate, endDate, periodLabel } = getSelectedPeriod();
+                const selectedClientId = clientSelect.value;
+                const today = startOfDay(new Date()); // Para cálculo de vencidos
 
-            let totalRecebidoPeriodo = 0;
-            let totalPagoPeriodo = 0;
-            let pendenteReceberPeriodo = 0;
-            let pendentePagarPeriodo = 0;
-            let totalVencido = 0;
+                // --- Filtrar Dados para o Período e Cliente ---
+                 // Itens REALIZADOS (pagos/recebidos) DENTRO do período
+                 const realizadosPeriodo = [...allReceipts, ...allPayments].filter(item =>
+                     item.pago && item.dataRealizado && isValid(item.dataRealizado) &&
+                     !isBefore(item.dataRealizado, startDate) && !isBefore(endDate, item.dataRealizado) &&
+                     (selectedClientId === 'all' || item.type === 'payment' || item.clienteId === selectedClientId) // Aplica filtro cliente a recebimentos
+                 );
 
-            const combinedEntries = [...allReceipts, ...allPayments];
-            const recentPaidEntries = [];
-            const overdueUnpaidEntries = [];
+                 // Itens PENDENTES (A Receber/Pagar) - TOTAL (não só do período)
+                 const pendentesReceberTotal = allReceipts.filter(r =>
+                     !r.pago && (selectedClientId === 'all' || r.clienteId === selectedClientId)
+                 );
+                 const pendentesPagarTotal = allPayments.filter(p => !p.pago);
 
-            combinedEntries.forEach(entry => {
-                 if (!entry.dataPagamento || typeof entry.dataPagamento !== 'string') return; // Skip invalid entries
-
-                 const entryDate = entry.dataPagamento; // YYYY-MM-DD
-
-                 // Check if entry falls within the selected period for KPIs
-                 const isInPeriod = (!startDate || entryDate >= startDate) && (!endDate || entryDate <= endDate);
-
-                 if (isInPeriod) {
-                     if (entry.type === 'receipt') {
-                         if (entry.pago) {
-                             totalRecebidoPeriodo += entry.valor || 0;
-                         } else {
-                             pendenteReceberPeriodo += entry.valor || 0;
-                         }
-                     } else if (entry.type === 'payment') {
-                         if (entry.pago) {
-                             totalPagoPeriodo += entry.valor || 0;
-                         } else {
-                             pendentePagarPeriodo += entry.valor || 0;
-                         }
-                     }
-                 }
-
-                 // Check for Recent Paid/Received (last 30 days maybe, independent of period filter?)
-                 // Let's simplify: Recent = Paid/Received within the *selected* period for now
-                 if (isInPeriod && entry.pago) {
-                     recentPaidEntries.push(entry);
-                 }
-
-                 // Check for Overdue UNPAID items (Date < Today AND Not Paid)
-                 if (!entry.pago && entryDate < today) {
-                     totalVencido += entry.valor || 0;
-                     overdueUnpaidEntries.push(entry);
-                 }
-            });
-
-            // Update KPIs
-            const saldoPeriodo = totalRecebidoPeriodo - totalPagoPeriodo;
-            kpiTotalRecebidoEl.textContent = formatCurrency(totalRecebidoPeriodo);
-            kpiTotalPagoEl.textContent = formatCurrency(totalPagoPeriodo);
-            kpiSaldoEl.textContent = formatCurrency(saldoPeriodo);
-            kpiSaldoItemEl.className = `kpi-item kpi-saldo ${saldoPeriodo >= 0 ? 'positive' : 'negative'}`;
-            kpiPendenteReceberEl.textContent = formatCurrency(pendenteReceberPeriodo);
-            kpiPendentePagarEl.textContent = formatCurrency(pendentePagarPeriodo);
-            kpiVencidoEl.textContent = formatCurrency(totalVencido);
-
-            // Update Lists
-            updateRecentList(recentPaidEntries);
-            updateOverdueList(overdueUnpaidEntries);
-
-            // Update Charts
-            updateCharts(startDate, endDate);
-        }
-
-        function getSelectedPeriod() {
-            const selection = periodSelect.value;
-            const today = new Date();
-            today.setUTCHours(0, 0, 0, 0); // Use UTC for date calculations
-            let startDate = null;
-            let endDate = null;
-            let periodLabel = '';
-
-             const firstDayCurrentMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
-             const lastDayCurrentMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0));
-             const firstDayLastMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 1, 1));
-             const lastDayLastMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 0));
-             const firstDayCurrentYear = new Date(Date.UTC(today.getUTCFullYear(), 0, 1));
-             const lastDayCurrentYear = new Date(Date.UTC(today.getUTCFullYear(), 11, 31));
-             const thirtyDaysAgo = new Date(today);
-             thirtyDaysAgo.setUTCDate(today.getUTCDate() - 30);
+                // Itens VENCIDOS (NÃO PAGOS com vencimento antes de HOJE) - TOTAL
+                 const vencidosReceberTotal = pendentesReceberTotal.filter(r => r.dataVencimento && isValid(r.dataVencimento) && isBefore(r.dataVencimento, today));
+                 const vencidosPagarTotal = pendentesPagarTotal.filter(p => p.dataVencimento && isValid(p.dataVencimento) && isBefore(p.dataVencimento, today));
+                 const vencidosTotal = [...vencidosReceberTotal, ...vencidosPagarTotal];
 
 
-            switch (selection) {
-                case 'current_month':
-                    startDate = toISODateString(firstDayCurrentMonth);
-                    endDate = toISODateString(lastDayCurrentMonth);
-                    periodLabel = 'Mês Atual';
-                    break;
-                case 'last_month':
-                    startDate = toISODateString(firstDayLastMonth);
-                    endDate = toISODateString(lastDayLastMonth);
-                    periodLabel = 'Mês Anterior';
-                    break;
-                case 'last_30_days':
-                     startDate = toISODateString(thirtyDaysAgo);
-                     endDate = toISODateString(today); // Include today
-                     periodLabel = 'Últimos 30 Dias';
-                    break;
-                case 'current_year':
-                     startDate = toISODateString(firstDayCurrentYear);
-                     endDate = toISODateString(lastDayCurrentYear);
-                     periodLabel = 'Ano Atual';
-                    break;
-                case 'custom':
-                    startDate = startDateInput.value;
-                    endDate = endDateInput.value;
-                     periodLabel = `Período: ${startDate ? formatDateFull(startDate) : '?'} a ${endDate ? formatDateFull(endDate) : '?'}`;
-                     // Basic validation for custom dates
-                     if (!startDate || !endDate || startDate > endDate) {
-                         alert("Por favor, selecione um período personalizado válido.");
-                         // Optionally revert to a default period or disable update
-                         startDate = null; endDate = null; periodLabel = 'Erro Período';
-                     }
-                    break;
+                // --- Calcular KPIs ---
+                 const totalRecebidoPeriodo = realizadosPeriodo.filter(i => i.type === 'receipt').reduce((sum, i) => sum + i.valor, 0);
+                 const totalPagoPeriodo = realizadosPeriodo.filter(i => i.type === 'payment').reduce((sum, i) => sum + i.valor, 0);
+                 const saldoPeriodo = totalRecebidoPeriodo - totalPagoPeriodo;
+                 const totalAReceber = pendentesReceberTotal.reduce((sum, i) => sum + i.valor, 0);
+                 const totalAPagar = pendentesPagarTotal.reduce((sum, i) => sum + i.valor, 0);
+                 const totalVencidoValor = vencidosTotal.reduce((sum, i) => sum + i.valor, 0);
+
+
+                // --- Atualizar Info Filtro ---
+                const clientOption = clientSelect.options[clientSelect.selectedIndex];
+                const clientLabel = selectedClientId === 'all' ? 'Todos Clientes' : (clientOption ? clientOption.textContent.split('(')[0].trim() : 'Cliente');
+                kpiFilterInfoEl.textContent = `(${periodLabel} | ${clientLabel})`;
+
+                // --- Atualizar UI KPIs ---
+                kpiTotalRecebidoEl.textContent = safeFormatCurrency(totalRecebidoPeriodo);
+                kpiPendenteReceberEl.textContent = safeFormatCurrency(totalAReceber);
+                kpiTotalPagoEl.textContent = safeFormatCurrency(totalPagoPeriodo);
+                kpiPendentePagarEl.textContent = safeFormatCurrency(totalAPagar);
+                kpiSaldoEl.textContent = safeFormatCurrency(saldoPeriodo);
+                kpiSaldoItemEl.className = `kpi-item kpi-saldo ${saldoPeriodo >= 0 ? 'positive' : 'negative'}`;
+                kpiTotalVencidoEl.textContent = safeFormatCurrency(totalVencidoValor);
+
+                // --- Atualizar Gráficos ---
+                updateCharts(totalRecebidoPeriodo, totalPagoPeriodo, vencidosReceberTotal, vencidosPagarTotal);
+
+                // --- Atualizar Listas e guardar dados para PDF ---
+                 // Lista Realizados: Ordena por data de realização decrescente
+                 currentRealizadosData = realizadosPeriodo.sort((a, b) => b.dataRealizado - a.dataRealizado);
+                 // Lista Vencidos: Ordena por data de vencimento crescente (mais antigo primeiro)
+                 currentVencidosData = vencidosTotal.sort((a, b) => a.dataVencimento - b.dataVencimento);
+
+                 updateListUI(listRealizadosEl, currentRealizadosData, 'realizado');
+                 updateListUI(listVencidosEl, currentVencidosData, 'vencido');
+
+
+            } catch (error) {
+                 console.error("Erro ao atualizar dashboard:", error);
+                 alert(`Ocorreu um erro ao atualizar o painel: ${error.message}`);
+            } finally {
+                setLoadingState(false);
+                const loadingEnd = performance.now();
+                console.log(`Dashboard atualizado em ${(loadingEnd - loadingStart).toFixed(0)} ms.`);
             }
-            return { startDate, endDate, periodLabel };
         }
 
-        // --- Update UI List Functions ---
-        function updateRecentList(entries) {
-            listRecentesEl.innerHTML = ''; // Clear list
-            if (!entries || entries.length === 0) {
-                listRecentesEl.innerHTML = '<li class="placeholder">Nenhum lançamento recente pago/recebido no período.</li>';
-                return;
-            }
-            // Sort by date descending (most recent first)
-            entries.sort((a, b) => b.dataPagamento.localeCompare(a.dataPagamento));
-            // Limit to latest N entries (e.g., 10)
-            const recentLimit = 10;
-            entries.slice(0, recentLimit).forEach(entry => {
-                const li = document.createElement('li');
-                li.classList.add(entry.type); // 'receipt' or 'payment'
-                li.innerHTML = `
-                    <span class="description">${entry.descricao || 'Sem descrição'}</span>
-                    <span class="date">${formatDateFull(entry.dataPagamento)}</span>
-                    <span class="value">${formatCurrency(entry.valor || 0)}</span>
-                `;
-                listRecentesEl.appendChild(li);
-            });
-        }
-
-        function updateOverdueList(entries) {
-            listVencidosEl.innerHTML = ''; // Clear list
-             if (!entries || entries.length === 0) {
-                listVencidosEl.innerHTML = '<li class="placeholder">Nenhum lançamento vencido.</li>';
-                return;
-            }
-             // Sort by date ascending (oldest overdue first)
-             entries.sort((a, b) => a.dataPagamento.localeCompare(b.dataPagamento));
-             entries.forEach(entry => {
-                const li = document.createElement('li');
-                li.classList.add(entry.type, 'overdue'); // Mark as overdue
-                li.innerHTML = `
-                    <span class="description">${entry.descricao || 'Sem descrição'} (${entry.type === 'receipt' ? 'Receber' : 'Pagar'})</span>
-                    <span class="date">${formatDateFull(entry.dataPagamento)}</span>
-                    <span class="value">${formatCurrency(entry.valor || 0)}</span>
-                `;
-                listVencidosEl.appendChild(li);
-            });
-        }
-
-        // --- Chart Update Functions ---
-        function updateCharts(startDate, endDate) {
-             console.log("Updating charts...");
-            // --- Chart 1: Receitas x Despesas Pagas (Período Selecionado) ---
-             const paidReceiptsPeriod = allReceipts.filter(r => r.pago && r.dataPagamento >= startDate && r.dataPagamento <= endDate);
-             const paidPaymentsPeriod = allPayments.filter(p => p.pago && p.dataPagamento >= startDate && p.dataPagamento <= endDate);
-
-             // Simple sum for the period (Could be broken down by month/week if needed)
-             const totalRecebidoChart = paidReceiptsPeriod.reduce((sum, r) => sum + (r.valor || 0), 0);
-             const totalPagoChart = paidPaymentsPeriod.reduce((sum, p) => sum + (p.valor || 0), 0);
-
-             if (chartRecPag) chartRecPag.destroy(); // Destroy previous instance
-             if (chartRecPagCtx) {
+        // --- Atualizar Gráficos ---
+        function updateCharts(recebidoPeriodo, pagoPeriodo, vencidosReceber, vencidosPagar) {
+            // Gráfico 1: Recebido x Pago
+            if (chartRecPag) chartRecPag.destroy();
+            if (chartRecPagCtx) {
                 chartRecPag = new Chart(chartRecPagCtx, {
                     type: 'bar',
                     data: {
-                        labels: ['Período Selecionado'],
+                        labels: ['Período'],
                         datasets: [
-                            { label: 'Recebido', data: [totalRecebidoChart], backgroundColor: 'rgba(46, 204, 113, 0.7)' },
-                            { label: 'Pago', data: [totalPagoChart], backgroundColor: 'rgba(231, 76, 60, 0.7)' }
+                            { label: 'Recebido', data: [recebidoPeriodo], backgroundColor: 'rgba(46, 204, 113, 0.7)' }, // Verde
+                            { label: 'Pago', data: [pagoPeriodo], backgroundColor: 'rgba(231, 76, 60, 0.7)' } // Vermelho
                         ]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { position: 'top'} } }
                 });
-             }
+            } else { console.warn("Ctx Gráfico Rec/Pag não encontrado."); }
 
-             // --- Chart 2: Próximos Vencimentos (Receber vs Pagar - Próximos 30 dias) ---
-             const today = new Date(); today.setUTCHours(0,0,0,0);
-             const thirtyDaysLater = new Date(today);
-             thirtyDaysLater.setUTCDate(today.getUTCDate() + 30);
-             const next30StartDate = toISODateString(today);
-             const next30EndDate = toISODateString(thirtyDaysLater);
+            // Gráfico 2: Total Vencido (A Receber vs A Pagar)
+             const totalVencidoReceber = vencidosReceber.reduce((sum, i) => sum + i.valor, 0);
+             const totalVencidoPagar = vencidosPagar.reduce((sum, i) => sum + i.valor, 0);
 
-            let proxReceber = 0;
-            let proxPagar = 0;
-
-             allReceipts.forEach(r => {
-                 if (!r.pago && r.dataPagamento >= next30StartDate && r.dataPagamento <= next30EndDate) {
-                     proxReceber += r.valor || 0;
-                 }
-             });
-             allPayments.forEach(p => {
-                 if (!p.pago && p.dataPagamento >= next30StartDate && p.dataPagamento <= next30EndDate) {
-                     proxPagar += p.valor || 0;
-                 }
-             });
-
-             if (chartVencimentos) chartVencimentos.destroy(); // Destroy previous instance
-             if (chartVencimentosCtx) {
-                 chartVencimentos = new Chart(chartVencimentosCtx, {
+            if (chartVencidosTotal) chartVencidosTotal.destroy();
+             if (chartVencidosTotalCtx) {
+                 chartVencidosTotal = new Chart(chartVencidosTotalCtx, {
                     type: 'doughnut',
                     data: {
-                        labels: ['A Receber (30d)', 'A Pagar (30d)'],
+                        labels: ['A Receber Vencido', 'A Pagar Vencido'],
                         datasets: [{
-                            label: 'Próximos Vencimentos',
-                            data: [proxReceber, proxPagar],
-                            backgroundColor: ['rgba(52, 152, 219, 0.7)', 'rgba(241, 196, 15, 0.7)'] // Blue, Yellow
+                             data: [totalVencidoReceber, totalVencidoPagar],
+                            backgroundColor: ['rgba(231, 76, 60, 0.8)', 'rgba(241, 196, 15, 0.8)'], // Vermelho e Amarelo
+                            borderColor: '#fff', borderWidth: 2
                         }]
                     },
-                     options: { responsive: true, maintainAspectRatio: false }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top'} } }
                 });
-             }
-             console.log("Charts updated.");
+            } else { console.warn("Ctx Gráfico Vencidos não encontrado."); }
         }
 
 
+        // --- Atualizar UI das Listas ---
+         function updateListUI(listElement, data, listType) {
+             listElement.innerHTML = ''; // Limpa
+             if (data.length === 0) {
+                 const placeholderText = listType === 'realizado' ? 'Nenhum lançamento realizado no período.' : 'Nenhum lançamento vencido.';
+                 listElement.innerHTML = `<li class="placeholder">${placeholderText}</li>`;
+                 return;
+             }
+
+             const itemsToDisplay = listType === 'realizado' ? data.slice(0, 20) : data; // Limita recentes, mostra todos vencidos
+
+             itemsToDisplay.forEach(entry => {
+                 const li = document.createElement('li');
+                 li.classList.add(entry.type); // receipt ou payment
+                 const dateToShow = listType === 'realizado' ? entry.dataRealizado : entry.dataVencimento;
+                 const dateClass = listType === 'vencido' ? 'overdue' : ''; // Adiciona classe overdue na data vencida
+
+                 const clientNameHtml = entry.type === 'receipt' && entry.clienteNome ? `<span class="client-name">(${entry.clienteNome})</span>` : '';
+                  let descriptionText = entry.descricao || 'Sem descrição';
+                 if (listType === 'vencido') {
+                     const days = differenceInDays(startOfDay(new Date()), entry.dataVencimento);
+                     descriptionText += ` <i style="color:var(--danger-color); font-size:0.8em;">(${days}d atraso)</i>`;
+                 }
+
+                 li.innerHTML = `
+                     <span class="description">${descriptionText} ${clientNameHtml}</span>
+                     <span class="date ${dateClass}">${formatDate(dateToShow, 'dd/MM/yy')}</span>
+                     <span class="value">${safeFormatCurrency(entry.valor)}</span>
+                 `;
+                 listElement.appendChild(li);
+             });
+         }
+
+        // --- PDF Export ---
+         function exportListToPDF(data, title, filename) {
+             if (!data || data.length === 0) {
+                 alert(`Não há dados na lista "${title}" para exportar.`);
+                 return;
+             }
+             const doc = new jsPDF();
+             const { startDate, endDate, periodLabel } = getSelectedPeriod(); // Pega período atual
+             const selectedClientId = clientSelect.value;
+             const clientOption = clientSelect.options[clientSelect.selectedIndex];
+             const clientLabel = selectedClientId === 'all' ? 'Todos Clientes' : (clientOption ? clientOption.textContent : 'Cliente Específico');
+             const filterText = `Período: ${periodLabel} | Cliente: ${clientLabel}`;
+
+
+             doc.setFontSize(16);
+             doc.text(title, 14, 15);
+              doc.setFontSize(10);
+              doc.setTextColor(100); // Cinza
+              doc.text(filterText, 14, 22); // Adiciona info de filtro
+
+             const tableColumn = ["Data", "Tipo", "Descrição", "Cliente", "Valor"];
+             const tableRows = [];
+
+             data.forEach(item => {
+                  const dateCol = item.dataRealizado ? formatDate(item.dataRealizado) : (item.dataVencimento ? formatDate(item.dataVencimento) : '--');
+                  const typeCol = item.type === 'receipt' ? 'Receita' : 'Despesa';
+                  const descCol = item.descricao || 'S/ Descrição';
+                  const clientCol = item.type === 'receipt' ? (item.clienteNome || 'N/A') : ''; // Só para receitas
+                  const valueCol = safeFormatCurrency(item.valor);
+
+                  const rowData = [dateCol, typeCol, descCol, clientCol, valueCol];
+                 tableRows.push(rowData);
+             });
+
+             doc.autoTable({
+                 head: [tableColumn],
+                 body: tableRows,
+                 startY: 28, // Posição abaixo do título e filtro
+                 theme: 'grid', // Estilo da tabela
+                 headStyles: { fillColor: [52, 152, 219] }, // Azul no cabeçalho
+                 styles: { fontSize: 9 },
+                 columnStyles: { // Alinhamento e largura (ajuste conforme necessário)
+                    0: { halign: 'center', cellWidth: 25 }, // Data
+                     1: { halign: 'center', cellWidth: 20 }, // Tipo
+                     2: { halign: 'left', cellWidth: 'auto'}, // Descrição
+                     3: { halign: 'left', cellWidth: 40 }, // Cliente
+                     4: { halign: 'right', cellWidth: 30 } // Valor
+                 }
+             });
+
+             doc.save(`${filename}_${formatDate(new Date(), 'yyyyMMdd')}.pdf`);
+         }
+
+
+        // --- UI Helpers ---
+        function setLoadingState(isLoading) {
+            // Simplesmente desabilita o botão de atualizar durante o carregamento
+            if(btnUpdateView) btnUpdateView.disabled = isLoading;
+            // Poderia adicionar um spinner overlay etc.
+        }
+        function clearUIOnError() {
+             // Limpar KPIs
+             document.querySelectorAll('.kpi-value').forEach(el => el.textContent = 'Erro');
+             if(kpiFilterInfoEl) kpiFilterInfoEl.textContent = "(Erro ao carregar)";
+             // Limpar Gráficos
+             if (chartRecPag) chartRecPag.destroy(); chartRecPag = null;
+             if (chartVencidosTotal) chartVencidosTotal.destroy(); chartVencidosTotal = null;
+             if (chartRecPagCtx) chartRecPagCtx.canvas.parentElement.innerHTML = '<p class="placeholder error">Erro.</p>';
+             if (chartVencidosTotalCtx) chartVencidosTotalCtx.canvas.parentElement.innerHTML = '<p class="placeholder error">Erro.</p>';
+             // Limpar Listas
+             if(listRealizadosEl) listRealizadosEl.innerHTML = '<li class="placeholder error">Erro ao carregar.</li>';
+             if(listVencidosEl) listVencidosEl.innerHTML = '<li class="placeholder error">Erro ao carregar.</li>';
+             console.error("UI limpa devido a erro.");
+        }
+
         // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
-             // Set default dates for custom period (optional)
-            const todayStr = toISODateString(new Date());
-            startDateInput.value = todayStr;
-            endDateInput.value = todayStr;
+             // Default date values
+             const today = new Date();
+             const startCurrentMonth = format(startOfMonth(today), 'yyyy-MM-dd');
+             const endCurrentMonth = format(endOfMonth(today), 'yyyy-MM-dd');
+             startDateInput.value = startCurrentMonth;
+             endDateInput.value = endCurrentMonth;
 
-            // Handle period selection change
-            periodSelect.addEventListener('change', () => {
+             // Toggle custom date inputs
+             periodSelect.addEventListener('change', () => {
                 customPeriodInputs.style.display = periodSelect.value === 'custom' ? 'flex' : 'none';
-                if(periodSelect.value !== 'custom') {
-                     updateDashboard(); // Update immediately if not custom
-                }
-            });
+             });
 
-            // Handle update button click
-            btnUpdateView.addEventListener('click', updateDashboard);
+             // Update button
+              btnUpdateView.addEventListener('click', updateDashboard);
 
-            // Initial data fetch
-            fetchData();
+             // PDF Export Buttons
+             btnPdfRealizados.addEventListener('click', () => {
+                  const { periodLabel } = getSelectedPeriod();
+                  exportListToPDF(currentRealizadosData, `Lançamentos Realizados - ${periodLabel}`, 'realizados_periodo');
+             });
+             btnPdfVencidos.addEventListener('click', () => {
+                  exportListToPDF(currentVencidosData, 'Lançamentos Vencidos', 'vencidos');
+             });
+
+             // Initial data fetch
+             fetchData();
         });
 
     </script>

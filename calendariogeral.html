@@ -3,1638 +3,1361 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendário Financeiro Unificado</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Financeiro Completo Unificado</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <style>
-        /* --- Base Styles (Combined & Refined) --- */
+        /* --- Estilos (Moderno/Minimalista) --- */
         :root {
-            --primary-color-receipt: #5A9EDB; /* Blue for receipts */
-            --primary-color-payment: #e74c3c; /* Red/Orange for payments */
-            --primary-color-delivery: #9b59b6; /* Purple for deliveries */
-            --success-color: #2ecc71; /* Green for paid/success */
-            --warning-color: #f39c12; /* Yellow for pending/attention */
-            --light-color: #f8f9fa;
-            --dark-color: #343a40;
-            --border-color: #e2e8f0;
-            --background-color: #f8f9fa; /* Light gray background */
-            --card-background: #ffffff;
-            --text-color: #333;
-            --text-muted: #64748b;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-            --border-radius: 10px;
+            --clr-primary: #4a90e2; /* Primary Blue */
+            --clr-secondary: #50e3c2; /* Aqua */
+            --clr-text: #333;
+            --clr-text-light: #777;
+            --clr-bg: #f9fafb; /* Very light gray */
+            --clr-white: #ffffff;
+            --clr-border: #e5e7eb; /* Lighter border */
+            --clr-receipt: #3498db;    /* Blue */
+            --clr-payment: #e74c3c;    /* Red */
+            --clr-delivery: #9b59b6;   /* Purple */
+            --clr-success: #2ecc71;    /* Green */
+            --clr-warning: #f39c12;    /* Yellow */
+            --clr-danger: #f87171;     /* Lighter Red for overdue icon */
+            --clr-dark: #34495e;       /* Dark color */
+            --clr-muted: #7f8c8d;
+            --radius: 6px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background-color: var(--background-color);
-            padding: 15px;
-            color: var(--text-color);
-            font-size: 15px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: var(--clr-bg); color: var(--clr-text); font-size: 14px; line-height: 1.6;
         }
+        .app-container { max-width: 1500px; margin: 1.5rem auto; background-color: var(--clr-white); border-radius: var(--radius); box-shadow: var(--shadow-md); overflow: hidden; }
 
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            background: var(--card-background);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-md);
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            color: var(--dark-color);
-            margin-bottom: 20px;
-            font-size: 1.6rem;
-            font-weight: 600;
-        }
-
-        /* --- Filter Controls --- */
-        .filter-controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: #f1f5f9;
-            border-radius: var(--border-radius);
-        }
-
-        .filter-controls button {
-            padding: 8px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background-color: var(--card-background);
-            color: var(--text-muted);
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s ease-in-out;
-        }
-
-        .filter-controls button.active {
-            background-color: var(--dark-color);
-            color: white;
-            border-color: var(--dark-color);
-        }
-         .filter-controls button.filter-all.active { background-color: #6c757d; border-color: #6c757d; color:white;}
-         .filter-controls button.filter-receipts.active { background-color: var(--primary-color-receipt); border-color: var(--primary-color-receipt); color:white;}
-         .filter-controls button.filter-payments.active { background-color: var(--primary-color-payment); border-color: var(--primary-color-payment); color:white;}
+        /* Header & Filters */
+        .app-header { padding: 1rem 1.5rem; background-color: var(--clr-white); border-bottom: 1px solid var(--clr-border); display: flex; flex-direction: column; gap: 0.8rem; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .header-top h1 { font-size: 1.5rem; margin: 0; color: var(--clr-dark); display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+        .header-top .action-buttons { display: flex; gap: 0.5rem; }
+        .action-buttons button { padding: 6px 12px; border-radius: 5px; border: none; cursor: pointer; font-weight: 500; font-size: 0.9rem; transition: background-color 0.2s ease; display: inline-flex; align-items: center; gap: 5px;}
+        #btn-add-entry { background-color: var(--clr-success); color: white; }
+        #btn-reports { background-color: var(--clr-dark); color: white; }
 
 
-        /* --- Resumo Section --- */
-        .resumo {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-            background: #f1f5f9;
-            padding: 15px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-sm);
-        }
+        .filter-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; width: 100%; }
+        .filter-group { display: flex; align-items: center; gap: 0.5rem; background-color: var(--clr-bg); padding: 4px; border-radius: var(--radius); }
+        .filter-group button { padding: 6px 12px; border: none; border-radius: 5px; background-color: transparent; color: var(--clr-text-light); cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background-color 0.2s ease, color 0.2s ease; }
+        .filter-group button:hover:not(.active) { background-color: #e8e8e8; }
+        .filter-group button.active { color: var(--clr-white); box-shadow: var(--shadow-sm); }
+        .filter-group button.active[data-filter-type="all"],
+        .filter-group button.active[data-filter-status="all"] { background-color: var(--clr-primary); }
+        .filter-group button.active[data-filter-type="receipt"] { background-color: var(--clr-receipt); }
+        .filter-group button.active[data-filter-type="payment"] { background-color: var(--clr-payment); }
+        .filter-group button.active[data-filter-type="delivery"] { background-color: var(--clr-delivery); }
+        .filter-group button.active[data-filter-status="pending"] { background-color: var(--clr-warning); color: var(--clr-dark);} /* Texto escuro aqui também */
+        .filter-group button.active[data-filter-status="paid"] { background-color: var(--clr-success); }
+        .filter-group button.active[data-filter-status="overdue"] { background-color: var(--clr-danger); }
 
-        .resumo div {
-            text-align: center;
-        }
-
-        .resumo span {
-            display: block;
-        }
-
-        .resumo span:first-child { /* Value */
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 3px;
-        }
-        .resumo span:last-child { /* Label */
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-        #total-a-receber { color: var(--primary-color-receipt); }
-        #total-recebido { color: var(--success-color); }
-        #total-a-pagar { color: var(--primary-color-payment); }
-        #total-pago { color: var(--success-color); }
+        /* Summary Bar */
+        .summary-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1px; background-color: var(--clr-border); border-bottom: 1px solid var(--clr-border); }
+        .summary-item { background-color: var(--clr-white); text-align: center; padding: 12px 5px; transition: opacity 0.3s ease, max-height 0.3s ease, padding 0.3s ease; }
+        .summary-item .value { font-size: 1.2rem; font-weight: 600; display: block; }
+        .summary-item .label { font-size: 0.7rem; color: var(--clr-text-light); text-transform: uppercase; }
+        .summary-item .value.receipt { color: var(--clr-success); }
+        .summary-item .value.payment { color: var(--clr-danger); }
+        .summary-item .value.pending { color: var(--clr-warning); }
+        .summary-item .value.danger { color: var(--clr-danger); }
+        .summary-item .value.delivery-count { color: var(--clr-delivery);}
+        .summary-item.hidden { padding-top: 0; padding-bottom: 0; max-height: 0; opacity: 0; overflow: hidden; border: none; margin: 0; }
 
 
-        /* --- Calendar Controls & Grid --- */
-        .calendar-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 0 5px;
-        }
+        /* Calendar */
+        .calendar-container { padding: 1rem 1.5rem; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .calendar-header .month-display { font-size: 1.4rem; font-weight: 600; }
+        .calendar-header button { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--clr-primary); padding: 5px;}
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+        .day-label { text-align: center; font-weight: 500; color: var(--clr-text-light); padding-bottom: 0.5rem; font-size: 0.75rem; text-transform: uppercase; }
+        .day-cell { min-height: 115px; border: 1px solid var(--clr-border); border-radius: var(--radius); background-color: var(--clr-white); padding: 8px; font-size: 0.8rem; cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; position: relative; }
+        .day-cell.other-month { background-color: var(--clr-bg); cursor: default; pointer-events: none; opacity: 0.6; }
+        .day-cell.today { border-width: 2px; border-color: var(--clr-primary); }
+        .day-cell:hover:not(.other-month) { box-shadow: var(--shadow-sm); background-color: #fdfdff; }
+        .day-number { text-align: right; font-weight: 500; margin-bottom: 6px; color: var(--clr-text-light); font-size: 0.8rem;}
+        .day-cell.today .day-number { color: var(--clr-primary); font-weight: bold; }
+        .day-entries { flex-grow: 1; overflow: hidden; }
+        .entry-icon-list { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px; }
+        .entry-icon { font-size: 1.1rem; padding: 4px; border-radius: 4px; width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; position: relative; color: var(--clr-white); opacity: 1; transition: opacity 0.2s ease; }
+        .entry-icon.receipt { background-color: var(--clr-receipt); }
+        .entry-icon.payment { background-color: var(--clr-payment); }
+        .entry-icon.delivery { background-color: var(--clr-delivery); }
+        .entry-icon.completed { opacity: 0.4; }
+        .entry-icon.overdue { border: 2px solid var(--clr-danger); color: var(--clr-danger); background-color: transparent; padding: 2px; }
+        .entry-icon.completed.overdue { border-color: var(--clr-success); }
+        .more-entries-indicator { font-size: 0.75rem; color: var(--clr-text-light); margin-top: 6px; text-align: center; }
 
-        .calendar-nav button {
-            background: var(--dark-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .calendar-nav button:hover { background: #555; }
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); animation: fadeIn 0.2s ease-out; }
+        .modal-content { background-color: var(--clr-white); margin: 5% auto; padding: 25px; border-radius: var(--radius); width: 90%; max-width: 550px; box-shadow: var(--shadow-md); animation: slideIn 0.2s ease-out; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--clr-border); padding-bottom: 10px; margin-bottom: 20px; }
+        .modal-header h2 { margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--clr-dark); }
+        .modal-close-btn { background: none; border: none; font-size: 1.6rem; color: var(--clr-muted); cursor: pointer; padding: 0 5px; line-height: 1; }
+        .modal-body { max-height: 60vh; overflow-y: auto; padding-right: 5px;}
+        .modal-footer { margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--clr-border); text-align: right; }
+        .modal-footer button { padding: 8px 18px; border-radius: 5px; border: none; cursor: pointer; margin-left: 10px; font-weight: 500;}
+        .modal-footer .btn-cancel { background-color: var(--clr-muted); color: white; }
+        .modal-footer .btn-save { background-color: var(--clr-success); color: white; }
+          /* Report Modal Specifics */
+          .report-modal .modal-content { max-width: 700px; }
+          .report-section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+          .report-section:last-child { border-bottom: none; }
+          .report-section h3 { font-size: 1.1rem; color: var(--clr-dark); margin-bottom: 10px; }
+          #report-balancete p, #report-demonstrativo-list div p { margin: 4px 0; font-size: 0.95rem;}
+          #report-demonstrativo-list div { padding: 10px; margin-bottom: 8px; background-color: #f9f9f9; border-radius: 4px; }
+          #report-demonstrativo-list strong { font-weight: 600; }
+          #balancete-saldo.positivo { color: var(--clr-success); }
+          #balancete-saldo.negativo { color: var(--clr-danger); }
 
-        .month-year {
-            font-weight: 600;
-            font-size: 1.2rem;
-            color: var(--dark-color);
+        /* Day Details Modal Specifics */
+        #day-detail-entries .day-entry { border: 1px solid var(--clr-border); padding: 12px; margin-bottom: 10px; border-radius: 5px; background-color: #fdfdfd;}
+        #day-detail-entries h4 { margin: 0 0 8px 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;}
+        #day-detail-entries h4 i { min-width: 15px; text-align: center; font-size: 0.9rem; color: var(--clr-muted);}
+        #day-detail-entries h4 i.fa-dollar-sign { color: var(--clr-receipt);}
+        #day-detail-entries h4 i.fa-receipt { color: var(--clr-payment);}
+        #day-detail-entries h4 i.fa-truck { color: var(--clr-delivery);}
+        #day-detail-entries p { margin: 3px 0; font-size: 0.9rem; color: var(--clr-text-light); }
+        #day-detail-entries p strong { color: var(--clr-text); font-weight: 500;}
+        .day-entry-actions { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--clr-border); display: flex; gap: 8px; flex-wrap: wrap; }
+        .day-entry-actions button, .day-entry-actions a { padding: 6px 12px; font-size: 0.8rem; border-radius: 4px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; font-weight: 500;}
+        .day-entry-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .day-entry-actions .btn-paid, .day-entry-actions .btn-delivered { background-color: var(--clr-success); color: white; }
+        /* --- BOTÃO EDITAR ATUALIZADO --- */
+        .day-entry-actions .btn-edit {
+            background-color: var(--clr-warning); /* Amarelo */
+            color: var(--clr-dark); /* Texto escuro para contraste */
         }
+        /* --- FIM DA ATUALIZAÇÃO --- */
+        .day-entry-actions .btn-delete { background-color: var(--clr-danger); color: white; }
+        .day-entry-actions .btn-whatsapp { background-color: #25D366; color: white; }
+        .day-entry-actions .btn-view-order { background-color: var(--clr-muted); color: white; }
 
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-        }
+          /* Add/Edit Form */
+          .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px 20px; }
+          .form-group { display: flex; flex-direction: column; }
+          .form-group label { margin-bottom: 5px; font-weight: 500; color: var(--clr-muted); font-size: 0.85rem; }
+          .form-group input, .form-group select { width: 100%; padding: 9px 10px; border: 1px solid var(--clr-border); border-radius: 5px; font-size: 0.9rem; height: 38px; background-color: var(--clr-white); }
+          .form-group input[type="checkbox"] { width: auto; height: auto; margin-right: 5px; position: relative; top: 2px;}
+          .form-group.checkbox-group { flex-direction: row; align-items: center; }
+          .form-group.checkbox-group label { margin-bottom: 0; }
+          .form-group.full-width { grid-column: span 2; }
 
-        .day-header {
-            text-align: center;
-            font-weight: 600;
-            padding: 8px 0;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            text-transform: uppercase;
-        }
+        /* Responsive Adjustments */
+        @media (max-width: 992px) { .filter-bar { flex-direction: column; align-items: stretch; gap: 0.8rem;} .filter-group { justify-content: center; } }
+        @media (max-width: 768px) { body { padding: 10px; } .app-header { padding: 0.8rem 1rem; } .header-top { flex-direction: column; align-items: flex-start; gap: 0.5rem;} .header-top .action-buttons { width: 100%; justify-content: flex-end;} .summary-bar { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); } .calendar-container { padding: 0.8rem; } .calendar-grid { gap: 4px; } .day-cell { min-height: 95px; font-size: 0.75rem;} .entry-icon { width: 20px; height: 20px; font-size: 0.9rem;} .modal-content { margin: 5% auto; padding: 20px; max-width: 95%; } }
+        @media (max-width: 480px) { body { padding: 5px; font-size: 13px; } .app-header h1 { font-size: 1.2rem; } .filter-bar { gap: 0.5rem; } .filter-group { flex-wrap: wrap;} .filter-group button { padding: 5px 8px; font-size: 0.8rem;} .summary-bar { grid-template-columns: 1fr 1fr; } .summary-item .value { font-size: 1rem;} .calendar-container { padding: 0.5rem; } .day-cell { min-height: 85px; } .entry-icon { width: 18px; height: 18px; font-size: 0.8rem;} .form-grid { grid-template-columns: 1fr; } .form-group.full-width { grid-column: span 1; } }
 
-        .day-cell {
-            min-height: 90px; /* Increased height */
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 6px;
-            font-size: 0.85rem;
-            background: var(--card-background);
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            display: flex;
-            flex-direction: column;
-        }
-        .day-cell:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-sm);
-            border-color: #aaa;
-        }
-        .day-cell.today { border: 2px solid var(--dark-color); }
-        /* Status indicators (Subtle background colors) */
-        .day-cell.has-past-due-receipt { background-color: #fff5f5; } /* Light red for overdue receipts */
-        .day-cell.has-past-due-payment { background-color: #fff8f0; } /* Light orange for overdue payments */
-        .day-cell.has-paid-items { background-color: #f0fdf4; } /* Light green for days with paid items */
-        .day-cell.has-deliveries { background-color: #fbf5ff; } /* Light purple for days with deliveries */
-
-        .day-number {
-            font-weight: bold;
-            margin-bottom: 4px;
-            text-align: right;
-            color: var(--text-color);
-            font-size: 0.9rem;
-        }
-
-        .entry-indicators {
-            margin-top: auto; /* Push indicators to the bottom */
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            justify-content: center; /* Center indicators */
-            padding-top: 5px;
-        }
-        .indicator {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            line-height: 18px;
-            text-align: center;
-            color: white;
-            font-weight: bold;
-        }
-        .indicator-receipt { background-color: var(--primary-color-receipt); }
-        .indicator-payment { background-color: var(--primary-color-payment); }
-        .indicator-delivery { background-color: var(--primary-color-delivery); }
-
-
-        /* --- Buttons --- */
-        .action-buttons {
-            margin-top: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* Two columns */
-            gap: 10px;
-        }
-        .action-buttons button {
-            padding: 12px 15px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: all 0.2s ease-in-out;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .btn-add { background-color: var(--success-color); color: white; }
-        .btn-add:hover { background-color: #27ae60; }
-        .btn-report { background-color: var(--dark-color); color: white; }
-        .btn-report:hover { background-color: #555; }
-
-        /* --- Modals (General Styles) --- */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            overflow-y: auto;
-            padding: 20px;
-        }
-        .modal-content {
-            background: var(--card-background);
-            padding: 25px;
-            border-radius: var(--border-radius);
-            width: 95%;
-            max-width: 550px; /* Slightly wider default */
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative; /* For close button positioning */
-        }
-         .modal-header {
-             display: flex;
-             justify-content: space-between;
-             align-items: center;
-             margin-bottom: 20px;
-             padding-bottom: 10px;
-             border-bottom: 1px solid var(--border-color);
-         }
-         .modal-header h2 {
-             margin: 0;
-             color: var(--dark-color);
-             font-size: 1.4rem;
-         }
-         .modal-close-btn {
-            background: none;
-            border: none;
-            font-size: 1.8rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 0 5px;
-            line-height: 1;
-         }
-         .modal-close-btn:hover { color: var(--dark-color); }
-
-        .modal label {
-            display: block;
-            margin: 12px 0 5px 0;
-            font-weight: 500;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-        .modal input[type="text"],
-        .modal input[type="number"],
-        .modal input[type="date"],
-        .modal select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 0.95rem;
-            transition: border 0.2s, box-shadow 0.2s;
-        }
-        .modal input:focus, .modal select:focus {
-            outline: none;
-            border-color: var(--primary-color-receipt); /* Default focus color */
-            box-shadow: 0 0 0 3px rgba(90, 158, 219, 0.15);
-        }
-        /* Specific focus colors if needed */
-         .modal.payment-modal input:focus, .modal.payment-modal select:focus {
-             border-color: var(--primary-color-payment);
-             box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
-         }
-
-
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end; /* Align buttons to the right */
-            gap: 10px;
-            margin-top: 25px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border-color);
-        }
-        .modal-buttons button {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-        }
-        .btn-save { background-color: var(--success-color); color: white; }
-        .btn-save:hover { background-color: #27ae60; }
-        .btn-cancel { background-color: var(--text-muted); color: white; }
-        .btn-cancel:hover { background-color: #555; }
-        .btn-delete { background-color: var(--primary-color-payment); color: white; }
-        .btn-delete:hover { background-color: #c0392b; }
-
-
-        /* --- Day Details Modal --- */
-        .day-details-content { max-width: 600px; }
-        #day-entries-list { margin-top: 15px; }
-        .day-entry {
-            padding: 15px;
-            margin-bottom: 12px;
-            border-radius: 8px;
-            background: #f8fafc;
-            box-shadow: var(--shadow-sm);
-            border-left: 5px solid; /* Default border */
-            position: relative;
-        }
-         /* Specific styling per entry type */
-         .day-entry.receipt { border-left-color: var(--primary-color-receipt); }
-         .day-entry.payment { border-left-color: var(--primary-color-payment); }
-         .day-entry.delivery { border-left-color: var(--primary-color-delivery); }
-
-         .day-entry.paid, .day-entry.delivered {
-            background-color: #f0fdf4; /* Light green background for completed items */
-             border-left-color: var(--success-color) !important;
-        }
-        .day-entry.past-due {
-            background-color: #fff5f5; /* Light red/orange for past due */
-             /* Keep original border color for type distinction unless paid */
-        }
-        .day-entry h3 {
-            margin: 0 0 8px 0;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-         .day-entry h3 i { /* Icon before title */
-            font-size: 1rem;
-         }
-         .day-entry.receipt h3 i { color: var(--primary-color-receipt); }
-         .day-entry.payment h3 i { color: var(--primary-color-payment); }
-         .day-entry.delivery h3 i { color: var(--primary-color-delivery); }
-
-        .day-entry p { margin: 5px 0; font-size: 0.9rem; color: var(--text-muted); }
-        .day-entry p strong { color: var(--dark-color); font-weight: 500; }
-        .entry-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 12px;
-            padding-top: 10px;
-            border-top: 1px dashed var(--border-color);
-        }
-        .entry-actions button {
-            border: none;
-            padding: 7px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            flex: 0 1 auto; /* Allow shrinking but not growing */
-        }
-        .btn-action-paid { background-color: var(--success-color); color: white; }
-        .btn-action-paid:hover { background-color: #27ae60; }
-        .btn-action-delivered { background-color: var(--success-color); color: white; }
-        .btn-action-delivered:hover { background-color: #27ae60; }
-        .btn-action-whatsapp { background-color: #25D366; color: white; }
-        .btn-action-whatsapp:hover { background-color: #1da851; }
-        .btn-action-edit { background-color: #3b82f6; color: white; }
-        .btn-action-edit:hover { background-color: #2563eb; }
-        .btn-action-delete { background-color: var(--primary-color-payment); color: white; }
-        .btn-action-delete:hover { background-color: #c0392b; }
-
-        /* --- Combined Report Modal --- */
-        .report-modal .modal-content { max-width: 700px; }
-        #report-summary, #report-details { margin-top: 15px; }
-        .report-section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-         .report-section:last-child { border-bottom: none; margin-bottom: 0; }
-         .report-section h3 { margin-bottom: 10px; font-size: 1.1rem; color: var(--dark-color); }
-         .report-totals p { margin: 6px 0; font-size: 1rem; }
-         .report-totals .value { font-weight: bold; }
-         .report-totals .receipt-total { color: var(--primary-color-receipt); }
-         .report-totals .payment-total { color: var(--primary-color-payment); }
-         .report-totals .balance-positive { color: var(--success-color); font-size: 1.1rem; }
-         .report-totals .balance-negative { color: var(--primary-color-payment); font-size: 1.1rem; }
-         #report-details ul { list-style: none; padding: 0; }
-         #report-details li {
-             padding: 10px;
-             margin-bottom: 8px;
-             border-radius: 6px;
-             background-color: #f8f9fa;
-             display: flex;
-             justify-content: space-between;
-             align-items: center;
-             font-size: 0.9rem;
-             border-left: 4px solid;
-         }
-         #report-details li.receipt { border-left-color: var(--primary-color-receipt); }
-         #report-details li.payment { border-left-color: var(--primary-color-payment); }
-         #report-details li span:last-child { font-weight: bold; }
-
-
-        /* --- Responsiveness --- */
-        @media (max-width: 768px) {
-            .container { padding: 15px; }
-            h1 { font-size: 1.4rem; }
-            .resumo { grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
-            .resumo span:first-child { font-size: 1rem; }
-            .resumo span:last-child { font-size: 0.7rem; }
-            .calendar-grid { gap: 4px; }
-            .day-cell { min-height: 75px; padding: 4px; }
-            .day-number { font-size: 0.8rem; }
-            .indicator { width: 15px; height: 15px; line-height: 15px; font-size: 0.65rem; }
-            .action-buttons { grid-template-columns: 1fr; } /* Stack buttons */
-             .modal-content { padding: 20px; }
-             .modal-header h2 { font-size: 1.2rem; }
-             .entry-actions button { font-size: 0.75rem; padding: 6px 10px; }
-             #report-details li { flex-direction: column; align-items: flex-start; gap: 5px; }
-        }
-        @media (max-width: 480px) {
-            body { padding: 10px; }
-            .filter-controls { flex-wrap: wrap; justify-content: center; }
-            .filter-controls button { flex-grow: 1; font-size: 0.85rem; }
-            .resumo { grid-template-columns: 1fr; } /* Stack summary items */
-            .calendar-nav button { padding: 6px 10px; font-size: 0.9rem; }
-            .month-year { font-size: 1.1rem; }
-            .day-header { font-size: 0.7rem; padding: 6px 0; }
-            .day-cell { min-height: 65px; }
-            .indicator { width: 12px; height: 12px; line-height: 12px; font-size: 0.6rem; }
-            .action-buttons button { font-size: 0.9rem; }
-        }
-
+          /* Animations & Utilities */
+          @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes slideIn { from { transform: translateY(-15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+          .loading-indicator { text-align: center; padding: 20px; color: var(--clr-muted); }
+          .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Calendário Financeiro Unificado</h1>
-
-        <div class="filter-controls">
-            <button id="filter-all" class="active filter-all" data-filter="all">📅 Tudo</button>
-            <button id="filter-receipts" class="filter-receipts" data-filter="receipt">💰 Recebimentos</button>
-            <button id="filter-payments" class="filter-payments" data-filter="payment">💸 Pagamentos</button>
-             <button id="filter-deliveries" class="filter-deliveries" data-filter="delivery">🚚 Entregas</button>
-        </div>
-
-        <div class="resumo">
-            <div>
-                <span id="total-a-receber">R$ 0,00</span>
-                <span>A Receber (Mês)</span>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-top">
+                <h1><i class="fas fa-calendar"></i> Calendario</h1>
+                <div class="action-buttons">
+                    <button id="btn-add-entry"><i class="fas fa-plus"></i> Novo Lançamento</button>
+                    <button id="btn-reports"><i class="fas fa-chart-pie"></i> Relatórios</button>
+                </div>
             </div>
-            <div>
-                <span id="total-recebido">R$ 0,00</span>
-                <span>Recebido (Mês)</span>
+            <div class="filter-bar">
+                <div class="filter-group" id="filter-group-type">
+                    <button data-filter-type="all" class="active">Tudo</button>
+                    <button data-filter-type="receipt">Recebimentos</button>
+                    <button data-filter-type="payment">Pagamentos</button>
+                    <button data-filter-type="delivery">Entregas</button>
+                </div>
+                <div class="filter-group" id="filter-group-status">
+                    <button data-filter-status="all" class="active">Todos Status</button>
+                    <button data-filter-status="pending">Pendentes</button>
+                    <button data-filter-status="paid">Concluídos</button>
+                    <button data-filter-status="overdue">Atrasados</button>
+                </div>
             </div>
-            <div>
-                <span id="total-a-pagar">R$ 0,00</span>
-                <span>A Pagar (Mês)</span>
+        </header>
+
+        <main class="app-main">
+            <div class="summary-bar">
+                <div class="summary-item" id="summary-item-recebido">
+                    <span class="value receipt" id="summary-recebido">R$ 0,00</span>
+                    <span class="label">Recebido Mês</span>
+                </div>
+                <div class="summary-item" id="summary-item-a-receber">
+                    <span class="value pending" id="summary-a-receber">R$ 0,00</span>
+                    <span class="label">A Receber Mês</span>
+                </div>
+                <div class="summary-item" id="summary-item-pago">
+                    <span class="value payment" id="summary-pago">R$ 0,00</span>
+                    <span class="label">Pago Mês</span>
+                </div>
+                <div class="summary-item" id="summary-item-a-pagar">
+                    <span class="value pending" id="summary-a-pagar">R$ 0,00</span>
+                    <span class="label">A Pagar Mês</span>
+                </div>
+                <div class="summary-item hidden" id="summary-item-deliveries">
+                    <span class="value delivery-count" id="summary-deliveries-count">0</span>
+                    <span class="label">Entregas Mês</span>
+                </div>
+                <div class="summary-item" id="summary-item-vencido">
+                    <span class="value danger" id="summary-vencido">R$ 0,00</span>
+                    <span class="label">Vencido Total</span>
+                </div>
             </div>
-            <div>
-                <span id="total-pago">R$ 0,00</span>
-                <span>Pago (Mês)</span>
+
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <button id="prev-month" title="Mês Anterior"><i class="fas fa-chevron-left"></i></button>
+                    <span class="month-display" id="month-display">Carregando...</span>
+                    <button id="next-month" title="Próximo Mês"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="calendar-grid" id="calendar-labels">
+                    <div class="day-label">Dom</div> <div class="day-label">Seg</div> <div class="day-label">Ter</div>
+                    <div class="day-label">Qua</div> <div class="day-label">Qui</div> <div class="day-label">Sex</div> <div class="day-label">Sáb</div>
+                </div>
+                <div class="calendar-grid" id="calendar-days">
+                    <div class="loading-indicator" style="grid-column: span 7;"><i class="fas fa-spinner fa-spin"></i> Carregando calendário...</div>
+                </div>
             </div>
-        </div>
+        </main>
+    </div>
 
-        <div class="calendar-nav">
-            <button id="prev-month" title="Mês Anterior"><i class="fas fa-chevron-left"></i></button>
-            <div class="month-year" id="current-month">Mês Ano</div>
-            <button id="next-month" title="Próximo Mês"><i class="fas fa-chevron-right"></i></button>
-        </div>
-
-        <div class="calendar-grid" id="calendar-header">
-            <div class="day-header">Dom</div>
-            <div class="day-header">Seg</div>
-            <div class="day-header">Ter</div>
-            <div class="day-header">Qua</div>
-            <div class="day-header">Qui</div>
-            <div class="day-header">Sex</div>
-            <div class="day-header">Sáb</div>
-        </div>
-
-        <div class="calendar-grid" id="calendar-days">
+    <div id="day-detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="day-detail-title">Detalhes do Dia</h2>
+                <button class="modal-close-btn" data-modal-id="day-detail-modal">&times;</button>
             </div>
-
-        <div class="action-buttons">
-            <button class="btn-add" id="open-add-entry-modal"><i class="fas fa-plus-circle"></i> Adicionar Lançamento</button>
-            <button class="btn-report" id="open-report-modal"><i class="fas fa-chart-pie"></i> Relatório do Mês</button>
+            <div class="modal-body" id="day-detail-entries"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-modal-id="day-detail-modal">Fechar</button>
+            </div>
         </div>
     </div>
 
-    <div class="modal" id="entry-modal">
+    <div id="entry-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="entry-modal-title">Novo Lançamento</h2>
-                <button class="modal-close-btn" data-close-modal>&times;</button>
+                <button class="modal-close-btn" data-modal-id="entry-modal">&times;</button>
             </div>
             <form id="entry-form">
-                <input type="hidden" id="entry-id"> <label for="entry-type">Tipo de Lançamento</label>
-                <select id="entry-type" required>
-                    <option value="receipt" selected>Recebimento</option>
-                    <option value="payment">Pagamento</option>
-                </select>
-
-                <label for="entry-description">Descrição</label>
-                <input type="text" id="entry-description" required>
-
-                <label for="entry-value">Valor (R$)</label>
-                <input type="number" id="entry-value" step="0.01" required>
-
-                <label for="entry-date">Data Vencimento/Pagamento</label>
-                <input type="date" id="entry-date" required>
-
-                <div id="receipt-fields">
-                    <label for="entry-client">Cliente (opcional)</label>
-                    <select id="entry-client">
-                        <option value="">Selecione...</option>
-                        </select>
-                </div>
-
-                <div id="payment-fields" style="display: none;">
-                    <label for="entry-supplier">Fornecedor (opcional)</label>
-                    <input type="text" id="entry-supplier">
-
-                    <label for="entry-supplier-contact">Contato/Detalhes (opcional)</label>
-                    <input type="text" id="entry-supplier-contact">
-
-                     <label for="entry-recurrence">Recorrência</label>
-                     <select id="entry-recurrence">
-                         <option value="none">Não repete</option>
-                         <option value="weekly">Semanal</option>
-                         <option value="monthly">Mensal</option>
-                     </select>
-                </div>
-
-
-                <div class="modal-buttons">
-                    <button type="button" class="btn-cancel" data-close-modal>Cancelar</button>
-                    <button type="submit" class="btn-save">Salvar</button>
+                <input type="hidden" id="entry-id">
+                <input type="hidden" id="entry-original-id">
+                <input type="hidden" id="entry-is-generated">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="entry-type">Tipo</label>
+                        <select id="entry-type" required> <option value="receipt" selected>Recebimento</option> <option value="payment">Pagamento</option> </select>
+                    </div>
+                    <div class="form-group full-width"> <label for="entry-description">Descrição</label> <input type="text" id="entry-description" required> </div>
+                    <div class="form-group"> <label for="entry-value">Valor (R$)</label> <input type="number" id="entry-value" step="0.01" required> </div>
+                    <div class="form-group"> <label for="entry-date">Data Venc./Pgto.</label> <input type="date" id="entry-date" required> </div>
+                    <div class="form-group receipt-field full-width"> <label for="entry-client">Cliente</label> <select id="entry-client"><option value="">Nenhum</option></select> </div>
+                    <div class="form-group payment-field hidden"> <label for="entry-supplier">Fornecedor</label> <input type="text" id="entry-supplier"> </div>
+                    <div class="form-group payment-field hidden"> <label for="entry-recurrence">Recorrência</label> <select id="entry-recurrence"> <option value="none" selected>Não Repete</option> <option value="weekly">Semanal</option> <option value="monthly">Mensal</option> </select> </div>
+                    <div class="form-group payment-field hidden checkbox-group full-width"> <input type="checkbox" id="entry-paid"> <label for="entry-paid">Marcar Pago?</label> </div>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <div class="modal" id="day-details-modal">
-        <div class="modal-content day-details-content">
-            <div class="modal-header">
-                 <h2 id="day-details-title">Detalhes do Dia</h2>
-                <button class="modal-close-btn" data-close-modal>&times;</button>
-            </div>
-            <div id="day-entries-list">
-                </div>
-             <div class="modal-buttons">
-                  <button type="button" class="btn-cancel" data-close-modal>Fechar</button>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-modal-id="entry-modal">Cancelar</button>
+                <button type="submit" class="btn-save" form="entry-form">Salvar</button>
             </div>
         </div>
     </div>
 
-    <div class="modal report-modal" id="report-modal">
+    <div id="report-modal" class="modal report-modal">
         <div class="modal-content">
-             <div class="modal-header">
-                 <h2 id="report-title">Relatório Mensal</h2>
-                 <button class="modal-close-btn" data-close-modal>&times;</button>
-             </div>
-
-            <div id="report-content">
-                <div class="report-section report-totals">
-                     <h3>Resumo Financeiro do Mês</h3>
-                     <p>Total Recebido: <span class="value receipt-total" id="report-total-received">R$ 0,00</span></p>
-                     <p>Total Pago: <span class="value payment-total" id="report-total-paid">R$ 0,00</span></p>
-                     <p>Saldo: <span class="value" id="report-balance">R$ 0,00</span></p>
-                 </div>
-                 <div class="report-section">
-                    <h3>Detalhes dos Lançamentos</h3>
-                    <ul id="report-details">
-                         </ul>
-                 </div>
+            <div class="modal-header">
+                <h2 id="report-title">Relatórios do Mês</h2>
+                <button class="modal-close-btn" data-modal-id="report-modal">&times;</button>
             </div>
-             <div class="modal-buttons">
-                 <button type="button" class="btn-cancel" data-close-modal>Fechar</button>
-             </div>
+            <div class="modal-body">
+                <div class="report-section">
+                    <h3><i class="fas fa-file-invoice-dollar"></i> Balancete</h3>
+                    <div id="report-balancete">
+                        <p>Recebimentos Pagos: <span id="balancete-recebido">R$ 0,00</span></p>
+                        <p>Pagamentos Efetuados: <span id="balancete-pago">R$ 0,00</span></p>
+                        <p><strong>Saldo: <span id="balancete-saldo">R$ 0,00</span></strong></p>
+                    </div>
+                </div>
+                <div class="report-section">
+                    <h3><i class="fas fa-users"></i> Demonstrativo de Recebimentos por Cliente</h3>
+                    <div id="report-demonstrativo-list">
+                        <p class="placeholder">Nenhum recebimento no mês.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-modal-id="report-modal">Fechar</button>
+            </div>
         </div>
     </div>
 
 
     <script type="module">
-        // --- Firebase SDK Imports ---
+        // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, query, orderBy, deleteDoc, where, Timestamp, writeBatch, getDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, query, orderBy, deleteDoc, where, Timestamp, writeBatch, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-        // --- Firebase Configuration ---
-        // !!! REPLACE WITH YOUR ACTUAL FIREBASE CONFIGURATION !!!
+        // Firebase Config - ** SUBSTITUA COM OS SEUS DADOS DO FIREBASE **
+        // Configuração Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc", // Example key, replace it
-            authDomain: "testebosspro.firebaseapp.com",
-            projectId: "testebosspro",
-            storageBucket: "testebosspro.appspot.com",
-            messagingSenderId: "73684788134",
-            appId: "1:73684788134:web:7c8250c83f10a2df59e567",
+            apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc", authDomain: "testebosspro.firebaseapp.com", projectId: "testebosspro",
+            storageBucket: "testebosspro.appspot.com", messagingSenderId: "73684788134", appId: "1:73684788134:web:7c8250c83f10a2df59e567",
             measurementId: "G-1H29L5B830"
         };
-
-        // --- Firebase Initialization ---
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Global State Variables ---
+        // --- Global State & DOM Elements Cache ---
         let currentDate = new Date();
-        let allEntries = []; // Combined list of receipts, payments, and deliveries
-        let clients = []; // Cache for client data
-        let currentFilter = 'all'; // 'all', 'receipt', 'payment', 'delivery'
-
-        // --- DOM Element References ---
-        const calendarDaysEl = document.getElementById('calendar-days');
-        const currentMonthEl = document.getElementById('current-month');
-        const prevMonthBtnEl = document.getElementById('prev-month');
-        const nextMonthBtnEl = document.getElementById('next-month');
-        const entryModalEl = document.getElementById('entry-modal');
-        const openModalBtnEl = document.getElementById('open-add-entry-modal');
-        const entryFormEl = document.getElementById('entry-form');
-        const entryModalTitleEl = document.getElementById('entry-modal-title');
-        const entryTypeSelectEl = document.getElementById('entry-type');
-        const receiptFieldsEl = document.getElementById('receipt-fields');
-        const paymentFieldsEl = document.getElementById('payment-fields');
-        const entryClientSelectEl = document.getElementById('entry-client');
-        const entryIdInputEl = document.getElementById('entry-id');
-        const totalAReceberEl = document.getElementById('total-a-receber');
-        const totalRecebidoEl = document.getElementById('total-recebido');
-        const totalAPagarEl = document.getElementById('total-a-pagar');
-        const totalPagoEl = document.getElementById('total-pago');
-        const dayDetailsModalEl = document.getElementById('day-details-modal');
-        const dayDetailsTitleEl = document.getElementById('day-details-title');
-        const dayEntriesListEl = document.getElementById('day-entries-list');
-        const reportModalEl = document.getElementById('report-modal');
-        const reportTitleEl = document.getElementById('report-title');
-        const reportTotalReceivedEl = document.getElementById('report-total-received');
-        const reportTotalPaidEl = document.getElementById('report-total-paid');
-        const reportBalanceEl = document.getElementById('report-balance');
-        const reportDetailsListEl = document.getElementById('report-details');
-        const filterButtons = document.querySelectorAll('.filter-controls button');
-        const openReportModalBtnEl = document.getElementById('open-report-modal');
-
+        let allDbEntries = []; let displayedEntries = []; let clients = [];
+        let currentFilters = { type: 'all', status: 'all' }; let isLoading = false;
+        // Cache de Elementos DOM
+        const calendarDaysEl=document.getElementById('calendar-days'), monthDisplayEl=document.getElementById('month-display'), prevMonthBtnEl=document.getElementById('prev-month'), nextMonthBtnEl=document.getElementById('next-month'), filterTypeGroup=document.getElementById('filter-group-type'), filterStatusGroup=document.getElementById('filter-group-status'), btnAddEntry=document.getElementById('btn-add-entry'), summaryItemRecebido=document.getElementById('summary-item-recebido'), summaryItemAReceber=document.getElementById('summary-item-a-receber'), summaryItemPago=document.getElementById('summary-item-pago'), summaryItemAPagar=document.getElementById('summary-item-a-pagar'), summaryItemDeliveries=document.getElementById('summary-item-deliveries'), summaryItemVencido=document.getElementById('summary-item-vencido'), summaryRecebidoEl=document.getElementById('summary-recebido'), summaryAReceberEl=document.getElementById('summary-a-receber'), summaryPagoEl=document.getElementById('summary-pago'), summaryAPagarEl=document.getElementById('summary-a-pagar'), summaryVencidoEl=document.getElementById('summary-vencido'), summaryDeliveriesCountEl=document.getElementById('summary-deliveries-count'), dayDetailModalEl=document.getElementById('day-detail-modal'), dayDetailTitleEl=document.getElementById('day-detail-title'), dayDetailEntriesEl=document.getElementById('day-detail-entries'), entryModalEl=document.getElementById('entry-modal'), entryModalTitleEl=document.getElementById('entry-modal-title'), entryFormEl=document.getElementById('entry-form'), entryIdInput=document.getElementById('entry-id'), entryOriginalIdInput=document.getElementById('entry-original-id'), entryIsGeneratedInput=document.getElementById('entry-is-generated'), entryTypeSelect=document.getElementById('entry-type'), entryClientSelect=document.getElementById('entry-client'), entryRecurrenceSelect=document.getElementById('entry-recurrence'), entryPaidCheckbox=document.getElementById('entry-paid'), receiptFields=entryModalEl.querySelectorAll('.receipt-field'), paymentFields=entryModalEl.querySelectorAll('.payment-field'), modalCloseBtns=document.querySelectorAll('[data-modal-id]'), btnReports=document.getElementById('btn-reports'), reportModalEl=document.getElementById('report-modal'), reportBalanceteRecebidoEl=document.getElementById('balancete-recebido'), reportBalancetePagoEl=document.getElementById('balancete-pago'), reportBalanceteSaldoEl=document.getElementById('balancete-saldo'), reportDemonstrativoListEl=document.getElementById('report-demonstrativo-list');
 
         // --- Utility Functions ---
-        function formatCurrency(value) {
-            if (isNaN(value)) return 'R$ 0,00';
-            return `R$ ${Number(value).toFixed(2).replace('.', ',')}`;
+        const formatCurrency = (v) => isNaN(v)?'R$ 0,00':`R$ ${Number(v).toFixed(2).replace('.',',')}`;
+        const formatDate = (d) => {if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d))return 'N/A';const[y,m,day]=d.split('-');return`${day}/${m}/${y}`;};
+        const parseDate = (d) => {if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d))return null;const[y,m,day]=d.split('-');return new Date(Date.UTC(Number(y),Number(m)-1,Number(day)));};
+        const toISODateString = (d) => {if(!d||!(d instanceof Date))return'';return d.toISOString().split('T')[0];};
+        const getMonthName = (m) => ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][m]; // Nomes completos
+        const createEmptyDayElement = () => {const d=document.createElement('div');d.className='day-cell other-month';return d;};
+        const adjustDateForFirestore = (d) => {if(!d)return null;if(/^\d{4}-\d{2}-\d{2}$/.test(d))return d;try{const dt=new Date(d+'T00:00:00');if(!isNaN(dt.getTime()))return toISODateString(dt);}catch(e){}return null;};
+
+        // --- Data Loading & Processing ---
+        function setLoadingState(loading) {
+            isLoading = loading;
+            btnAddEntry.innerHTML = isLoading ? '<i class="fas fa-spinner fa-spin"></i> Carregando...' : '<i class="fas fa-plus"></i> Novo Lançamento';
+            btnAddEntry.disabled = isLoading;
+            // Adicionar feedback visual para outras ações se necessário
         }
-
-        function formatDate(dateString) { // Input YYYY-MM-DD
-            if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return 'N/A';
-            const [year, month, day] = dateString.split('-');
-            return `${day}/${month}/${year}`;
-        }
-
-         function parseDate(dateString) { // Input YYYY-MM-DD -> Date object (UTC midnight)
-            if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return null;
-            const [year, month, day] = dateString.split('-');
-            // Create date in UTC to avoid timezone issues when comparing dates
-            return new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
-        }
-
-        function toISODateString(date) { // Input Date object -> YYYY-MM-DD
-            if (!date || !(date instanceof Date)) return '';
-             const year = date.getFullYear();
-             const month = (date.getMonth() + 1).toString().padStart(2, '0');
-             const day = date.getDate().toString().padStart(2, '0');
-             return `${year}-${month}-${day}`;
-        }
-
-        function getMonthName(monthIndex) {
-            const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-            return months[monthIndex];
-        }
-
-        function createEmptyDayElement() {
-            const emptyDay = document.createElement('div');
-            emptyDay.className = 'day-cell';
-            emptyDay.style.visibility = 'hidden';
-            emptyDay.style.pointerEvents = 'none';
-            return emptyDay;
-        }
-
-        // Adjust date for Firestore (ensure YYYY-MM-DD)
-        function adjustDateForFirestore(dateString) {
-            if (!dateString) return null;
-            if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-                return dateString; // Already correct format
-            }
-            try {
-                // Attempt to parse potentially different input formats (e.g., from date picker)
-                const date = new Date(dateString + 'T00:00:00'); // Assume local time if not YYYY-MM-DD
-                if (!isNaN(date.getTime())) {
-                    return toISODateString(date); // Convert to YYYY-MM-DD
-                }
-            } catch (e) { console.error("Erro ao ajustar data para Firestore:", dateString, e); }
-            return null; // Return null if parsing fails
-        }
-
-
-        // --- Data Loading Functions ---
-
         async function loadClients() {
             try {
-                const q = query(collection(db, "clientes"), orderBy("empresa"), orderBy("nome"));
-                const querySnapshot = await getDocs(q);
-                clients = [];
-                entryClientSelectEl.innerHTML = '<option value="">Selecione...</option>'; // Reset dropdown
-
-                querySnapshot.forEach((doc) => {
-                    const client = { id: doc.id, ...doc.data() };
-                    clients.push(client);
-                    const option = document.createElement('option');
-                    // Store necessary info directly in the value for easy retrieval
-                    option.value = JSON.stringify({
-                        id: client.id,
-                        nome: client.empresa || client.nome || 'Cliente Desconhecido',
-                        telefone: client.telefone || ''
-                    });
-                    option.textContent = `${client.empresa || client.nome || 'Cliente Desconhecido'} (${client.codigo || 'S/C'})`;
-                    entryClientSelectEl.appendChild(option);
+                const q = query(collection(db, "clientes"), orderBy("empresa")); // Ou orderBy("nome") se preferir
+                const snap = await getDocs(q);
+                clients = snap.docs.map(doc=>({ id: doc.id, ...doc.data() }));
+                // Limpa e preenche o select de clientes
+                entryClientSelect.innerHTML = '<option value="">Nenhum</option>';
+                clients.forEach(c => {
+                    const o=document.createElement('option');
+                    // Guarda ID, Nome e Telefone no value como JSON string
+                    o.value = JSON.stringify({ id: c.id, nome: c.empresa || c.nome, telefone: c.telefone });
+                    o.textContent = `${c.empresa || c.nome || 'Cliente Sem Nome'} (${c.codigo || 'S/C'})`; // Mostra nome/empresa e código
+                    entryClientSelect.appendChild(o);
                 });
-                console.log("Clientes carregados:", clients.length);
-            } catch (error) {
-                console.error("Erro ao carregar clientes:", error);
-                // Consider adding UI feedback
+                console.log(`Clientes carregados: ${clients.length}`);
+            } catch (e) {
+                console.error("Erro ao carregar clientes:", e);
+                // Tratar erro (ex: mostrar mensagem ao usuário)
             }
         }
-
-         async function loadEntries() {
-            console.log("Iniciando carregamento de todos os lançamentos...");
-            allEntries = []; // Clear previous entries
-            const today = new Date(); today.setHours(0, 0, 0, 0);
-            const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-            const futureMonthsLimit = 12; // How many months ahead to generate recurring payments
-            const limitDate = new Date(today.getFullYear(), today.getMonth() + futureMonthsLimit, 0); // Generate up to end of the limit month
-
-
+        async function loadAllData() {
+            if(isLoading) return;
+            setLoadingState(true);
+            console.log("Iniciando carregamento de todos os dados...");
             try {
-                // 1. Load Receipts
-                const receiptsQuery = query(collection(db, "recebimentos"), orderBy("dataPagamento"));
-                const receiptsSnapshot = await getDocs(receiptsQuery);
-                receiptsSnapshot.forEach(doc => {
+                const cp = loadClients(); // Carrega clientes em paralelo
+                // Prepara queries para recebimentos, pagamentos e pedidos
+                const rq = query(collection(db, "recebimentos"), orderBy("dataPagamento"));
+                const pq = query(collection(db, "pagamentos"), orderBy("dataPagamento"));
+                const dq = query(collection(db, "pedidos"), where("dataEntregaOficial", "!=", null)); // Apenas pedidos com data de entrega
+
+                // Executa todas as queries em paralelo
+                const [receiptsSnap, paymentsSnap, deliveriesSnap] = await Promise.all([
+                    getDocs(rq),
+                    getDocs(pq),
+                    getDocs(dq),
+                    cp // Espera o carregamento de clientes também
+                ]);
+
+                allDbEntries = []; // Limpa array antes de preencher
+
+                // Processa Recebimentos
+                receiptsSnap.forEach(doc => {
                     const data = doc.data();
-                    if (data.dataPagamento && typeof data.dataPagamento === 'string') {
-                        allEntries.push({
+                    if(data.dataPagamento) { // Garante que há data
+                        allDbEntries.push({
                             id: doc.id,
-                            type: 'receipt', // Add type identifier
-                            description: data.descricao || "Recebimento sem descrição",
-                            value: data.valor || 0,
-                            date: data.dataPagamento, // YYYY-MM-DD
+                            type: 'receipt',
+                            description: data.descricao || 'Recebimento N/A',
+                            value: Number(data.valor) || 0,
+                            date: data.dataPagamento, // Assume formato YYYY-MM-DD
                             clientId: data.clienteId || null,
-                            clientName: data.clienteNome || null,
-                            clientPhone: data.telefone || null,
+                            clientName: data.clienteNome || null, // Pode ser preenchido depois se necessário
+                            clientPhone: data.telefone || null,   // Armazena telefone
                             isPaid: data.pago || false,
-                            isRecurring: false, // Receipts are not recurring in this model
-                            createdAt: data.createdAt?.toDate() || new Date()
+                            isGenerated: false, // Recibos não são gerados por recorrência neste modelo
+                            isRecurringRule: false,
+                            recurrenceType: 'none',
+                            originalId: null,
+                            createdAt: data.createdAt?.toDate() || null // Converte Timestamp para Date
                         });
-                    } else {
-                        console.warn("Recebimento ignorado (data inválida):", doc.id, data.dataPagamento);
                     }
                 });
-                console.log(`Carregados ${receiptsSnapshot.size} recebimentos.`);
 
-                // 2. Load Original Payments & Generate Recurring Instances
-                const paymentsQuery = query(collection(db, "pagamentos"), orderBy("dataPagamento"));
-                const paymentsSnapshot = await getDocs(paymentsQuery);
-                const originalPayments = []; // Store originals to generate future ones
-
-                 paymentsSnapshot.forEach(doc => {
+                // Processa Pagamentos
+                paymentsSnap.forEach(doc => {
                     const data = doc.data();
-                     if (data.dataPagamento && typeof data.dataPagamento === 'string') {
-                        const paymentData = {
+                    if(data.dataPagamento) {
+                        allDbEntries.push({
                             id: doc.id,
                             type: 'payment',
-                            description: data.descricao || "Pagamento sem descrição",
-                            value: data.valor || 0,
-                            date: data.dataPagamento, // YYYY-MM-DD
+                            description: data.descricao || 'Pagamento N/A',
+                            value: Number(data.valor) || 0,
+                            date: data.dataPagamento,
                             supplier: data.fornecedor || null,
-                            supplierContact: data.contatoFornecedor || null,
+                            supplierContact: data.contatoFornecedor || null, // Se houver
                             isPaid: data.pago || false,
-                            recurrence: data.recorrencia || 'none', // 'none', 'weekly', 'monthly'
-                            isRecurring: data.recorrencia !== 'none',
-                            createdAt: data.createdAt?.toDate() || new Date()
-                        };
-                        allEntries.push(paymentData); // Add the original payment
-                        if (paymentData.isRecurring) {
-                             originalPayments.push(paymentData); // Keep recurring originals for generation
-                        }
-                    } else {
-                        console.warn("Pagamento ignorado (data inválida):", doc.id, data.dataPagamento);
-                    }
-                 });
-                console.log(`Carregados ${paymentsSnapshot.size} pagamentos originais.`);
-
-                // Generate future instances for recurring payments
-                originalPayments.forEach(origPayment => {
-                    let nextDate = parseDate(origPayment.date);
-                     if (!nextDate) {
-                         console.warn(`Não foi possível gerar recorrências para ${origPayment.id} devido à data inválida.`);
-                         return;
-                     }
-
-                    let generatedCount = 0;
-                    const maxGenerated = futureMonthsLimit * (origPayment.recurrence === 'weekly' ? 5 : 1); // Limit generation count
-
-                    while (generatedCount < maxGenerated) {
-                        // Calculate next occurrence date
-                        if (origPayment.recurrence === 'weekly') {
-                            nextDate.setUTCDate(nextDate.getUTCDate() + 7);
-                        } else if (origPayment.recurrence === 'monthly') {
-                            const originalDay = parseDate(origPayment.date).getUTCDate(); // Get day from original date
-                             nextDate.setUTCMonth(nextDate.getUTCMonth() + 1);
-                            // Adjust if month changed day (e.g., Jan 31 -> Feb 28)
-                            // Set day explicitly to handle month length differences
-                             nextDate = new Date(Date.UTC(nextDate.getUTCFullYear(), nextDate.getUTCMonth(), originalDay));
-                        } else {
-                            break; // Should not happen if isRecurring is true, but safety break
-                        }
-
-                        // Stop if next date exceeds the generation limit
-                        if (nextDate > limitDate) break;
-
-                        // Add the generated instance (only if it's on or after today)
-                         // *** Correction: Generate all future instances within the limit ***
-                         // We filter *display* later, but need all generated instances for accurate future view
-                         // if (nextDate >= today) { // -- REMOVED THIS FILTER --
-                            allEntries.push({
-                                id: `gen-${origPayment.id}-${toISODateString(nextDate)}`, // Unique ID for generated
-                                originalId: origPayment.id, // Link to original
-                                type: 'payment',
-                                description: origPayment.description,
-                                value: origPayment.value,
-                                date: toISODateString(nextDate),
-                                supplier: origPayment.supplier,
-                                supplierContact: origPayment.supplierContact,
-                                isPaid: false, // Generated are always initially unpaid
-                                recurrence: 'none', // Generated instances don't recur themselves
-                                isRecurring: false,
-                                isGenerated: true, // Flag as generated
-                                createdAt: origPayment.createdAt // Inherit original creation time for context
-                            });
-                        // } // -- REMOVED THIS FILTER --
-                        generatedCount++;
-                    }
-                });
-                console.log("Instâncias de pagamento recorrentes geradas.");
-
-
-                // 3. Load Deliveries (from 'pedidos')
-                const deliveriesQuery = query(collection(db, "pedidos"), where("dataEntregaOficial", "!=", null)); // Only those with a date
-                const deliveriesSnapshot = await getDocs(deliveriesQuery);
-                 deliveriesSnapshot.forEach(doc => {
-                    const data = doc.data();
-                     // Ensure dataEntregaOficial exists and is likely in YYYY-MM-DD format
-                     if (data.dataEntregaOficial && typeof data.dataEntregaOficial === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.dataEntregaOficial)) {
-                        allEntries.push({
-                            id: doc.id, // Use pedido ID
-                            type: 'delivery',
-                            description: `Entrega Pedido #${data.numeroPedido || doc.id.substring(0, 6).toUpperCase()}`,
-                            date: data.dataEntregaOficial,
-                            clientName: data.clienteNome || clients.find(c => c.id === data.clienteId)?.nome || 'Cliente Desconhecido',
-                            value: data.totalGeral || 0, // Optional: include order value if needed
-                            isDelivered: data.entregue || false, // Use 'entregue' field
-                            isRecurring: false,
-                            // Add other relevant fields from 'pedidos' if needed
-                             numeroPedido: data.numeroPedido || null,
-                             clienteId: data.clienteId || null,
-                             orcamentoId: data.orcamentoId || null
+                            isRecurringRule: data.isRecurringRule || false,
+                            recurrenceType: data.recurrenceType || data.recorrencia || 'none', // Compatibilidade
+                            originalId: data.originalRuleId || null,
+                            isGenerated: data.isGenerated || false,
+                            createdAt: data.createdAt?.toDate() || null
                         });
-                    } else {
-                        console.warn("Pedido ignorado para entrega (data inválida/ausente):", doc.id, data.dataEntregaOficial);
                     }
-                 });
-                console.log(`Carregadas ${deliveriesSnapshot.size} entregas.`);
-
-
-                // Sort all entries by date after loading all types
-                allEntries.sort((a, b) => {
-                    const dateA = parseDate(a.date)?.getTime() || 0;
-                    const dateB = parseDate(b.date)?.getTime() || 0;
-                    if (dateA !== dateB) {
-                        return dateA - dateB;
-                    }
-                    // Optional: secondary sort (e.g., by type or description) if dates are equal
-                    return a.description.localeCompare(b.description);
                 });
 
-                console.log("Total de lançamentos carregados e ordenados:", allEntries.length);
-                updateCalendar(); // Update UI after loading everything
+                // Processa Entregas (Pedidos)
+                deliveriesSnap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.dataEntregaOficial && typeof data.dataEntregaOficial === 'string') {
+                        // Tenta encontrar o nome do cliente no array já carregado
+                        const clientInfo = clients.find(c => c.id === data.clienteId);
+                        const clientName = data.clienteNome || clientInfo?.empresa || clientInfo?.nome || 'Cliente N/A';
+
+                        allDbEntries.push({
+                            id: doc.id, // ID do pedido
+                            type: 'delivery',
+                            description: `Entrega Pedido #${data.numeroPedido || doc.id.substring(0, 6).toUpperCase()}`, // Descrição padrão
+                            date: data.dataEntregaOficial, // Data da entrega
+                            clientName: clientName,
+                            clientId: data.clienteId || null,
+                            isDelivered: data.entregue || false, // Status da entrega
+                            numeroPedido: data.numeroPedido || null,
+                            orcamentoId: data.orcamentoId || null, // ID do orçamento para link
+                            value: 0, // Entregas não têm valor financeiro direto aqui
+                            isPaid: data.entregue || false, // Considera 'pago' como 'entregue' para filtros
+                            isGenerated: false,
+                            isRecurringRule: false,
+                            recurrenceType: 'none',
+                            originalId: null,
+                            createdAt: data.createdAt?.toDate() || null
+                        });
+                    }
+                });
+
+                // Ordena todas as entradas pela data (importante para a exibição)
+                allDbEntries.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+                console.log(`Dados carregados e processados. Total de entradas: ${allDbEntries.length}`);
+                applyFiltersAndUpdateUI(); // Atualiza a interface com os dados carregados
 
             } catch (error) {
-                console.error("Erro geral ao carregar lançamentos:", error);
-                // Display error to user?
+                console.error("Erro fatal ao carregar dados:", error);
+                alert("Falha ao carregar os dados financeiros. Verifique o console para detalhes.");
+                // Poderia tentar recarregar ou mostrar uma mensagem mais persistente
+            } finally {
+                setLoadingState(false); // Finaliza o estado de carregamento
             }
         }
+        function applyFiltersAndUpdateUI() {
+            if (isLoading) return; // Não atualiza se ainda estiver carregando
+            console.log("Aplicando filtros e atualizando UI:", currentFilters);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Zera horas para comparar só a data
+            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+            const todayISO = toISODateString(todayUTC);
 
+            displayedEntries = allDbEntries.filter(entry => {
+                // Filtro por TIPO
+                if (currentFilters.type !== 'all' && entry.type !== currentFilters.type) {
+                    return false;
+                }
+                // Filtro por STATUS
+                if (currentFilters.status !== 'all') {
+                    const entryDate = parseDate(entry.date);
+                    const isOverdue = entryDate && entryDate < todayUTC;
+                    let isComplete = entry.isPaid || entry.isDelivered || false; // Pago OU Entregue
 
-        // --- Calendar UI Update Functions ---
+                    if (currentFilters.status === 'pending' && isComplete) return false; // Se quer pendente, ignora completo
+                    if (currentFilters.status === 'paid' && !isComplete) return false;    // Se quer concluído, ignora não completo
+                    if (currentFilters.status === 'overdue' && (isComplete || !isOverdue)) return false; // Se quer atrasado, ignora completo ou não atrasado
+                }
+                return true; // Passou por todos os filtros
+            });
 
-        function updateCalendar() {
+            console.log(`Exibindo ${displayedEntries.length} entradas após filtros.`);
+            renderCalendar(); // Redesenha o calendário com os dados filtrados
+            updateSummary();  // Atualiza a barra de resumo
+        }
+
+        // --- UI Rendering ---
+        function renderCalendar() {
             const year = currentDate.getFullYear();
-            const month = currentDate.getMonth(); // 0-indexed
-
-            currentMonthEl.textContent = `${getMonthName(month)} ${year}`;
-            calendarDaysEl.innerHTML = ''; // Clear previous days
+            const month = currentDate.getMonth();
+            monthDisplayEl.textContent = `${getMonthName(month)} ${year}`;
+            calendarDaysEl.innerHTML = ''; // Limpa o grid de dias
 
             const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
             const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0));
-            const startDayOfWeek = firstDayOfMonth.getUTCDay(); // 0=Sun, 1=Mon,...
+            const startDayOfWeek = firstDayOfMonth.getUTCDay(); // 0 = Domingo, 6 = Sábado
             const totalDaysInMonth = lastDayOfMonth.getUTCDate();
 
-            // Add empty cells for days before the 1st of the month
-            for (let i = 0; i < startDayOfWeek; i++) {
-                calendarDaysEl.appendChild(createEmptyDayElement());
-            }
-
-            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
             const todayUTCString = toISODateString(new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())));
 
-            // Add cells for each day of the month
+            // Adiciona dias do mês anterior (se necessário)
+            const lastDayOfPrevMonth = new Date(Date.UTC(year, month, 0));
+            const daysInPrevMonth = lastDayOfPrevMonth.getUTCDate();
+            for (let i = startDayOfWeek - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                const dateString = toISODateString(new Date(Date.UTC(lastDayOfPrevMonth.getUTCFullYear(), lastDayOfPrevMonth.getUTCMonth(), day)));
+                calendarDaysEl.appendChild(createDayCell(day, dateString, true)); // true = isOtherMonth
+            }
+
+            // Adiciona dias do mês atual
             for (let day = 1; day <= totalDaysInMonth; day++) {
-                const currentDayDate = new Date(Date.UTC(year, month, day));
-                const dateString = toISODateString(currentDayDate);
-
-                // Filter entries for the current day AND current filter selection
-                const dayEntries = allEntries.filter(entry =>
-                    entry.date === dateString &&
-                    (currentFilter === 'all' || entry.type === currentFilter)
-                );
-
-                const dayElement = document.createElement('div');
-                dayElement.className = 'day-cell';
-                dayElement.dataset.date = dateString; // Store date for click handling
-
-                // Highlight today
-                if (dateString === todayUTCString) {
-                    dayElement.classList.add('today');
-                }
-
-                // --- Add status classes based on ALL entries for the day (ignoring filter for status styling) ---
-                const allDayEntriesUnfiltered = allEntries.filter(entry => entry.date === dateString);
-                 let hasPaid = false;
-                 let hasPastDueReceipt = false;
-                 let hasPastDuePayment = false;
-                 let hasDelivery = false;
-
-                 allDayEntriesUnfiltered.forEach(entry => {
-                     const entryDate = parseDate(entry.date);
-                     const isPast = entryDate < today;
-                     if (entry.type === 'receipt') {
-                         if (entry.isPaid) hasPaid = true;
-                         if (!entry.isPaid && isPast) hasPastDueReceipt = true;
-                     } else if (entry.type === 'payment') {
-                         if (entry.isPaid) hasPaid = true;
-                         if (!entry.isPaid && isPast) hasPastDuePayment = true;
-                     } else if (entry.type === 'delivery') {
-                         hasDelivery = true;
-                         if (entry.isDelivered) hasPaid = true; // Consider delivered as 'paid' for styling
-                         // Could add past-due styling for deliveries if needed
-                     }
-                 });
-
-                 if (hasPastDueReceipt) dayElement.classList.add('has-past-due-receipt');
-                 if (hasPastDuePayment) dayElement.classList.add('has-past-due-payment');
-                 if (hasPaid && !hasPastDueReceipt && !hasPastDuePayment) dayElement.classList.add('has-paid-items'); // Only green if nothing is overdue
-                 if (hasDelivery) dayElement.classList.add('has-deliveries');
-                // --- End of status class logic ---
-
-
-                // Add day number
-                const dayNumberEl = document.createElement('div');
-                dayNumberEl.className = 'day-number';
-                dayNumberEl.textContent = day;
-                dayElement.appendChild(dayNumberEl);
-
-                // Add indicators container
-                const indicatorsEl = document.createElement('div');
-                indicatorsEl.className = 'entry-indicators';
-
-                 // Add indicators based on FILTERED entries for the day
-                 const counts = { receipt: 0, payment: 0, delivery: 0 };
-                 dayEntries.forEach(entry => {
-                     if (counts[entry.type] !== undefined) {
-                         counts[entry.type]++;
-                     }
-                 });
-
-                if (counts.receipt > 0) indicatorsEl.innerHTML += `<span class="indicator indicator-receipt" title="${counts.receipt} Recebimento(s)">${counts.receipt}</span>`;
-                if (counts.payment > 0) indicatorsEl.innerHTML += `<span class="indicator indicator-payment" title="${counts.payment} Pagamento(s)">${counts.payment}</span>`;
-                if (counts.delivery > 0) indicatorsEl.innerHTML += `<span class="indicator indicator-delivery" title="${counts.delivery} Entrega(s)">${counts.delivery}</span>`;
-
-
-                if (indicatorsEl.children.length > 0) {
-                    dayElement.appendChild(indicatorsEl);
-                }
-
-
-                // Add click listener to show details
-                dayElement.addEventListener('click', () => {
-                    showDayDetails(dateString);
-                });
-
-                calendarDaysEl.appendChild(dayElement);
+                const dateString = toISODateString(new Date(Date.UTC(year, month, day)));
+                const isToday = dateString === todayUTCString;
+                calendarDaysEl.appendChild(createDayCell(day, dateString, false, isToday)); // false = isOtherMonth
             }
 
-            // Add empty cells for days after the end of the month
-            const totalCells = startDayOfWeek + totalDaysInMonth;
-            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-            for (let i = 0; i < remainingCells; i++) {
-                calendarDaysEl.appendChild(createEmptyDayElement());
+            // Adiciona dias do próximo mês (se necessário para completar a grade)
+            const totalCells = calendarDaysEl.children.length;
+            const remainingCells = totalCells <= 35 ? (35 - totalCells) : (42 - totalCells); // Aponta para 5 ou 6 linhas
+            const firstDayOfNextMonth = new Date(Date.UTC(year, month + 1, 1));
+            for (let i = 1; i <= remainingCells; i++) {
+                const dateString = toISODateString(new Date(Date.UTC(firstDayOfNextMonth.getUTCFullYear(), firstDayOfNextMonth.getUTCMonth(), i)));
+                calendarDaysEl.appendChild(createDayCell(i, dateString, true));
             }
-
-            updateSummary(); // Update financial summary after calendar renders
         }
+        function createDayCell(day, dateString, isOtherMonth = false, isToday = false) {
+            const dayElement = document.createElement('div');
+            dayElement.className = 'day-cell';
+            if (isOtherMonth) dayElement.classList.add('other-month');
+            if (isToday) dayElement.classList.add('today');
+            dayElement.dataset.date = dateString; // Armazena a data no formato YYYY-MM-DD
 
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = day;
+            dayElement.appendChild(dayNumber);
+
+            const entriesContainer = document.createElement('div');
+            entriesContainer.className = 'day-entries';
+            const iconList = document.createElement('div');
+            iconList.className = 'entry-icon-list';
+
+            // Filtra as entradas *já filtradas* (displayedEntries) para este dia específico
+            const dayEntries = displayedEntries.filter(entry => entry.date === dateString);
+            dayEntries.sort((a, b) => (a.type || '').localeCompare(b.type || '')); // Ordena por tipo para consistência
+
+            const todayCheck = new Date(); todayCheck.setHours(0,0,0,0);
+            const todayUTC = new Date(Date.UTC(todayCheck.getFullYear(), todayCheck.getMonth(), todayCheck.getDate()));
+
+            // Exibe ícones (limitado a 4 para não poluir)
+            const maxIcons = 4;
+            dayEntries.slice(0, maxIcons).forEach(entry => {
+                const iconWrapper = document.createElement('span');
+                iconWrapper.className = `entry-icon ${entry.type}`;
+                iconWrapper.title = `${entry.description || 'N/A'} (${entry.type !== 'delivery' ? formatCurrency(entry.value || 0) : 'Entrega'})`; // Tooltip
+
+                let iconClass = 'fa-question-circle'; // Default
+                if (entry.type === 'receipt') iconClass = 'fa-dollar-sign';
+                else if (entry.type === 'payment') iconClass = 'fa-receipt';
+                else if (entry.type === 'delivery') iconClass = 'fa-truck';
+                iconWrapper.innerHTML = `<i class="fas ${iconClass}"></i>`;
+
+                const isComplete = entry.isPaid || entry.isDelivered || false;
+                const entryDate = parseDate(entry.date);
+                const isOverdue = !isComplete && entryDate && entryDate < todayUTC;
+
+                if (isComplete) iconWrapper.classList.add('completed'); // Estilo para concluído
+                if (isOverdue) iconWrapper.classList.add('overdue');   // Estilo para atrasado
+
+                iconList.appendChild(iconWrapper);
+            });
+
+            entriesContainer.appendChild(iconList);
+
+            // Indicador "+X" se houver mais entradas do que ícones exibidos
+            if (dayEntries.length > maxIcons) {
+                const moreIndicator = document.createElement('div');
+                moreIndicator.className = 'more-entries-indicator';
+                moreIndicator.textContent = `+${dayEntries.length - maxIcons}`;
+                entriesContainer.appendChild(moreIndicator);
+            }
+
+            dayElement.appendChild(entriesContainer);
+
+            // Adiciona evento de clique apenas para dias do mês atual
+            if (!isOtherMonth) {
+                dayElement.addEventListener('click', () => showDayDetails(dateString));
+            }
+
+            return dayElement;
+        }
         function updateSummary() {
             const year = currentDate.getFullYear();
-            const month = currentDate.getMonth(); // 0-indexed
+            const month = currentDate.getMonth();
+            const todayISO = toISODateString(new Date()); // Data de hoje para verificar vencidos
 
-            let totalAReceber = 0, totalRecebido = 0, totalAPagar = 0, totalPago = 0;
+            let totalRecebido = 0, totalAReceber = 0, totalPago = 0, totalAPagar = 0, totalVencido = 0, deliveryCount = 0;
 
-            allEntries.forEach(entry => {
+            // Calcula totais baseado em *todas* as entradas (allDbEntries)
+            allDbEntries.forEach(entry => {
                 const entryDate = parseDate(entry.date);
+                const value = Number(entry.value) || 0;
+                const isComplete = entry.isPaid || entry.isDelivered || false;
+
+                // Totais do Mês Atual
                 if (entryDate && entryDate.getUTCFullYear() === year && entryDate.getUTCMonth() === month) {
                     if (entry.type === 'receipt') {
-                        if (entry.isPaid) {
-                            totalRecebido += entry.value;
-                        } else {
-                            totalAReceber += entry.value;
-                        }
+                        if (isComplete) totalRecebido += value;
+                        else totalAReceber += value;
                     } else if (entry.type === 'payment') {
-                        if (entry.isPaid) {
-                            totalPago += entry.value;
-                        } else {
-                            totalAPagar += entry.value;
-                        }
+                        if (isComplete) totalPago += value;
+                        else totalAPagar += value;
+                    } else if (entry.type === 'delivery') {
+                        deliveryCount++; // Conta entregas do mês
                     }
-                    // Deliveries don't contribute to the financial summary directly here
+                }
+
+                // Total Vencido (apenas financeiros, não pagos e data anterior a hoje)
+                if (entry.type !== 'delivery' && !isComplete && entry.date && entry.date < todayISO) {
+                    totalVencido += value;
                 }
             });
 
-            totalAReceberEl.textContent = formatCurrency(totalAReceber);
-            totalRecebidoEl.textContent = formatCurrency(totalRecebido);
-            totalAPagarEl.textContent = formatCurrency(totalAPagar);
-            totalPagoEl.textContent = formatCurrency(totalPago);
+            // Atualiza os elementos no HTML
+            summaryRecebidoEl.textContent = formatCurrency(totalRecebido);
+            summaryAReceberEl.textContent = formatCurrency(totalAReceber);
+            summaryPagoEl.textContent = formatCurrency(totalPago);
+            summaryAPagarEl.textContent = formatCurrency(totalAPagar);
+            summaryVencidoEl.textContent = formatCurrency(totalVencido);
+            summaryDeliveriesCountEl.textContent = deliveryCount;
+
+            // Mostra/Esconde itens do resumo baseado no filtro de TIPO ativo
+            const currentTypeFilter = currentFilters.type;
+            summaryItemRecebido.classList.toggle('hidden', currentTypeFilter === 'payment' || currentTypeFilter === 'delivery');
+            summaryItemAReceber.classList.toggle('hidden', currentTypeFilter === 'payment' || currentTypeFilter === 'delivery');
+            summaryItemPago.classList.toggle('hidden', currentTypeFilter === 'receipt' || currentTypeFilter === 'delivery');
+            summaryItemAPagar.classList.toggle('hidden', currentTypeFilter === 'receipt' || currentTypeFilter === 'delivery');
+            summaryItemDeliveries.classList.toggle('hidden', currentTypeFilter !== 'delivery'); // Mostra só se filtro for 'delivery'
+            summaryItemVencido.classList.toggle('hidden', currentTypeFilter === 'delivery'); // Esconde vencido se filtro for 'delivery'
         }
 
+        // --- Modal & Action Logic ---
+        function showDayDetails(dateString) {
+            const date = parseDate(dateString);
+            if (!date) return; // Segurança
 
-        // --- Modal Handling ---
+            dayDetailTitleEl.textContent = `Detalhes para ${formatDate(dateString)}`;
+            dayDetailEntriesEl.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>'; // Feedback
+            dayDetailModalEl.style.display = 'block'; // Mostra o modal
 
-        function openEntryModal(entry = null) { // Pass entry data for editing
-            entryFormEl.reset(); // Clear form
-            entryIdInputEl.value = ''; // Clear hidden ID
-            entryClientSelectEl.value = ''; // Reset client dropdown
-            document.getElementById('entry-supplier').value = '';
-            document.getElementById('entry-supplier-contact').value = '';
-            document.getElementById('entry-recurrence').value = 'none';
+            // Usar setTimeout para permitir que o modal apareça antes de popular
+            setTimeout(() => {
+                dayDetailEntriesEl.innerHTML = ''; // Limpa o conteúdo
+                // Filtra as entradas *exibidas* (já filtradas por tipo/status global) para este dia
+                const entriesToShow = displayedEntries.filter(e => e.date === dateString);
 
-            if (entry) { // Editing existing entry
-                entryModalTitleEl.textContent = `Editar ${entry.type === 'receipt' ? 'Recebimento' : 'Pagamento'}`;
-                entryIdInputEl.value = entry.id;
-                entryTypeSelectEl.value = entry.type;
-                document.getElementById('entry-description').value = entry.description;
-                document.getElementById('entry-value').value = entry.value;
-                document.getElementById('entry-date').value = entry.date; // Assumes YYYY-MM-DD
+                if (entriesToShow.length === 0) {
+                    dayDetailEntriesEl.innerHTML = '<p class="placeholder">Nenhum lançamento para exibir com os filtros atuais.</p>';
+                    return;
+                }
+
+                // Ordena as entradas dentro do modal (ex: Entregas primeiro)
+                entriesToShow.sort((a, b) => {
+                    const typeOrder = { 'delivery': 0, 'receipt': 1, 'payment': 2 };
+                    if (typeOrder[a.type] !== typeOrder[b.type]) return typeOrder[a.type] - typeOrder[b.type];
+                    return (a.description || '').localeCompare(b.description || ''); // Desempate por descrição
+                });
+
+                const today = new Date(); today.setHours(0,0,0,0);
+                const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+
+                entriesToShow.forEach(entry => {
+                    const entryDiv = document.createElement('div');
+                    entryDiv.className = `day-entry ${entry.type}`; // Classe baseada no tipo
+                    // Armazena dados importantes no elemento para fácil acesso nas ações
+                    entryDiv.dataset.entryId = entry.id || '';
+                    entryDiv.dataset.entryType = entry.type || '';
+                    entryDiv.dataset.originalId = entry.originalId || entry.id || ''; // Para recorrências
+                    entryDiv.dataset.isGenerated = entry.isGenerated || false; // Para recorrências
+
+                    let statusText = 'Pendente';
+                    let isComplete = entry.isPaid || entry.isDelivered || false;
+                    const entryDate = parseDate(entry.date);
+                    const isEntryOverdue = !isComplete && entryDate && entryDate < todayUTC;
+
+                    if (isComplete) statusText = entry.type === 'delivery' ? 'Entregue' : 'Pago';
+                    else if (isEntryOverdue) statusText = entry.type === 'delivery' ? 'Entrega Atrasada' : 'Vencido';
+
+                    // Adiciona classes para estilização de status
+                    if (isComplete) entryDiv.classList.add('paid'); // Ou 'delivered'
+                    if (isEntryOverdue && !isComplete) entryDiv.classList.add('overdue');
+
+                    // Ícone correspondente ao tipo
+                    let iconClass = 'fa-question-circle';
+                    if (entry.type === 'receipt') iconClass = 'fa-dollar-sign';
+                    else if (entry.type === 'payment') iconClass = 'fa-receipt';
+                    else if (entry.type === 'delivery') iconClass = 'fa-truck';
+
+                    // Monta o HTML dos detalhes
+                    let detailsHtml = `<h4><i class="fas ${iconClass}"></i> ${entry.description || 'Sem Descrição'}</h4>`;
+                    if (entry.type !== 'delivery') detailsHtml += `<p><strong>Valor:</strong> ${formatCurrency(entry.value || 0)}</p>`;
+                    if (entry.clientName) detailsHtml += `<p><strong>Cliente:</strong> ${entry.clientName}</p>`;
+                    if (entry.supplier) detailsHtml += `<p><strong>Fornecedor:</strong> ${entry.supplier}</p>`;
+                    if (entry.numeroPedido && entry.type === 'delivery') detailsHtml += `<p><strong>Pedido:</strong> ${entry.numeroPedido}</p>`;
+                    detailsHtml += `<p><strong>Data:</strong> ${formatDate(entry.date || '')}</p>`;
+                    detailsHtml += `<p><strong>Status:</strong> ${statusText}</p>`;
+                    if (entry.type === 'payment' && entry.isRecurringRule && !entry.isGenerated) detailsHtml += `<p><strong>Recorrência:</strong> ${entry.recurrenceType === 'weekly' ? 'Semanal' : 'Mensal'} (Regra)</p>`;
+
+                    // Monta o HTML das ações (botões)
+                    let actionsHtml = '<div class="day-entry-actions">';
+                    if (entry.type === 'receipt') {
+                        if (!isComplete) {
+                            actionsHtml += `<button class="btn-paid" data-action="mark-paid"><i class="fas fa-check"></i> Marcar Pago</button> `; // Adiciona "Marcar"
+                            actionsHtml += `<button class="btn-edit" data-action="edit"><i class="fas fa-edit"></i> Editar</button> `;
+                            if(entry.clientPhone) { // Mostra botão do WhatsApp apenas se houver telefone
+                                actionsHtml += `<button class="btn-whatsapp" data-action="whatsapp"><i class="fab fa-whatsapp"></i> Cobrar</button> `; // Adiciona "Cobrar"
+                            }
+                        }
+                        // Excluir sempre visível para recibos
+                        actionsHtml += `<button class="btn-delete" data-action="delete"><i class="fas fa-trash"></i> Excluir</button>`;
+                    } else if (entry.type === 'payment') {
+                        if (!isComplete) actionsHtml += `<button class="btn-paid" data-action="mark-paid"><i class="fas fa-check"></i> Marcar Pago</button> `;
+                        // Lógica para pagamentos recorrentes
+                        if (!entry.isGenerated) { // Se for a regra original ou um pagamento único
+                            actionsHtml += `<button class="btn-edit" data-action="edit"><i class="fas fa-edit"></i> Editar${entry.isRecurringRule ? ' Regra' : ''}</button> `;
+                            actionsHtml += `<button class="btn-delete" data-action="delete"><i class="fas fa-trash"></i> Excluir${entry.isRecurringRule ? ' Regra' : ''}</button>`;
+                        } else { // Se for uma instância gerada
+                            // Poderia adicionar um botão para editar a instância (ajustar data/valor?), mas mantendo simples por agora.
+                            actionsHtml += `<button class="btn-delete" data-action="delete-instance" title="Excluir apenas esta ocorrência"><i class="fas fa-times"></i> Excluir Ocorrência</button>`;
+                        }
+                    } else if (entry.type === 'delivery') {
+                        if (!isComplete) actionsHtml += `<button class="btn-delivered" data-action="mark-delivered"><i class="fas fa-check"></i> Marcar Entregue</button> `;
+                        // Link para ver o pedido/orçamento se o ID existir
+                        if (entry.orcamentoId) actionsHtml += `<a href="telaorcamento.html?orcamentoId=${entry.orcamentoId}"  target="conteudo" class="btn-view-order"><i class="fas fa-file-alt"></i> Ver Pedido</a> `;
+                        // Poderia adicionar um botão de excluir entrega se fizesse sentido
+                    }
+                    actionsHtml += '</div>';
+
+                    entryDiv.innerHTML = detailsHtml + actionsHtml; // Combina detalhes e ações
+                    dayDetailEntriesEl.appendChild(entryDiv); // Adiciona ao modal
+                });
+            }, 10); // Pequeno delay para renderização inicial do modal
+        }
+        function openAddEditModal(entry = null) {
+            entryFormEl.reset(); // Limpa o formulário
+            // Reseta campos hidden e outros defaults
+            entryIdInput.value = '';
+            entryOriginalIdInput.value = '';
+            entryIsGeneratedInput.value = 'false';
+            entryClientSelect.value = ''; // Reseta select de cliente
+            entryPaidCheckbox.checked = false; // Reseta checkbox pago
+
+            const isEditing = !!entry;
+            entryModalTitleEl.textContent = isEditing ? `Editar ${entry.type === 'receipt' ? 'Recebimento' : 'Pagamento'}` : 'Novo Lançamento';
+            entryTypeSelect.disabled = isEditing; // Não permite mudar o tipo ao editar
+
+            if (isEditing) {
+                // Preenche o formulário com os dados da entrada existente
+                entryIdInput.value = entry.id || '';
+                entryOriginalIdInput.value = entry.originalId || ''; // Para recorrências
+                entryIsGeneratedInput.value = entry.isGenerated ? 'true' : 'false'; // Importante para lógica de recorrência
+                entryTypeSelect.value = entry.type || 'receipt';
+                document.getElementById('entry-description').value = entry.description || '';
+                document.getElementById('entry-value').value = entry.value || 0;
+                document.getElementById('entry-date').value = entry.date || ''; // Data YYYY-MM-DD
 
                 if (entry.type === 'receipt') {
-                    receiptFieldsEl.style.display = 'block';
-                    paymentFieldsEl.style.display = 'none';
-                    // Find and select the client in the dropdown
-                     const clientOptionValue = JSON.stringify({ id: entry.clientId, nome: entry.clientName, telefone: entry.clientPhone });
-                     // Find the option whose value matches the stringified object
-                     const matchingOption = Array.from(entryClientSelectEl.options).find(opt => opt.value === clientOptionValue);
-                     if(matchingOption) {
-                         entryClientSelectEl.value = matchingOption.value;
-                     } else {
-                         entryClientSelectEl.value = ""; // Reset if client not found (or null)
-                     }
-
-                } else if (entry.type === 'payment') {
-                    receiptFieldsEl.style.display = 'none';
-                    paymentFieldsEl.style.display = 'block';
+                    // Encontra e seleciona o cliente no select
+                    const clientJsonString = Array.from(entryClientSelect.options).find(opt => {
+                        try { return opt.value && JSON.parse(opt.value).id === entry.clientId; } catch { return false; }
+                    })?.value;
+                    entryClientSelect.value = clientJsonString || ""; // Define o valor do select
+                } else { // Pagamento
                     document.getElementById('entry-supplier').value = entry.supplier || '';
-                    document.getElementById('entry-supplier-contact').value = entry.supplierContact || '';
-                     // For recurring payments, editing the original sets the recurrence
-                     // For generated instances, recurrence is 'none' and disabled
-                     document.getElementById('entry-recurrence').value = entry.recurrence || 'none';
-                     document.getElementById('entry-recurrence').disabled = !!entry.isGenerated; // Disable recurrence for generated
+                    entryRecurrenceSelect.value = entry.recurrenceType || 'none';
+                    entryPaidCheckbox.checked = entry.isPaid || false; // Define o estado do checkbox
                 }
-                 entryTypeSelectEl.disabled = true; // Don't allow changing type when editing
-
-            } else { // Adding new entry
-                entryModalTitleEl.textContent = 'Novo Lançamento';
-                const today = new Date();
-                document.getElementById('entry-date').value = toISODateString(today); // Default to today
-                 entryTypeSelectEl.value = 'receipt'; // Default to receipt
-                 receiptFieldsEl.style.display = 'block'; // Show receipt fields by default
-                 paymentFieldsEl.style.display = 'none'; // Hide payment fields by default
-                 entryTypeSelectEl.disabled = false; // Allow changing type when adding
-                 document.getElementById('entry-recurrence').disabled = false;
+            } else { // Adicionando novo lançamento
+                entryTypeSelect.value = 'receipt'; // Default para recebimento
+                document.getElementById('entry-date').value = toISODateString(new Date()); // Data de hoje como default
+                entryRecurrenceSelect.value = 'none'; // Default sem recorrência
             }
 
-            toggleEntryFields(); // Ensure correct fields are visible based on type
-            entryModalEl.style.display = 'flex';
+            toggleEntryTypeFields(); // Mostra/esconde campos baseado no tipo e se é edição
+            entryModalEl.style.display = 'block'; // Mostra o modal de adicionar/editar
         }
+        function toggleEntryTypeFields() {
+            const type = entryTypeSelect.value;
+            const isEditing = !!entryIdInput.value;
+            const isGenerated = entryIsGeneratedInput.value === 'true'; // Lê do input hidden
 
-        function closeEntryModal() {
-            entryModalEl.style.display = 'none';
+            // Mostra/esconde campos de Cliente vs Fornecedor/Recorrência
+            receiptFields.forEach(el => el.classList.toggle('hidden', type !== 'receipt'));
+            paymentFields.forEach(el => el.classList.toggle('hidden', type !== 'payment'));
+
+            // Campo de Recorrência (select) - visível apenas para Pagamentos
+            const recurrenceFieldGroup = entryRecurrenceSelect.closest('.form-group.payment-field');
+            if(recurrenceFieldGroup) recurrenceFieldGroup.classList.toggle('hidden', type !== 'payment');
+
+            // Desabilita o select de recorrência se estiver editando uma *instância gerada*
+            entryRecurrenceSelect.disabled = isGenerated;
+
+            // Campo "Marcar Pago?" (checkbox)
+            const paidFieldGroup = entryPaidCheckbox.closest('.form-group.payment-field.checkbox-group');
+            if (paidFieldGroup) {
+                // Visível apenas ao *editar* um pagamento que *não é* uma instância gerada
+                paidFieldGroup.classList.toggle('hidden', !(isEditing && type === 'payment' && !isGenerated));
+            }
         }
+        async function saveEntry(event) {
+            event.preventDefault(); // Impede envio padrão do formulário
+            setLoadingState(true); // Inicia feedback de carregamento
 
-         function toggleEntryFields() {
-             const selectedType = entryTypeSelectEl.value;
-             const isEditingGenerated = !!entryIdInputEl.value && allEntries.find(e => e.id === entryIdInputEl.value)?.isGenerated;
+            const id = entryIdInput.value; // ID da entrada (se editando)
+            const type = entryTypeSelect.value; // 'receipt' ou 'payment'
+            const originalId = entryOriginalIdInput.value; // Para recorrências
+            const isGenerated = entryIsGeneratedInput.value === 'true'; // Para recorrências
 
-             if (selectedType === 'receipt') {
-                 receiptFieldsEl.style.display = 'block';
-                 paymentFieldsEl.style.display = 'none';
-             } else if (selectedType === 'payment') {
-                 receiptFieldsEl.style.display = 'none';
-                 paymentFieldsEl.style.display = 'block';
-                 // Disable recurrence select if editing a generated payment instance
-                 document.getElementById('entry-recurrence').disabled = isEditingGenerated;
-             } else {
-                 receiptFieldsEl.style.display = 'none';
-                 paymentFieldsEl.style.display = 'none';
-             }
-         }
+            // Coleta dados básicos do formulário
+            const data = {
+                descricao: document.getElementById('entry-description').value.trim(),
+                valor: parseFloat(document.getElementById('entry-value').value) || 0,
+                dataPagamento: document.getElementById('entry-date').value, // Data YYYY-MM-DD
+                // createdAt é adicionado apenas para novos itens
+            };
 
-
-         function showDayDetails(dateString) {
-            const date = parseDate(dateString);
-            if (!date) return;
-
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' };
-            dayDetailsTitleEl.textContent = `Detalhes para ${date.toLocaleDateString('pt-BR', options)}`;
-            dayEntriesListEl.innerHTML = ''; // Clear previous list
-
-             // Get ALL entries for the day, regardless of the current filter
-             const dayEntriesAllTypes = allEntries.filter(entry => entry.date === dateString);
-
-            if (dayEntriesAllTypes.length === 0) {
-                dayEntriesListEl.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Nenhum lançamento ou entrega neste dia.</p>';
-                dayDetailsModalEl.style.display = 'flex';
+            // Validação básica
+            if (!data.descricao || data.valor <= 0 || !data.dataPagamento) {
+                alert("Por favor, preencha Descrição, Valor (maior que zero) e Data.");
+                setLoadingState(false);
                 return;
             }
 
-            // Sort entries for display (e.g., by type, then description)
-            dayEntriesAllTypes.sort((a, b) => {
-                 const typeOrder = { 'delivery': 0, 'receipt': 1, 'payment': 2 }; // Example order
-                 if (typeOrder[a.type] !== typeOrder[b.type]) {
-                    return typeOrder[a.type] - typeOrder[b.type];
-                 }
-                 return a.description.localeCompare(b.description);
-            });
+            let collectionName; // Nome da coleção no Firestore
+            let needsRecurrenceGeneration = false; // Flag para (re)gerar instâncias
+            let oldRecurrenceType = 'none'; // Para detectar mudança na recorrência
+            let ruleIdForGeneration = id && !isGenerated ? id : null; // ID da regra a ser usada
 
+            // Prepara dados específicos por tipo
+            if (type === 'receipt') {
+                collectionName = 'recebimentos';
+                const clientSelectValue = entryClientSelect.value;
+                const clientData = clientSelectValue ? JSON.parse(clientSelectValue) : null;
+                data.clienteId = clientData?.id || null;
+                data.clienteNome = clientData?.nome || null;
+                data.telefone = clientData?.telefone || null; // Salva telefone junto
+                // Mantém o status 'pago' existente ao editar, ou false se for novo
+                const currentReceipt = allDbEntries.find(e => e.id === id && e.type === 'receipt');
+                data.pago = id ? (currentReceipt?.isPaid || false) : false;
+            } else { // Pagamento
+                collectionName = 'pagamentos';
+                data.fornecedor = document.getElementById('entry-supplier').value.trim() || null;
 
-            dayEntriesAllTypes.forEach(entry => {
-                 const entryElement = document.createElement('div');
-                 entryElement.className = `day-entry ${entry.type}`; // Add type class
-                 entryElement.dataset.entryId = entry.id; // Store ID for actions
-                 entryElement.dataset.entryType = entry.type;
-                 entryElement.dataset.originalId = entry.originalId || entry.id; // Store original ID if generated
+                // Lógica de Recorrência (só se aplica se não for uma instância gerada)
+                const recurrenceValue = isGenerated ? 'none' : entryRecurrenceSelect.value;
+                data.isRecurringRule = !isGenerated && recurrenceValue !== 'none';
+                data.recurrenceType = recurrenceValue;
+                data.isGenerated = isGenerated; // Define se é uma instância gerada
+                // Define o ID da regra original
+                data.originalRuleId = isGenerated ? originalId : (data.isRecurringRule ? ruleIdForGeneration : null);
 
-
-                 let statusText = 'Pendente';
-                 let isPastDue = false;
-                 const entryDate = parseDate(entry.date);
-                 const today = new Date(); today.setHours(0,0,0,0);
-                 const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
-
-
-                 if (entry.type === 'receipt' || entry.type === 'payment') {
-                     isPastDue = !entry.isPaid && entryDate < todayUTC;
-                     if (entry.isPaid) {
-                         statusText = 'Pago';
-                         entryElement.classList.add('paid');
-                     } else if (isPastDue) {
-                         statusText = 'Atrasado';
-                         entryElement.classList.add('past-due');
-                     }
-                 } else if (entry.type === 'delivery') {
-                     isPastDue = !entry.isDelivered && entryDate < todayUTC; // Check if delivery is past due
-                     if (entry.isDelivered) {
-                         statusText = 'Entregue';
-                         entryElement.classList.add('delivered');
-                     } else if (isPastDue) {
-                         statusText = 'Atrasada'; // Delivery specific status
-                         entryElement.classList.add('past-due');
-                     } else {
-                         statusText = 'Pendente';
-                     }
-                 }
-
-
-                 let titleIcon = '';
-                 if(entry.type === 'receipt') titleIcon = '<i class="fas fa-dollar-sign"></i>';
-                 else if(entry.type === 'payment') titleIcon = '<i class="fas fa-receipt"></i>';
-                 else if(entry.type === 'delivery') titleIcon = '<i class="fas fa-truck"></i>';
-
-                 let detailsHtml = `<h3>${titleIcon} ${entry.description}</h3>`;
-                 if (entry.value && entry.type !== 'delivery') detailsHtml += `<p><strong>Valor:</strong> ${formatCurrency(entry.value)}</p>`;
-                 if (entry.clientName) detailsHtml += `<p><strong>Cliente:</strong> ${entry.clientName}</p>`;
-                 if (entry.supplier) detailsHtml += `<p><strong>Fornecedor:</strong> ${entry.supplier}</p>`;
-                 if (entry.supplierContact) detailsHtml += `<p><strong>Contato:</strong> ${entry.supplierContact}</p>`;
-                 if (entry.numeroPedido && entry.type === 'delivery') detailsHtml += `<p><strong>Pedido:</strong> ${entry.numeroPedido}</p>`;
-                 detailsHtml += `<p><strong>Data:</strong> ${formatDate(entry.date)}</p>`;
-                 detailsHtml += `<p><strong>Status:</strong> ${statusText}</p>`;
-                 if (entry.type === 'payment' && entry.isRecurring && !entry.isGenerated) {
-                     detailsHtml += `<p><strong>Recorrência:</strong> ${entry.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}</p>`;
-                 }
-
-                 // Action Buttons
-                 let actionsHtml = '<div class="entry-actions">';
-                 if (entry.type === 'receipt') {
-                     if (!entry.isPaid) {
-                         actionsHtml += `<button class="btn-action-paid" data-action="mark-paid"><i class="fas fa-check-circle"></i> Pago</button>`;
-                         actionsHtml += `<button class="btn-action-edit" data-action="edit"><i class="fas fa-edit"></i> Editar</button>`;
-                         if(entry.clientPhone) actionsHtml += `<button class="btn-action-whatsapp" data-action="whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</button>`;
-                     }
-                     actionsHtml += `<button class="btn-action-delete" data-action="delete"><i class="fas fa-trash-alt"></i> Excluir</button>`;
-                 } else if (entry.type === 'payment') {
-                      // Allow actions only on original or non-generated payments
-                     if (!entry.isGenerated) {
-                        if (!entry.isPaid) {
-                            actionsHtml += `<button class="btn-action-paid" data-action="mark-paid"><i class="fas fa-check-circle"></i> Pago</button>`;
-                        }
-                        actionsHtml += `<button class="btn-action-edit" data-action="edit"><i class="fas fa-edit"></i> Editar</button>`;
-                        actionsHtml += `<button class="btn-action-delete" data-action="delete"><i class="fas fa-trash-alt"></i> Excluir</button>`;
-                     } else {
-                        // Maybe add an action to skip/delete just this generated instance?
-                        actionsHtml += `<button class="btn-action-delete" data-action="delete-generated"><i class="fas fa-trash-alt"></i> Excluir Ocorrência</button>`; // Special action for generated
-                     }
-                 } else if (entry.type === 'delivery') {
-                      if (!entry.isDelivered) {
-                          // Use 'mark-delivered' action
-                          actionsHtml += `<button class="btn-action-delivered" data-action="mark-delivered"><i class="fas fa-check-circle"></i> Entregue</button>`;
-                      }
-                     // Link to order page if orcamentoId exists
-                     if (entry.orcamentoId) {
-                         actionsHtml += `<a href="telaorcamento.html?orcamentoId=${entry.orcamentoId}" target="_blank" class="entry-actions button-link btn-action-edit" style="text-decoration:none; background-color:#6c757d; color:white;"><i class="fas fa-file-alt"></i> Ver Pedido</a>`;
-                      }
-                     // Maybe add delete action? Depends on business logic.
-                 }
-                 actionsHtml += '</div>';
-
-                 entryElement.innerHTML = detailsHtml + actionsHtml;
-                 dayEntriesListEl.appendChild(entryElement);
-            });
-
-            dayDetailsModalEl.style.display = 'flex';
-        }
-
-         function closeDayDetailsModal() {
-            dayDetailsModalEl.style.display = 'none';
-         }
-
-
-        function openReportModal() {
-             const year = currentDate.getFullYear();
-             const month = currentDate.getMonth();
-             reportTitleEl.textContent = `Relatório de ${getMonthName(month)} de ${year}`;
-
-             let monthlyReceived = 0;
-             let monthlyPaid = 0;
-             const detailedEntries = [];
-
-             allEntries.forEach(entry => {
-                 const entryDate = parseDate(entry.date);
-                 if (entryDate && entryDate.getUTCFullYear() === year && entryDate.getUTCMonth() === month) {
-                    if (entry.type === 'receipt' && entry.isPaid) {
-                         monthlyReceived += entry.value;
-                         detailedEntries.push(entry);
-                    } else if (entry.type === 'payment' && entry.isPaid) {
-                         monthlyPaid += entry.value;
-                         detailedEntries.push(entry);
-                    } else if ((entry.type === 'receipt' || entry.type === 'payment') && !entry.isPaid) {
-                         // Optionally include pending items in the detailed list
-                         detailedEntries.push(entry);
-                    }
-                    // Deliveries are not included in the financial report calculation
-                 }
-             });
-
-             const balance = monthlyReceived - monthlyPaid;
-
-             reportTotalReceivedEl.textContent = formatCurrency(monthlyReceived);
-             reportTotalPaidEl.textContent = formatCurrency(monthlyPaid);
-             reportBalanceEl.textContent = formatCurrency(balance);
-             reportBalanceEl.className = balance >= 0 ? 'value balance-positive' : 'value balance-negative';
-
-             // Populate detailed list
-             reportDetailsListEl.innerHTML = '';
-             detailedEntries.sort((a, b) => (parseDate(a.date)?.getTime() || 0) - (parseDate(b.date)?.getTime() || 0)); // Sort by date
-
-             if (detailedEntries.length > 0) {
-                detailedEntries.forEach(entry => {
-                    const li = document.createElement('li');
-                    li.classList.add(entry.type); // Add class 'receipt' or 'payment'
-                    li.innerHTML = `
-                        <span>${formatDate(entry.date)} - ${entry.description} ${entry.isPaid ? '(Pago)' : '(Pendente)'}</span>
-                        <span>${formatCurrency(entry.value)}</span>
-                    `;
-                    reportDetailsListEl.appendChild(li);
-                });
-             } else {
-                 reportDetailsListEl.innerHTML = '<li>Nenhum lançamento pago ou pendente neste mês.</li>';
-             }
-
-            reportModalEl.style.display = 'flex';
-        }
-
-         function closeReportModal() {
-             reportModalEl.style.display = 'none';
-         }
-
-        // --- Action Functions (Interacting with Data/Firebase) ---
-
-         async function handleFormSubmit(event) {
-             event.preventDefault();
-             const id = entryIdInputEl.value; // Check if we are editing
-             const type = entryTypeSelectEl.value;
-             const description = document.getElementById('entry-description').value.trim();
-             const value = parseFloat(document.getElementById('entry-value').value);
-             const date = adjustDateForFirestore(document.getElementById('entry-date').value); // Ensure YYYY-MM-DD
-
-             // Basic validation
-             if (!description || isNaN(value) || value <= 0 || !date) {
-                 alert("Por favor, preencha Descrição, Valor (> 0) e Data corretamente.");
-                 return;
-             }
-
-             let dataToSave = {
-                 descricao: description,
-                 valor: value,
-                 dataPagamento: date,
-                 // isPaid is handled by mark-paid action, default to false or keep existing on edit
-             };
-
-             let collectionName = '';
-
-             if (type === 'receipt') {
-                 collectionName = 'recebimentos';
-                 const clientSelect = document.getElementById('entry-client');
-                 const selectedClientData = clientSelect.value ? JSON.parse(clientSelect.value) : null;
-                 dataToSave.clienteId = selectedClientData?.id || null;
-                 dataToSave.clienteNome = selectedClientData?.nome || null;
-                 dataToSave.telefone = selectedClientData?.telefone || null;
-             } else if (type === 'payment') {
-                 collectionName = 'pagamentos';
-                 dataToSave.fornecedor = document.getElementById('entry-supplier').value.trim() || null;
-                 dataToSave.contatoFornecedor = document.getElementById('entry-supplier-contact').value.trim() || null;
-                  // Only save recurrence if NOT editing a generated instance
-                  const isGenerated = id && allEntries.find(e => e.id === id)?.isGenerated;
-                 if (!isGenerated) {
-                     dataToSave.recorrencia = document.getElementById('entry-recurrence').value;
-                 }
-             } else {
-                 console.error("Tipo de lançamento inválido:", type);
-                 return; // Should not happen
-             }
-
-
-             try {
-                let action = '';
-                if (id) { // Editing existing entry
-                     // Prevent editing generated payment instances directly (should edit original)
-                    const existingEntry = allEntries.find(e => e.id === id);
-                    if (existingEntry?.isGenerated && type === 'payment') {
-                         alert("Não é possível editar uma ocorrência de pagamento recorrente gerada. Edite o pagamento original para afetar futuras ocorrências.");
-                         return;
-                     }
-
-                    const entryRef = doc(db, collectionName, id);
-                     // Fetch existing data to preserve 'pago' status unless explicitly changed elsewhere
-                    const docSnap = await getDoc(entryRef);
-                    if (docSnap.exists()) {
-                        dataToSave.pago = docSnap.data().pago || false; // Preserve paid status
-                    } else {
-                        dataToSave.pago = false; // Default if somehow editing non-existent doc
-                    }
-                    dataToSave.createdAt = docSnap.exists() ? (docSnap.data().createdAt || Timestamp.now()) : Timestamp.now(); // Preserve original creation time if possible
-
-                    await updateDoc(entryRef, dataToSave);
-                    action = 'atualizado';
-                } else { // Adding new entry
-                    dataToSave.pago = false; // New entries are not paid by default
-                    dataToSave.createdAt = Timestamp.now(); // Set creation time
-                    await addDoc(collection(db, collectionName), dataToSave);
-                     action = 'adicionado';
+                if (id && !isGenerated) { // Editando uma regra ou pagamento único existente
+                    const currentPayment = allDbEntries.find(e => e.id === id && e.type === 'payment');
+                    oldRecurrenceType = currentPayment?.recurrenceType || 'none';
+                    data.pago = entryPaidCheckbox.checked; // Pega status do checkbox (visível neste caso)
+                    // Verifica se precisa regerar instâncias (mudou tipo de recorrência, data, valor, descrição, ou deixou de ser recorrente)
+                    needsRecurrenceGeneration = (data.isRecurringRule || oldRecurrenceType !== 'none') &&
+                                                (data.recurrenceType !== oldRecurrenceType ||
+                                                 data.dataPagamento !== currentPayment?.date ||
+                                                 data.valor !== currentPayment?.valor ||
+                                                 data.descricao !== currentPayment?.description);
+                    data.originalRuleId = data.isRecurringRule ? id : null; // Garante que originalRuleId é o próprio ID se for regra
+                } else if (id && isGenerated) {
+                    // Bloqueia a edição de instâncias geradas através deste formulário principal
+                    alert("Edição de ocorrências geradas não é suportada aqui. Exclua e edite a regra original.");
+                    setLoadingState(false);
+                    return;
+                } else { // Adicionando um novo pagamento
+                    data.pago = entryPaidCheckbox.checked; // Checkbox não é visível, mas pegamos o valor (será false)
+                    data.isGenerated = false;
+                    data.originalRuleId = null; // Será definido depois se for regra
+                    needsRecurrenceGeneration = data.isRecurringRule; // Precisa gerar se for uma nova regra
+                    data.createdAt = Timestamp.now(); // Adiciona data de criação
+                    if(data.isRecurringRule) ruleIdForGeneration = null; // ID da regra ainda não existe
                 }
-
-                 console.log(`Lançamento (${type}) ${action} com sucesso.`);
-                 closeEntryModal();
-                 await loadEntries(); // Reload all data and update UI
-                 // Optionally, provide user feedback (e.g., toast message)
-
-             } catch (error) {
-                 console.error(`Erro ao ${id ? 'atualizar' : 'adicionar'} lançamento:`, error);
-                 alert(`Ocorreu um erro ao salvar o lançamento. Tente novamente.\n${error.message}`);
-             }
-         }
-
-        async function handleEntryAction(event) {
-            const button = event.target.closest('button[data-action]');
-            if (!button) return; // Click wasn't on an action button
-
-            const action = button.dataset.action;
-            const entryElement = button.closest('.day-entry');
-            const entryId = entryElement?.dataset.entryId;
-            const entryType = entryElement?.dataset.entryType;
-             const originalId = entryElement?.dataset.originalId || entryId; // Use original ID for recurring
-
-
-            if (!entryId || !entryType) {
-                 console.error("Não foi possível obter dados do lançamento para a ação.");
-                 return;
             }
 
-            const entryData = allEntries.find(e => e.id === entryId);
-             if (!entryData && action !== 'delete-generated') { // Allow delete-generated even if data isn't fully loaded yet
-                 console.error("Dados completos do lançamento não encontrados:", entryId);
-                 // Potentially try to refetch or handle gracefully
-                 return;
-             }
-
-
-            console.log(`Ação: ${action}, ID: ${entryId}, Tipo: ${entryType}, Original ID: ${originalId}`);
-
-             // Disable button to prevent double clicks
-             button.disabled = true;
-             button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; // Show loading indicator
-
-
+            // Salva no Firestore
             try {
-                 if (action === 'edit') {
-                    openEntryModal(entryData);
-                 } else if (action === 'mark-paid') {
-                     const collectionName = entryType === 'receipt' ? 'recebimentos' : 'pagamentos';
-                     // For generated payments, marking as paid should perhaps create a record
-                     // or update the original differently? For simplicity, let's mark the original if generated.
-                      const idToUpdate = entryData?.isGenerated ? originalId : entryId;
-                      const ref = doc(db, collectionName, idToUpdate);
+                let currentDocRef;
+                if (id && !isGenerated) { // Atualiza documento existente (regra ou item único)
+                    currentDocRef = doc(db, collectionName, id);
+                    await updateDoc(currentDocRef, data);
+                    console.log("Documento atualizado:", id);
+                } else if (!id) { // Adiciona novo documento
+                    data.createdAt = Timestamp.now(); // Garante timestamp de criação
+                    currentDocRef = await addDoc(collection(db, collectionName), data);
+                    console.log("Novo documento adicionado:", currentDocRef.id);
+                    // Se for uma nova regra de pagamento, atualiza o próprio documento com seu ID como originalRuleId
+                    if (type === 'payment' && data.isRecurringRule) {
+                        ruleIdForGeneration = currentDocRef.id; // O ID da regra é o ID do doc recém-criado
+                        await updateDoc(currentDocRef, { originalRuleId: ruleIdForGeneration });
+                        console.log("Definido ID da regra de recorrência:", ruleIdForGeneration);
+                    }
+                } else {
+                    // Não faz nada se for tentativa de salvar instância gerada (já bloqueado antes)
+                    console.error("Tentativa de salvar instância gerada foi ignorada.");
+                    needsRecurrenceGeneration = false; // Garante que não tente gerar
+                }
 
-                     // Security/Logic Check: If it's a generated payment, maybe we just want to record
-                     // that *this instance* was paid, not modify the original 'pago' status?
-                     // This requires a more complex data model (e.g., an exceptions collection).
-                     // For now, updating the main doc (original or single entry)
-                     await updateDoc(ref, { pago: true });
-                     alert(`${entryType === 'receipt' ? 'Recebimento' : 'Pagamento'} marcado como pago!`);
-                     await loadEntries(); // Reload
-                     closeDayDetailsModal();
+                // Lida com a geração/regeneração de instâncias recorrentes
+                if (needsRecurrenceGeneration && ruleIdForGeneration) {
+                    console.log("Regerando/Gerando instâncias recorrentes para a regra:", ruleIdForGeneration);
+                    // Busca os dados atualizados da regra
+                    const ruleSnap = await getDoc(doc(db, "pagamentos", ruleIdForGeneration));
+                    if(ruleSnap.exists()){
+                        const ruleData = { id: ruleSnap.id, ...ruleSnap.data() };
+                        // 1. Exclui instâncias futuras NÃO PAGAS
+                        await deleteFutureGeneratedInstances(ruleIdForGeneration, data.dataPagamento);
+                        // 2. Gera novas instâncias se a regra ainda for recorrente
+                        if (ruleData.isRecurringRule && ruleData.recurrenceType !== 'none') {
+                            await generateAndSaveRecurringInstances(ruleIdForGeneration, ruleData);
+                        }
+                    } else {
+                         console.warn("Regra não encontrada para gerar instâncias:", ruleIdForGeneration);
+                    }
+                } else if (needsRecurrenceGeneration) {
+                    // Caso algo dê errado e precise gerar mas não tenha o ID
+                    console.warn("Geração de recorrência necessária, mas ID da regra não está disponível.");
+                }
 
-                 } else if (action === 'mark-delivered') {
-                     if (entryType === 'delivery') {
-                         const ref = doc(db, "pedidos", entryId);
-                         await updateDoc(ref, { entregue: true, dataEntregaReal: Timestamp.now() }); // Mark delivered in 'pedidos'
-                         alert('Entrega marcada como concluída!');
-                         await loadEntries(); // Reload
-                         closeDayDetailsModal();
-                     }
-                 } else if (action === 'whatsapp') {
-                     if (entryData && entryData.clientPhone) {
-                         const phone = entryData.clientPhone.replace(/\D/g, '');
-                         const valueFormatted = formatCurrency(entryData.value);
-                         const dateFormatted = formatDate(entryData.date);
-                         const clientName = entryData.clientName || 'Cliente';
-                         const description = entryData.description;
-                         const message = encodeURIComponent(
-                             `Olá ${clientName}! 👋\n\n` +
-                             `Gostaríamos de lembrar sobre o recebimento pendente:\n` +
-                             `Descrição: ${description}\n` +
-                             `Valor: ${valueFormatted}\n` +
-                             `Vencimento: ${dateFormatted}\n\n` +
-                             `Agradecemos a sua atenção!`
-                         );
-                         window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-                     } else {
-                         alert('Telefone do cliente não disponível.');
-                     }
-                 } else if (action === 'delete') {
-                      // Handle deletion of original recurring payments carefully
-                     const isOriginalRecurring = entryData?.isRecurring && !entryData?.isGenerated;
-                      let confirmMessage = `Tem certeza que deseja excluir este ${entryType === 'receipt' ? 'recebimento' : 'pagamento'}?`;
-                      if (isOriginalRecurring) {
-                          confirmMessage += '\n\nAtenção: Isto é um lançamento recorrente original. Excluir irá remover TODAS as futuras ocorrências geradas.';
-                      }
+                entryModalEl.style.display = 'none'; // Fecha o modal
+                await loadAllData(); // Recarrega TODOS os dados e atualiza a UI
 
-                     if (confirm(confirmMessage)) {
-                         const collectionName = entryType === 'receipt' ? 'recebimentos' : 'pagamentos';
-                         await deleteDoc(doc(db, collectionName, entryId));
-
-                         // If deleting an original recurring payment, we might need to delete its generated instances
-                         // This requires querying for generated instances based on originalId, which is complex here.
-                         // Simpler approach: Reloading entries will naturally remove the source and its generated children won't appear.
-
-                         alert(`${entryType === 'receipt' ? 'Recebimento' : 'Pagamento'} excluído com sucesso!`);
-                         await loadEntries();
-                         closeDayDetailsModal();
-                     }
-                  } else if (action === 'delete-generated') {
-                      // This action is specific to generated payment instances
-                      // It doesn't delete anything from Firestore, just removes this instance from the view
-                      if (confirm("Tem certeza que deseja remover esta ocorrência gerada do calendário? O pagamento recorrente original não será afetado.")) {
-                         // Find and remove the specific generated instance from the `allEntries` array
-                         allEntries = allEntries.filter(e => e.id !== entryId);
-                         alert("Ocorrência removida do calendário.");
-                         updateCalendar(); // Re-render the calendar without the deleted instance
-                         closeDayDetailsModal();
-                     }
-                  }
-
-             } catch (error) {
-                console.error(`Erro ao executar ação "${action}":`, error);
-                alert(`Ocorreu um erro: ${error.message}`);
-             } finally {
-                 // Re-enable button if it wasn't an edit action that closes the modal anyway
-                 if (action !== 'edit' && button.parentNode) { // Check if button still exists
-                    // Restore original button text/icon (more complex logic needed for specific icons)
-                     button.innerHTML = button.innerHTML.replace('<i class="fas fa-spinner fa-spin"></i>', '<i class="fas fa-check"></i>'); // Placeholder restore
-                    button.disabled = false;
-                 }
-             }
+            } catch (error) {
+                console.error("Erro ao salvar entrada:", error);
+                alert(`Ocorreu um erro ao salvar: ${error.message}`);
+            } finally {
+                setLoadingState(false); // Finaliza feedback de carregamento
+            }
         }
 
+        // --- Recurrence Generation/Deletion ---
+        async function deleteFutureGeneratedInstances(originalRuleId, fromDateISO) {
+            console.log(`Excluindo futuras instâncias NÃO PAGAS da regra ${originalRuleId} a partir de ${fromDateISO}`);
+            // Query para encontrar instâncias geradas, não pagas, a partir da data informada
+            const q = query(collection(db, "pagamentos"),
+                where("originalRuleId", "==", originalRuleId),
+                where("isGenerated", "==", true),
+                where("dataPagamento", ">=", fromDateISO),
+                where("pago", "==", false) // Apenas não pagas
+            );
+            try {
+                const snapshot = await getDocs(q);
+                if (!snapshot.empty) {
+                    // Usa WriteBatch para excluir em lote (mais eficiente e atômico até 500 operações)
+                    const batch = writeBatch(db);
+                    let deleteCount = 0;
+                    snapshot.docs.forEach(doc => {
+                        if(deleteCount < 499){ // Limite do batch
+                           batch.delete(doc.ref);
+                           deleteCount++;
+                        }
+                        // Se houver mais de 499, seria necessário múltiplos batches
+                    });
+                    await batch.commit();
+                    console.log(`Excluídas ${deleteCount} ocorrências futuras não pagas.`);
+                } else {
+                    console.log("Nenhuma ocorrência futura não paga encontrada para excluir.");
+                }
+            } catch(e) {
+                console.error("Erro ao excluir futuras instâncias recorrentes:", e);
+                // Considerar alertar o usuário ou tentar novamente
+            }
+        }
+        async function generateAndSaveRecurringInstances(originalRuleId, originalData) {
+            const recurrenceType = originalData.recurrenceType || 'none';
+            const startDate = parseDate(originalData.dataPagamento); // Data de início da regra
+
+            if (!startDate || recurrenceType === 'none') {
+                console.log("Não é possível gerar recorrências: data inválida ou tipo 'none'.");
+                return;
+            }
+            console.log(`Gerando ${recurrenceType} instâncias para a regra ${originalRuleId} a partir de ${originalData.dataPagamento}`);
+
+            const batch = writeBatch(db);
+            let count = 0;
+            const generationLimit = 12; // Gera para os próximos 12 períodos (1 ano para mensal)
+            let nextDate = new Date(startDate); // Começa com a data da regra
+
+            while (count < generationLimit) {
+                let instanceDate = new Date(nextDate); // Cria cópia para modificar
+
+                // Calcula a próxima data baseado no tipo de recorrência
+                if (recurrenceType === 'weekly') {
+                    instanceDate.setUTCDate(instanceDate.getUTCDate() + 7);
+                } else if (recurrenceType === 'monthly') {
+                    const originalDay = startDate.getUTCDate(); // Mantém o dia do mês original
+                    instanceDate.setUTCMonth(instanceDate.getUTCMonth() + 1);
+                    // Ajusta para o dia correto (cuidado com meses de tamanhos diferentes)
+                    instanceDate = new Date(Date.UTC(instanceDate.getUTCFullYear(), instanceDate.getUTCMonth(), originalDay));
+                     // Verifica se o mês pulou (ex: dia 31 em mês com 30 dias), se sim, ajusta para o último dia do mês correto
+                     if (instanceDate.getUTCMonth() !== (nextDate.getUTCMonth() + 1) % 12) {
+                         instanceDate = new Date(Date.UTC(nextDate.getUTCFullYear(), nextDate.getUTCMonth() + 1, 0)); // Último dia do mês desejado
+                     }
+                } else {
+                    break; // Tipo de recorrência inválido ou 'none'
+                }
+
+                if (count >= generationLimit) break; // Segurança extra
+
+                // Cria os dados da instância
+                const instanceData = {
+                    descricao: originalData.descricao || '',
+                    valor: originalData.valor || 0,
+                    fornecedor: originalData.fornecedor || null,
+                    dataPagamento: toISODateString(instanceDate), // Data calculada
+                    pago: false, // Instâncias geradas começam como não pagas
+                    isRecurringRule: false, // Não é a regra em si
+                    recurrenceType: 'none', // Instância não tem tipo de recorrência
+                    isGenerated: true, // Marca como gerada
+                    originalRuleId: originalRuleId, // Link para a regra original
+                    createdAt: originalData.createdAt || Timestamp.now() // Mantém timestamp da regra original
+                };
+                delete instanceData.id; // Garante que não tente salvar com ID antigo
+
+                // Adiciona a operação de criação ao batch
+                const newInstanceRef = doc(collection(db, "pagamentos")); // Gera nova referência
+                batch.set(newInstanceRef, instanceData);
+
+                nextDate = instanceDate; // Atualiza a data para o próximo cálculo
+                count++;
+
+                 // Limite de segurança para evitar loops infinitos em caso de erro lógico
+                 if (count > generationLimit + 5) {
+                     console.error("Loop de geração de recorrência excedeu limite de segurança.");
+                     break;
+                 }
+            }
+
+            // Se alguma instância foi adicionada ao batch, commita
+            if (count > 0) {
+                try {
+                    await batch.commit();
+                    console.log(`Salvas ${count} novas ocorrências recorrentes.`);
+                } catch(e){
+                    console.error("Erro ao salvar batch de recorrências:", e);
+                    // O batch inteiro falha se uma operação falhar
+                }
+            } else {
+                 console.log("Nenhuma nova instância recorrente foi gerada.");
+            }
+        }
+        // --- End Recurrence ---
+
+        // --- WhatsApp Cobrança ---
+        function cobrarViaWhatsapp(paymentData) {
+            // Usa o campo clientPhone que foi adicionado ao objeto 'entry'
+            const phoneField = paymentData?.clientPhone || null;
+            if (!phoneField) {
+                alert('Telefone do cliente não disponível para este recebimento.');
+                return;
+            }
+            const telefone = phoneField.replace(/\D/g, ''); // Remove não-dígitos
+            if(!telefone || telefone.length < 10) { // Validação mínima de telefone BR
+                alert('Número de telefone inválido.');
+                return;
+            }
+
+            // Formata os dados para a mensagem
+            const valorFormatado = formatCurrency(paymentData.value || 0);
+            const dataFormatada = formatDate(paymentData.date || '');
+            const descricao = paymentData.description || 'Recebimento';
+            const clienteNome = paymentData.clientName || 'Cliente';
+
+            // Monta a mensagem (personalize como desejar)
+            const mensagem = encodeURIComponent(
+`Olá ${clienteNome}! 👋
+
+Gostaríamos de lembrar sobre o recebimento pendente referente a:
+*Descrição:* ${descricao}
+*Valor:* ${valorFormatado}
+*Vencimento:* ${dataFormatada}
+
+Agradecemos a sua atenção e aguardamos a regularização.
+
+Atenciosamente,
+JSFER` // Adapte a assinatura
+            );
+
+            // Cria a URL do WhatsApp (Assume prefixo 55 para Brasil)
+            const whatsappUrl = `https://wa.me/${telefone}?text=${mensagem}`;
+            console.log("Abrindo URL do WhatsApp:", whatsappUrl);
+            window.open(whatsappUrl, '_blank'); // Abre em nova aba/app
+        }
+        // --- End WhatsApp Cobrança ---
+
+        async function handleEntryActionClick(event) {
+            const button = event.target.closest('button[data-action]'); // Encontra o botão clicado
+            if (!button || button.disabled) return; // Ignora se não for um botão de ação ou estiver desabilitado
+
+            const action = button.dataset.action; // Pega a ação (e.g., 'edit', 'mark-paid')
+            const entryElement = button.closest('.day-entry'); // Encontra o elemento pai da entrada
+            // Pega os dados da entrada armazenados no elemento
+            const entryId = entryElement?.dataset.entryId;
+            const entryType = entryElement?.dataset.entryType;
+            const isGenerated = entryElement?.dataset.isGenerated === 'true';
+
+            if (!entryId || !entryType) {
+                console.error("Não foi possível obter ID ou Tipo da entrada para a ação.");
+                return;
+            }
+
+            // Encontra os dados completos da entrada no array principal (para ter todos os campos)
+            const entryData = allDbEntries.find(e => e.id === entryId);
+
+            console.log(`Ação: ${action}`, { entryId, entryType, isGenerated, entryData }); // Log para debug
+            // Feedback visual e bloqueio do botão
+            button.disabled = true;
+            const originalButtonHTML = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            let needsReload = true; // Flag para saber se precisa recarregar dados
+            let closeModal = true;  // Flag para saber se fecha o modal de detalhes
+
+            try {
+                let collectionName = entryType === 'receipt' ? 'recebimentos' : entryType === 'payment' ? 'pagamentos' : 'pedidos'; // 'pedidos' para delivery
+                let docRef = doc(db, collectionName, entryId); // Referência ao documento no Firestore
+
+                // Executa a ação correspondente
+                if (action === 'edit') {
+                    closeModal = false; // Não fecha modal de detalhes, abre o de edição
+                    if (isGenerated && entryType === 'payment') {
+                        alert("Para editar uma ocorrência recorrente, por favor, edite a regra original.");
+                        throw new Error("Attempted to edit generated instance via main edit button.");
+                    }
+                    if (entryData) {
+                        openAddEditModal(entryData); // Abre modal de edição preenchido
+                        needsReload = false; // Não precisa recarregar, pois a edição ainda não foi salva
+                    } else {
+                         throw new Error("Dados completos da entrada não encontrados para edição.");
+                    }
+                }
+                else if (action === 'mark-paid') { // Marca Pagamento ou Recebimento como pago
+                    await updateDoc(docRef, { pago: true });
+                    console.log(`Entrada ${entryId} marcada como paga.`);
+                }
+                else if (action === 'mark-delivered') { // Marca Entrega como concluída
+                     await updateDoc(docRef, { entregue: true, dataEntregaReal: Timestamp.now() }); // Adiciona data real da entrega
+                     console.log(`Entrega ${entryId} marcada como concluída.`);
+                }
+                else if (action === 'delete' || action === 'delete-instance') { // Excluir
+                    let confirmMsg = `Tem certeza que deseja excluir este lançamento?`;
+                    let isRule = false;
+                    // Mensagem específica se for excluir uma REGRA de pagamento recorrente
+                    if(action === 'delete' && entryType === 'payment' && !isGenerated){
+                        isRule = entryData?.isRecurringRule || false;
+                        if(isRule) confirmMsg = "ATENÇÃO: Excluir esta REGRA também excluirá todas as ocorrências futuras NÃO PAGAS. Deseja continuar?";
+                    } else if(action === 'delete-instance') {
+                        confirmMsg = "Tem certeza que deseja excluir APENAS esta ocorrência do pagamento recorrente?";
+                    }
+
+                    if (confirm(confirmMsg)) { // Pede confirmação
+                        await deleteDoc(docRef); // Exclui o documento principal
+                        console.log(`Documento ${entryId} excluído.`);
+                        // Se excluiu uma regra, exclui também as instâncias futuras não pagas
+                        if (isRule) {
+                            await deleteFutureGeneratedInstances(entryId, toISODateString(new Date())); // Exclui a partir de hoje
+                        }
+                    } else {
+                        needsReload = false; // Cancelou, não precisa recarregar
+                        closeModal = false; // Mantém modal aberto
+                        throw new Error("Exclusão cancelada pelo usuário."); // Para cair no catch e reabilitar botão
+                    }
+                }
+                else if (action === 'whatsapp') { // Cobrar via WhatsApp
+                    needsReload = false; // Não modifica dados, não recarrega
+                    closeModal = false; // Não fecha o modal
+                    if (entryData && entryData.type === 'receipt') { // Garante que é um recebimento
+                        cobrarViaWhatsapp(entryData); // Chama a função de cobrar
+                    } else {
+                        throw new Error("Dados inválidos ou tipo incorreto para cobrança via WhatsApp.");
+                    }
+                }
+
+                // --- Recarregamento e Atualização da UI ---
+                if (needsReload) {
+                    console.log("Ação concluída, recarregando dados...");
+                    await loadAllData(); // Espera o recarregamento completo dos dados
+                    console.log("Dados recarregados, UI será atualizada.");
+                    // A função loadAllData já chama applyFiltersAndUpdateUI -> renderCalendar e updateSummary
+                }
+                // --- Fim Recarregamento ---
+
+                if (closeModal) {
+                     // Fecha o modal APÓS o possível recarregamento
+                    dayDetailModalEl.style.display = 'none';
+                }
+
+            } catch(error) {
+                console.error(`Erro ao executar ação ${action}:`, error);
+                // Não mostra alerta se for apenas cancelamento de exclusão
+                if (error.message !== "Exclusão cancelada pelo usuário." && !error.message.includes("Attempted to edit generated")) {
+                    alert(`Erro ao processar a ação: ${error.message || 'Ocorreu um problema inesperado.'}`);
+                }
+                closeModal = false; // Mantém o modal aberto em caso de erro
+            } finally {
+                // Restaura o botão para o estado original APÓS todas as operações
+                // Precisa verificar se o botão ainda existe (modal pode ter fechado)
+                 setTimeout(() => { // Adiciona um pequeno delay para garantir que o DOM atualizou
+                     const finalButtonCheck = entryElement?.querySelector(`button[data-action="${action}"]`);
+                     if(finalButtonCheck) { // Se o botão ainda existir no DOM
+                         finalButtonCheck.disabled = false;
+                         finalButtonCheck.innerHTML = originalButtonHTML;
+                     } else if (!closeModal) {
+                         // Se o modal não fechou, mas o botão sumiu (improvável), restaura o original
+                          button.disabled = false;
+                          button.innerHTML = originalButtonHTML;
+                     }
+                 }, 50); // 50ms de delay
+            }
+        }
+
+        // --- Função para Gerar Relatórios ---
+        async function gerarRelatorioCombinado() {
+            console.log("Gerando Relatório Combinado para o mês atual...");
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            reportModalEl.style.display = 'block'; // Mostra o modal de relatórios
+
+            // --- Cálculo do Balancete ---
+            let totalRecebidoMes = 0;
+            let totalPagoMes = 0;
+            allDbEntries.forEach(entry => {
+                const entryDate = parseDate(entry.date);
+                // Filtra pelo mês/ano atual
+                if (entryDate && entryDate.getUTCFullYear() === year && entryDate.getUTCMonth() === month) {
+                    if (entry.type === 'receipt' && entry.isPaid) { // Apenas recebimentos pagos
+                        totalRecebidoMes += (Number(entry.value) || 0);
+                    } else if (entry.type === 'payment' && entry.isPaid) { // Apenas pagamentos efetuados
+                        totalPagoMes += (Number(entry.value) || 0);
+                    }
+                }
+            });
+            const saldo = totalRecebidoMes - totalPagoMes;
+            // Atualiza o modal
+            reportBalanceteRecebidoEl.textContent = formatCurrency(totalRecebidoMes);
+            reportBalancetePagoEl.textContent = formatCurrency(totalPagoMes);
+            reportBalanceteSaldoEl.textContent = formatCurrency(saldo);
+            reportBalanceteSaldoEl.className = saldo >= 0 ? 'positivo' : 'negativo'; // Estiliza o saldo
+
+             // --- Cálculo do Demonstrativo por Cliente ---
+            const receiptsThisMonth = allDbEntries.filter(entry => {
+                const entryDate = parseDate(entry.date);
+                return entry.type === 'receipt' && entryDate && entryDate.getUTCFullYear() === year && entryDate.getUTCMonth() === month;
+            });
+
+            reportDemonstrativoListEl.innerHTML = ''; // Limpa lista anterior
+            if (receiptsThisMonth.length === 0) {
+                reportDemonstrativoListEl.innerHTML = '<p class="placeholder">Nenhum recebimento registrado neste mês.</p>';
+            } else {
+                // Agrupa recebimentos por cliente
+                const summaryByClient = {};
+                receiptsThisMonth.forEach(p => {
+                    const clientId = p.clientId || 'sem_cliente_id'; // Chave para agrupar
+                    const clientName = p.clientName || 'Cliente Não Identificado'; // Nome para exibição
+                    if (!summaryByClient[clientId]) {
+                        summaryByClient[clientId] = { name: clientName, paid: 0, pending: 0, total: 0 };
+                    }
+                    const value = Number(p.value) || 0;
+                    summaryByClient[clientId].total += value;
+                    if (p.isPaid) summaryByClient[clientId].paid += value;
+                    else summaryByClient[clientId].pending += value;
+                });
+                // Converte o objeto em array e ordena por nome do cliente
+                const clientsSummaryArray = Object.values(summaryByClient).sort((a, b) => a.name.localeCompare(b.name));
+                // Cria o HTML para cada cliente
+                clientsSummaryArray.forEach(cs => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <h4>${cs.name}</h4>
+                        <p>Total Recebimentos no Mês: <strong>${formatCurrency(cs.total)}</strong></p>
+                        <p>Total Pago: <strong style="color:var(--clr-success);">${formatCurrency(cs.paid)}</strong></p>
+                        <p>Total Pendente: <strong style="color:var(--clr-warning);">${formatCurrency(cs.pending)}</strong></p>`;
+                    reportDemonstrativoListEl.appendChild(div);
+                });
+            }
+        }
 
         // --- Event Listeners Setup ---
         document.addEventListener('DOMContentLoaded', () => {
-            loadClients(); // Load clients for the dropdown
-            loadEntries(); // Load all entries initially
+            loadAllData(); // Carrega os dados iniciais quando a página estiver pronta
 
-            // Calendar Navigation
-            prevMonthBtnEl.addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-                loadEntries(); // Reload entries for the new month view
+            // Navegação entre meses
+            prevMonthBtnEl.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); updateSummary(); });
+            nextMonthBtnEl.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); updateSummary(); });
+
+            // Filtros (Tipo e Status) - Usa delegação de eventos
+            filterTypeGroup.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    filterTypeGroup.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilters.type = e.target.dataset.filterType;
+                    applyFiltersAndUpdateUI(); // Reaplica filtros e atualiza UI
+                }
             });
-            nextMonthBtnEl.addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-                loadEntries(); // Reload entries
+            filterStatusGroup.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    filterStatusGroup.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilters.status = e.target.dataset.filterStatus;
+                    applyFiltersAndUpdateUI(); // Reaplica filtros e atualiza UI
+                }
             });
 
-            // Filter Buttons
-            filterButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    filterButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    currentFilter = button.dataset.filter;
-                    updateCalendar(); // Re-render calendar with the new filter
+            // Botões de Ação Principais (Novo Lançamento, Relatórios)
+            btnAddEntry.addEventListener('click', () => openAddEditModal());
+            btnReports.addEventListener('click', gerarRelatorioCombinado);
+
+            // Botões de Fechar Modais (usando atributo data-modal-id)
+            modalCloseBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const modalId = e.target.closest('[data-modal-id]')?.dataset.modalId; // Pega ID do botão ou do pai
+                    if (modalId) {
+                        const modal = document.getElementById(modalId);
+                        if(modal) modal.style.display = 'none'; // Esconde o modal correspondente
+                    }
                 });
             });
 
-            // Open Add/Edit Modal
-            openModalBtnEl.addEventListener('click', () => openEntryModal());
+            // Formulário de Adicionar/Editar
+            entryTypeSelect.addEventListener('change', toggleEntryTypeFields); // Atualiza campos ao mudar tipo
+            entryFormEl.addEventListener('submit', saveEntry); // Salva ao submeter
 
-            // Open Report Modal
-            openReportModalBtnEl.addEventListener('click', openReportModal);
-
-
-            // Close Modals (using data attribute for multiple close buttons)
-            document.querySelectorAll('[data-close-modal]').forEach(button => {
-                 button.addEventListener('click', () => {
-                    button.closest('.modal').style.display = 'none';
-                     // Reset form only if closing the entry modal via cancel/close
-                     if (button.closest('.modal')?.id === 'entry-modal') {
-                         entryFormEl.reset();
-                         entryFormEl.removeAttribute('data-editar-id');
-                         document.getElementById('entry-client').value = '';
-                         document.getElementById('entry-recurrence').value = 'none';
-                         document.querySelector('#entry-modal h2').textContent = 'Novo Lançamento';
-                         toggleEntryFields(); // Reset fields visibility
-                     }
-                });
-            });
-
-            // Toggle fields based on entry type selection
-             entryTypeSelectEl.addEventListener('change', toggleEntryFields);
-
-            // Handle Form Submission (Add/Edit)
-             entryFormEl.addEventListener('submit', handleFormSubmit);
-
-            // Handle Actions within Day Details Modal (Event Delegation)
-             dayEntriesListEl.addEventListener('click', handleEntryAction);
-
-        }); // End DOMContentLoaded
+            // Ações dentro do Modal de Detalhes do Dia (Delegação de Eventos)
+            // O listener é adicionado ao container PAI dos botões
+            dayDetailEntriesEl.addEventListener('click', handleEntryActionClick);
+        });
 
     </script>
 
