@@ -4,34 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Lumodev System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Cores baseadas no azul, mas com variações para fundo escuro */
-            --primary-color: #007bff; /* Azul principal */
-            --primary-darker: #0056b3; /* Azul mais escuro para hover */
-            --gradient-start: #0a2a4e; /* Azul bem escuro para o gradiente */
-            --gradient-end: #1a4a7a;   /* Azul um pouco mais claro para o gradiente */
-            --light-gray: #f8f9fa;     /* Cinza claro (bom para texto em fundo escuro) */
-            --gray: #adb5bd;          /* Cinza médio */
-            --dark-gray: #495057;     /* Cinza escuro */
-            --background-color: #eef1f5; /* Cor de fundo da página (mantida clara) */
+            /* Cores baseadas no menu lateral */
+            --bg-dark: #1E1E2E;         /* Fundo principal (do menu) */
+            --bg-input: rgba(255, 255, 255, 0.05); /* Fundo sutil para inputs */
+            --text-light: #E4E4E7;      /* Texto/Ícones claros (do menu) */
+            --text-muted: rgba(228, 228, 231, 0.6); /* Texto claro mais sutil */
+            --accent-green: #4CAF50;    /* Verde para botão/hover (do menu) */
+            --accent-green-darker: #409143; /* Verde um pouco mais escuro para hover/active */
+            --border-light: rgba(255, 255, 255, 0.1); /* Borda sutil clara (do menu) */
             --white: #ffffff;
-            --border-color-light: rgba(255, 255, 255, 0.2); /* Borda sutil para inputs */
-            --border-color-dark: #dee2e6; /* Borda para elementos fora do container */
-            --shadow-color: rgba(0, 0, 0, 0.15); /* Sombra um pouco mais pronunciada */
-            --text-muted-light: rgba(255, 255, 255, 0.7); /* Texto 'muted' para fundo escuro */
-            --text-muted-dark: #6c757d; /* Texto 'muted' para fundo claro (copyright) */
-            --border-radius: 0.375rem;
+            --shadow-color: rgba(0, 0, 0, 0.2); /* Sombra (usar com moderação) */
+            --border-radius: 6px; /* Raio de borda sutil */
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: var(--background-color);
-            color: var(--dark-gray); /* Cor padrão do texto fora do container */
+            background-color: var(--bg-dark); /* Fundo escuro aplicado a toda a página */
+            color: var(--text-light); /* Cor de texto padrão clara */
             display: flex;
+            flex-direction: column; /* Permite que o copyright fique abaixo */
             justify-content: center;
             align-items: center;
             min-height: 100vh;
@@ -39,192 +36,185 @@
         }
 
         .login-container {
-            /* Fundo gradiente para destacar logo branco */
-            background-image: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-            color: var(--white); /* Texto padrão dentro do container agora é branco */
-            padding: 40px 30px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 0.75rem 1.5rem var(--shadow-color);
+            /* Removemos fundo e sombra - integra com o body */
             width: 100%;
-            max-width: 400px;
+            max-width: 380px; /* Um pouco mais estreito */
             text-align: center;
+            padding: 20px; /* Adiciona padding para não colar nas bordas */
         }
 
         .logo {
-            max-width: 130px; /* Aumentei um pouco */
+            max-width: 140px;
             height: auto;
-            margin-bottom: 30px; /* Mais espaço abaixo do logo */
-            filter: brightness(0) invert(1); /* Garante que o logo fique branco se a imagem tiver outra cor - opcional, remova se seu logo já é PNG branco */
+            margin-bottom: 40px;
+             /* Opcional: Se seu logo não for branco, descomente a linha abaixo */
+             /* filter: brightness(0) invert(1); */
         }
 
         .login-container h2 {
-            margin-bottom: 30px;
+            margin-bottom: 35px;
             font-weight: 500;
-            color: var(--white); /* Título branco */
-            font-size: 1.8rem; /* Um pouco maior */
+            color: var(--text-light);
+            font-size: 1.9rem;
         }
 
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             text-align: left;
+            position: relative; /* Necessário para posicionar o ícone */
         }
 
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            color: var(--text-muted-light); /* Label clara */
-            font-weight: 500;
+         /* Não usamos mais label separada, usamos placeholder */
+        /* .input-group label { ... } */
+
+        .input-group .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted); /* Ícone com cor sutil */
+            font-size: 1rem; /* Tamanho do ícone */
+            pointer-events: none; /* Para não interferir no clique do input */
         }
 
         .input-group input {
             width: 100%;
-            padding: 12px 15px; /* Um pouco mais de padding */
-            border: 1px solid var(--border-color-light); /* Borda clara sutil */
-            border-radius: var(--border-radius);
+            padding: 14px 15px 14px 45px; /* Padding: top, right, bottom, left (espaço para ícone) */
+            border: none; /* Removemos a borda padrão */
+            border-bottom: 1px solid var(--border-light); /* Borda inferior sutil */
+            border-radius: var(--border-radius); /* Bordas levemente arredondadas */
             font-size: 1rem;
-            background-color: var(--white); /* Fundo do input branco */
-            color: var(--dark-gray); /* Texto dentro do input escuro */
-            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            background-color: var(--bg-input); /* Fundo escuro sutil */
+            color: var(--text-light); /* Texto digitado claro */
+            transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
         }
-        /* Ajuste no placeholder */
+
         .input-group input::placeholder {
-             color: var(--gray);
-             opacity: 1; /* Garante visibilidade em alguns browsers */
+             color: var(--text-muted); /* Placeholder com cor sutil */
+             opacity: 1;
         }
 
         .input-group input:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.35); /* Sombra de foco um pouco mais visível */
-            background-color: var(--white); /* Mantém fundo branco no foco */
+            border-color: var(--accent-green); /* Borda inferior fica verde no foco */
+            background-color: rgba(255, 255, 255, 0.08); /* Fundo levemente mais claro no foco */
         }
+         /* Oculta o ícone de revelar senha padrão em alguns browsers */
+        .input-group input[type="password"]::-ms-reveal,
+        .input-group input[type="password"]::-ms-clear {
+            display: none;
+        }
+
 
         .options {
             display: flex;
-            justify-content: flex-end; /* Mantém à direita */
-            margin-bottom: 25px;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+            margin-top: -10px; /* Puxa um pouco para cima */
         }
 
         .options .forgot-password {
             font-size: 0.85rem;
-            color: var(--light-gray); /* Link claro */
+            color: var(--text-muted); /* Link sutil */
             text-decoration: none;
             transition: color 0.2s ease-in-out;
         }
 
         .options .forgot-password:hover {
-            text-decoration: underline;
-            color: var(--white); /* Hover para branco */
+            text-decoration: none; /* Remove sublinhado no hover */
+            color: var(--accent-green); /* Hover verde */
         }
 
         .login-button {
             width: 100%;
-            padding: 12px;
-            background-color: var(--primary-color);
+            padding: 14px; /* Mais padding vertical */
+            background-color: var(--accent-green); /* Botão verde */
             color: var(--white);
             border: none;
             border-radius: var(--border-radius);
             font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out, transform 0.1s ease; /* Adiciona transição de transform */
-            margin-bottom: 25px; /* Aumenta espaço abaixo */
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+            margin-bottom: 30px;
+            text-transform: uppercase; /* Opcional: deixa texto do botão maiúsculo */
+            letter-spacing: 0.5px; /* Opcional: leve espaçamento */
         }
         .login-button:hover {
-            background-color: var(--primary-darker);
+            background-color: var(--accent-green-darker); /* Verde mais escuro no hover */
         }
         .login-button:active {
-             transform: scale(0.98); /* Efeito de clique */
+             transform: scale(0.98);
         }
 
         .signup-link {
             font-size: 0.9rem;
-            color: var(--text-muted-light); /* Texto claro */
+            color: var(--text-muted);
         }
 
         .signup-link a {
-            color: var(--light-gray); /* Link claro */
+            color: var(--text-light); /* Link um pouco mais destacado */
             font-weight: 500;
             text-decoration: none;
             transition: color 0.2s ease-in-out;
         }
 
         .signup-link a:hover {
-            text-decoration: underline;
-            color: var(--white); /* Hover para branco */
+            text-decoration: none; /* Sem sublinhado */
+            color: var(--accent-green); /* Hover verde */
         }
 
-        /* Estilo para o copyright (fora do container, usa cores escuras) */
         .copyright {
-            margin-top: 35px; /* Aumenta espaço acima */
-            padding-top: 20px; /* Espaço acima da linha */
-            border-top: 1px solid var(--border-color-dark); /* Linha separadora sutil */
-            font-size: 0.8rem; /* Texto menor */
-            color: var(--text-muted-dark); /* Cor sutil (escura) */
+            /* Posicionado fora do container principal, mas centralizado */
+            margin-top: 40px; /* Mais espaço acima */
+            font-size: 0.8rem;
+            color: var(--text-muted);
             text-align: center;
-            /* Garante que o copyright fique visível se o container crescer muito */
             width: 100%;
-            max-width: 400px; /* Mesma largura do container */
+            max-width: 380px; /* Mantém alinhado com o container */
+            padding-top: 15px;
+            border-top: 1px solid var(--border-light); /* Linha separadora sutil */
         }
-
-        @media (max-width: 480px) {
-             .login-container { padding: 30px 20px; }
-             .logo { max-width: 110px; }
-             .login-container h2 { font-size: 1.6rem; }
-        }
-        /* ... (todo o CSS anterior continua aqui) ... */
 
         /* === Media Query para Telas Pequenas (Smartphones) === */
         @media (max-width: 480px) {
-            /* Reduz padding geral da página */
             body {
-                padding: 15px; /* Menos padding nas laterais e topo/base */
+                padding: 10px; /* Menos padding ainda */
             }
-
-            /* Ajusta padding do container (mantém como antes ou reduz levemente vertical) */
             .login-container {
-                padding: 30px 20px; /* Padding vertical e horizontal ajustados */
+                padding: 15px; /* Menos padding interno no container */
+                max-width: 100%; /* Ocupa a largura total menos o padding do body */
             }
-
-            /* Ajusta logo */
             .logo {
-                max-width: 100px; /* Um pouco menor ainda */
-                margin-bottom: 25px; /* Margem inferior ligeiramente reduzida */
+                max-width: 120px;
+                margin-bottom: 30px;
             }
-
-            /* Ajusta título */
             .login-container h2 {
-                font-size: 1.6rem; /* Tamanho da fonte ajustado */
-                margin-bottom: 25px; /* Margem inferior ligeiramente reduzida */
+                font-size: 1.7rem;
+                margin-bottom: 30px;
+            }
+             .input-group {
+                margin-bottom: 20px;
+            }
+             .input-group input {
+                padding: 13px 15px 13px 40px; /* Ajusta padding do input */
+            }
+            .input-group .input-icon {
+                 left: 12px; /* Ajusta posição do ícone */
+                 font-size: 0.9rem;
             }
 
-            /* Ajusta espaçamento dos grupos de input */
-            .input-group {
-                margin-bottom: 18px; /* Margem inferior ligeiramente reduzida */
-            }
-            .input-group label {
-                 font-size: 0.85rem; /* Reduz um pouco o label se necessário */
-            }
-
-
-            /* Ajusta botão e links */
-             .login-button {
-                padding: 11px; /* Levemente menos padding vertical no botão */
-                 margin-bottom: 20px; /* Margem inferior ligeiramente reduzida */
+            .login-button {
+                padding: 13px;
+                margin-bottom: 25px;
             }
             .options {
-                margin-bottom: 20px; /* Margem inferior ligeiramente reduzida */
+                margin-bottom: 25px;
             }
-             .options .forgot-password, .signup-link, .signup-link a {
-                  font-size: 0.85rem; /* Garante tamanho mínimo legível/tocável */
-             }
-
-
-            /* Ajusta copyright */
             .copyright {
-                margin-top: 25px; /* Margem superior ligeiramente reduzida */
-                font-size: 0.75rem; /* Texto do copyright um pouco menor */
+                margin-top: 30px;
+                max-width: 100%;
+                padding-top: 10px;
             }
         }
     </style>
@@ -233,14 +223,14 @@
 
     <div class="login-container">
         <img src="img/logo.png" alt="Logo Lumodev" class="logo">
-        <h2>Bem Vindo</h2> <form id="login-form">
+        <h2>Bem-vindo(a)</h2> <form id="login-form">
             <div class="input-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" placeholder="seuemail@exemplo.com" required>
+                <i class="fas fa-envelope input-icon"></i>
+                <input type="email" id="email" name="email" placeholder="Seu e-mail" required>
             </div>
             <div class="input-group">
-                <label for="password">Senha</label>
-                <input type="password" id="password" name="password" placeholder="Sua senha" required>
+                 <i class="fas fa-lock input-icon"></i>
+                 <input type="password" id="password" name="password" placeholder="Sua senha" required>
             </div>
             <div class="options">
                 <a href="#" class="forgot-password">Esqueci minha senha</a>
@@ -250,25 +240,18 @@
                 Não tem uma conta? <a href="#">Cadastre-se</a>
             </p>
         </form>
-
-        <p class="copyright">
-            &copy; <span id="current-year"></span> Lumodev. Todos os direitos reservados.
-        </p>
-
     </div>
+
+    <p class="copyright">
+        &copy; <span id="current-year"></span> Lumodev. Todos os direitos reservados.
+    </p>
 
     <script>
         const loginForm = document.getElementById('login-form');
         if (loginForm) {
             loginForm.addEventListener('submit', (event) => {
                 event.preventDefault(); // IMPEDE o envio padrão do formulário
-
-                // --- Validação Mínima (Apenas verifica se não está vazio) ---
-                // Os campos 'required' no HTML já fazem essa validação básica.
-                // Se você quisesse adicionar mais validações JS, faria aqui.
-
                 console.log('Formulário submetido. Redirecionando...');
-
                 // --- REDIRECIONAMENTO ---
                 window.location.href = 'index2.html'; // Redireciona para a página index2.html
             });
@@ -277,7 +260,7 @@
         // ---> Atualiza o ano no copyright <---
         const yearSpan = document.getElementById('current-year');
         if (yearSpan) {
-            yearSpan.textContent = new Date().getFullYear(); // Pega o ano atual
+            yearSpan.textContent = new Date().getFullYear();
         }
     </script>
 
