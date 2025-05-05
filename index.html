@@ -1,208 +1,285 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Boss - Gestão Empresarial</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Lumodev System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Cores baseadas no azul, mas com variações para fundo escuro */
+            --primary-color: #007bff; /* Azul principal */
+            --primary-darker: #0056b3; /* Azul mais escuro para hover */
+            --gradient-start: #0a2a4e; /* Azul bem escuro para o gradiente */
+            --gradient-end: #1a4a7a;   /* Azul um pouco mais claro para o gradiente */
+            --light-gray: #f8f9fa;     /* Cinza claro (bom para texto em fundo escuro) */
+            --gray: #adb5bd;          /* Cinza médio */
+            --dark-gray: #495057;     /* Cinza escuro */
+            --background-color: #eef1f5; /* Cor de fundo da página (mantida clara) */
+            --white: #ffffff;
+            --border-color-light: rgba(255, 255, 255, 0.2); /* Borda sutil para inputs */
+            --border-color-dark: #dee2e6; /* Borda para elementos fora do container */
+            --shadow-color: rgba(0, 0, 0, 0.15); /* Sombra um pouco mais pronunciada */
+            --text-muted-light: rgba(255, 255, 255, 0.7); /* Texto 'muted' para fundo escuro */
+            --text-muted-dark: #6c757d; /* Texto 'muted' para fundo claro (copyright) */
+            --border-radius: 0.375rem;
+        }
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--dark-gray); /* Cor padrão do texto fora do container */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-    .container {
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
+        .login-container {
+            /* Fundo gradiente para destacar logo branco */
+            background-image: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: var(--white); /* Texto padrão dentro do container agora é branco */
+            padding: 40px 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 0.75rem 1.5rem var(--shadow-color);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
 
-    .sidebar {
-      width: 250px;
-      background-color: #1E1E2E;
-      color: #E4E4E7;
-      transition: all 0.3s ease;
-      overflow-y: auto;
-      flex-shrink: 0;
-    }
+        .logo {
+            max-width: 130px; /* Aumentei um pouco */
+            height: auto;
+            margin-bottom: 30px; /* Mais espaço abaixo do logo */
+            filter: brightness(0) invert(1); /* Garante que o logo fique branco se a imagem tiver outra cor - opcional, remova se seu logo já é PNG branco */
+        }
 
-    .sidebar.hidden {
-      width: 0;
-      overflow: hidden;
-    }
+        .login-container h2 {
+            margin-bottom: 30px;
+            font-weight: 500;
+            color: var(--white); /* Título branco */
+            font-size: 1.8rem; /* Um pouco maior */
+        }
 
-    .logo {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 15px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
 
-    .logo img {
-      max-width: 80%;
-      height: auto;
-      border-radius: 8px;
-    }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-muted-light); /* Label clara */
+            font-weight: 500;
+        }
 
-    .sidebar a {
-      display: flex;
-      align-items: center;
-      padding: 15px 20px;
-      text-decoration: none;
-      color: #E4E4E7;
-      font-size: 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      transition: background-color 0.3s ease;
-    }
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px; /* Um pouco mais de padding */
+            border: 1px solid var(--border-color-light); /* Borda clara sutil */
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            background-color: var(--white); /* Fundo do input branco */
+            color: var(--dark-gray); /* Texto dentro do input escuro */
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        /* Ajuste no placeholder */
+        .input-group input::placeholder {
+             color: var(--gray);
+             opacity: 1; /* Garante visibilidade em alguns browsers */
+        }
 
-    .sidebar a i {
-      margin-right: 10px;
-      font-size: 18px;
-    }
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.35); /* Sombra de foco um pouco mais visível */
+            background-color: var(--white); /* Mantém fundo branco no foco */
+        }
 
-    .sidebar a:hover {
-      background-color: #4CAF50;
-      color: #FFFFFF;
-    }
+        .options {
+            display: flex;
+            justify-content: flex-end; /* Mantém à direita */
+            margin-bottom: 25px;
+        }
 
-    .toggle-btn {
-      position: absolute;
-      top: 20px;
-      left: 250px;
-      z-index: 1000;
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px;
-      border-radius: 0 5px 5px 0;
-      cursor: pointer;
-      transition: left 0.3s ease;
-    }
+        .options .forgot-password {
+            font-size: 0.85rem;
+            color: var(--light-gray); /* Link claro */
+            text-decoration: none;
+            transition: color 0.2s ease-in-out;
+        }
 
-    .toggle-btn i {
-      font-size: 18px;
-    }
+        .options .forgot-password:hover {
+            text-decoration: underline;
+            color: var(--white); /* Hover para branco */
+        }
 
-    iframe {
-      flex: 1;
-      width: 100%;
-      height: 100vh;
-      border: none;
-      transition: margin-left 0.3s ease;
-    }
+        .login-button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease; /* Adiciona transição de transform */
+            margin-bottom: 25px; /* Aumenta espaço abaixo */
+        }
+        .login-button:hover {
+            background-color: var(--primary-darker);
+        }
+        .login-button:active {
+             transform: scale(0.98); /* Efeito de clique */
+        }
 
-    /* Responsividade */
-    @media (max-width: 768px) {
-      .toggle-btn {
-        left: 0;
-      }
+        .signup-link {
+            font-size: 0.9rem;
+            color: var(--text-muted-light); /* Texto claro */
+        }
 
-      .sidebar {
-        position: absolute;
-        height: 100%;
-        z-index: 999;
-      }
+        .signup-link a {
+            color: var(--light-gray); /* Link claro */
+            font-weight: 500;
+            text-decoration: none;
+            transition: color 0.2s ease-in-out;
+        }
 
-      .sidebar.hidden {
-        transform: translateX(-100%);
-      }
+        .signup-link a:hover {
+            text-decoration: underline;
+            color: var(--white); /* Hover para branco */
+        }
 
-      .sidebar.show {
-        transform: translateX(0);
-      }
+        /* Estilo para o copyright (fora do container, usa cores escuras) */
+        .copyright {
+            margin-top: 35px; /* Aumenta espaço acima */
+            padding-top: 20px; /* Espaço acima da linha */
+            border-top: 1px solid var(--border-color-dark); /* Linha separadora sutil */
+            font-size: 0.8rem; /* Texto menor */
+            color: var(--text-muted-dark); /* Cor sutil (escura) */
+            text-align: center;
+            /* Garante que o copyright fique visível se o container crescer muito */
+            width: 100%;
+            max-width: 400px; /* Mesma largura do container */
+        }
 
-      .container {
-        flex-direction: column;
-      }
+        @media (max-width: 480px) {
+             .login-container { padding: 30px 20px; }
+             .logo { max-width: 110px; }
+             .login-container h2 { font-size: 1.6rem; }
+        }
+        /* ... (todo o CSS anterior continua aqui) ... */
 
-      iframe {
-        height: calc(100vh - 50px);
-      }
-    }
+        /* === Media Query para Telas Pequenas (Smartphones) === */
+        @media (max-width: 480px) {
+            /* Reduz padding geral da página */
+            body {
+                padding: 15px; /* Menos padding nas laterais e topo/base */
+            }
 
-    @media (max-width: 480px) {
-      .sidebar a {
-        font-size: 14px;
-        padding: 12px;
-      }
+            /* Ajusta padding do container (mantém como antes ou reduz levemente vertical) */
+            .login-container {
+                padding: 30px 20px; /* Padding vertical e horizontal ajustados */
+            }
 
-      .logo img {
-        max-width: 70%;
-      }
-    }
-  </style>
+            /* Ajusta logo */
+            .logo {
+                max-width: 100px; /* Um pouco menor ainda */
+                margin-bottom: 25px; /* Margem inferior ligeiramente reduzida */
+            }
+
+            /* Ajusta título */
+            .login-container h2 {
+                font-size: 1.6rem; /* Tamanho da fonte ajustado */
+                margin-bottom: 25px; /* Margem inferior ligeiramente reduzida */
+            }
+
+            /* Ajusta espaçamento dos grupos de input */
+            .input-group {
+                margin-bottom: 18px; /* Margem inferior ligeiramente reduzida */
+            }
+            .input-group label {
+                 font-size: 0.85rem; /* Reduz um pouco o label se necessário */
+            }
+
+
+            /* Ajusta botão e links */
+             .login-button {
+                padding: 11px; /* Levemente menos padding vertical no botão */
+                 margin-bottom: 20px; /* Margem inferior ligeiramente reduzida */
+            }
+            .options {
+                margin-bottom: 20px; /* Margem inferior ligeiramente reduzida */
+            }
+             .options .forgot-password, .signup-link, .signup-link a {
+                  font-size: 0.85rem; /* Garante tamanho mínimo legível/tocável */
+             }
+
+
+            /* Ajusta copyright */
+            .copyright {
+                margin-top: 25px; /* Margem superior ligeiramente reduzida */
+                font-size: 0.75rem; /* Texto do copyright um pouco menor */
+            }
+        }
+    </style>
 </head>
 <body>
 
-  <!-- Botão para esconder/mostrar o menu -->
-  <div class="toggle-btn" onclick="toggleMenu()">
-    <i class="fas fa-angle-left"></i>
-  </div>
+    <div class="login-container">
+        <img src="img/logo.png" alt="Logo Lumodev" class="logo">
+        <h2>Bem Vindo</h2> <form id="login-form">
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="seuemail@exemplo.com" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" name="password" placeholder="Sua senha" required>
+            </div>
+            <div class="options">
+                <a href="#" class="forgot-password">Esqueci minha senha</a>
+            </div>
+            <button type="submit" class="login-button">Entrar</button>
+            <p class="signup-link">
+                Não tem uma conta? <a href="#">Cadastre-se</a>
+            </p>
+        </form>
 
-  <div class="container">
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-      <div class="logo">
-        <img src="img/logo.png" alt="Logo do Programa">
-      </div>
-      
-      <a href="clientes.html" target="conteudo"><i class="fas fa-address-book"></i>Tela do Cliente</a>
-      <a href="lista-orcamentos.html" target="conteudo"><i class="fas fa-file-invoice-dollar"></i>Tela de Orçamentos</a>
-      <a href="pedidos.html" target="conteudo"><i class="fas fa-shopping-cart"></i>Tela de Pedidos</a>
-      <a href="calendariogeral.html" target="conteudo"><i class="fas fa-calendar-alt"></i>Calendário geral</a>
-      <a href="financeiro.html" target="conteudo"><i class="fas fa-dollar"></i>Financeiro</a>
-      <a href="cadastromateriais.html" target="conteudo"><i class="fas fa-tools"></i>Cadastro de Materiais e Serviços</a>
+        <p class="copyright">
+            &copy; <span id="current-year"></span> Lumodev. Todos os direitos reservados.
+        </p>
+
     </div>
 
-    <!-- Conteúdo principal -->
-    <iframe name="conteudo" src="cadastromateriais.html"></iframe>
-  </div>
+    <script>
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (event) => {
+                event.preventDefault(); // IMPEDE o envio padrão do formulário
 
-  <!-- Script de alternância -->
-<script>
-    let menuAberto = true;
+                // --- Validação Mínima (Apenas verifica se não está vazio) ---
+                // Os campos 'required' no HTML já fazem essa validação básica.
+                // Se você quisesse adicionar mais validações JS, faria aqui.
 
-    function toggleMenu() {
-        const sidebar = document.querySelector('.sidebar');
-        const iframe = document.querySelector('iframe');
-        const toggleBtn = document.querySelector('.toggle-btn');
-        const toggleIcon = toggleBtn.querySelector('i');
+                console.log('Formulário submetido. Redirecionando...');
 
-        if (menuAberto) {
-            sidebar.style.width = '0';
-            iframe.style.marginLeft = '0';
-            toggleBtn.style.left = '0';
-            toggleIcon.classList.remove('fa-angle-left');
-            toggleIcon.classList.add('fa-angle-right');
-        } else {
-            sidebar.style.width = window.innerWidth <= 480 ? '100%' : '250px';
-            iframe.style.marginLeft = window.innerWidth <= 480 ? '0' : '250px';
-            toggleBtn.style.left = window.innerWidth <= 480 ? '0' : '250px';
-            toggleIcon.classList.remove('fa-angle-right');
-            toggleIcon.classList.add('fa-angle-left');
+                // --- REDIRECIONAMENTO ---
+                window.location.href = 'index2.html'; // Redireciona para a página index2.html
+            });
         }
 
-        menuAberto = !menuAberto;
-    }
-
-    // Fecha o menu ao clicar em um item no menu em telas pequenas
-    document.addEventListener("DOMContentLoaded", function () {
-        const links = document.querySelectorAll(".sidebar a");
-        links.forEach(link => {
-            link.addEventListener("click", () => {
-                if (window.innerWidth <= 768 && menuAberto) {
-                    toggleMenu();
-                }
-            });
-        });
-    });
-</script>
-
+        // ---> Atualiza o ano no copyright <---
+        const yearSpan = document.getElementById('current-year');
+        if (yearSpan) {
+            yearSpan.textContent = new Date().getFullYear(); // Pega o ano atual
+        }
+    </script>
 
 </body>
 </html>

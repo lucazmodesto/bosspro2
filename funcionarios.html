@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Funcionários</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* --- Estilos Gerais --- */
+        :root {
+            --primary-color: #007bff; --secondary-color: #6c757d; --success-color: #28a745;
+            --danger-color: #dc3545; --warning-color: #ffc107; --info-color: #17a2b8;
+            --light-color: #f8f9fa; --dark-color: #343a40; --border-color: #dee2e6;
+            --background-color: #eef1f5; --card-background: #ffffff; --text-color: #495057;
+            --text-muted: #6c757d; --shadow-sm: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+            --shadow-md: 0 0.5rem 1rem rgba(0,0,0,0.1); --border-radius: 0.375rem;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--background-color); color: var(--text-color); line-height: 1.6; font-size: 16px; padding: 20px; }
+        .container { background-color: var(--card-background); padding: 25px 30px; border-radius: var(--border-radius); box-shadow: var(--shadow-md); max-width: 1200px; margin: 20px auto; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .page-header h1 { font-size: 1.8rem; font-weight: 500; color: var(--dark-color); margin: 0; }
+
+        /* --- Formulário de Cadastro/Edição --- */
+        #form-funcionario-modal {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group input[type="number"],
+        .form-group input[type="date"], /* Added date type */
+        .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            height: 38px;
+        }
+        /* Specific style for checkbox label */
+        .form-group input[type="checkbox"] + label {
+             display: inline; font-weight: normal; font-size: 0.9rem; margin-bottom: 0; vertical-align: middle;
+        }
+         .form-group input[type="checkbox"] {
+              width: auto; height: auto; margin-right: 5px; vertical-align: middle;
+         }
+        #form-funcionario-modal .full-width {
+            grid-column: span 2;
+        }
+
+        /* --- Estilos para Parcelas de Pagamento Dinâmicas --- */
+        #parcelas-container .parcela-input-pair {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        #parcelas-container .parcela-input-pair input[type="number"] {
+            height: 34px; /* Ajustar altura para combinar com botões sm */
+            padding: 6px 8px;
+             flex-grow: 1; /* Para o percentual ocupar mais espaço */
+        }
+         #parcelas-container .parcela-input-pair input.parcela-dia {
+             width: 80px; /* Largura fixa para o dia */
+             flex-grow: 0;
+         }
+        #parcelas-container .parcela-input-pair .btn-remove-parcela {
+             padding: 4px 8px;
+             height: 34px;
+             flex-shrink: 0; /* Não encolher o botão */
+         }
+        #parcelas-total-percentual.invalid {
+            color: var(--danger-color);
+        }
+        #parcelas-total-percentual.valid {
+            color: var(--success-color);
+        }
+
+
+        /* --- Área de Busca/Filtro --- */
+        .filter-controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; background-color: #f8f9fa; padding: 15px; border-radius: var(--border-radius); margin-bottom: 25px; }
+        .filter-controls > div { flex: 1 1 200px; min-width: 180px; }
+        .filter-controls label { display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-muted); font-size: 0.85rem; }
+        .filter-controls input[type="text"],
+        .filter-controls select { /* Added select */
+             width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.95rem; height: 38px;
+        }
+        .filter-controls button { padding: 8px 15px; font-size: 0.9rem; height: 38px; flex-shrink: 0; }
+
+        /* --- Tabela de Funcionários --- */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 0; font-size: 0.95rem; }
+        th, td { border: 1px solid var(--border-color); padding: 10px 12px; text-align: left; vertical-align: middle; }
+        th { background-color: var(--light-color); font-weight: 500; color: var(--text-muted); white-space: nowrap; font-size: 0.85rem; }
+        tbody tr:nth-child(even) { background-color: #fdfdfe; }
+        tbody tr:hover { background-color: #f1f1f1; }
+        .col-actions { text-align: center; white-space: nowrap; width: 1%; } /* Width 1% to keep actions together */
+        .col-tipo { text-align: center; white-space: nowrap; }
+        .col-salario { text-align: right; white-space: nowrap; } /* Align salary right */
+        .col-parcelas { text-align: left; white-space: normal; } /* Allow wrap for long parcel list */
+
+
+        /* --- Botões --- */
+        button, .button-link { display: inline-block; padding: 8px 15px; font-size: 0.9rem; font-weight: 500; text-align: center; white-space: nowrap; vertical-align: middle; user-select: none; border: 1px solid transparent; border-radius: var(--border-radius); transition: all 0.15s ease-in-out; cursor: pointer; text-decoration: none; }
+        button i, .button-link i { margin-right: 5px; }
+        button:disabled { opacity: 0.65; cursor: not-allowed; }
+        .btn-primary { color: #fff; background-color: var(--primary-color); border-color: var(--primary-color); } .btn-primary:hover { background-color: #0056b3; border-color: #004085; }
+        .btn-success { color: #fff; background-color: var(--success-color); border-color: var(--success-color); } .btn-success:hover { background-color: #218838; border-color: #1e7e34; }
+        .btn-danger { color: #fff; background-color: var(--danger-color); border-color: var(--danger-color); } .btn-danger:hover { background-color: #c82333; border-color: #bd2130; }
+        .btn-info { color: #fff; background-color: var(--info-color); border-color: var(--info-color); } .btn-info:hover { background-color: #138496; border-color: #117a8b; }
+        .btn-warning { color: #212529; background-color: var(--warning-color); border-color: var(--warning-color); } .btn-warning:hover { background-color: #e0a800; border-color: #d39e00;} /* Warning button text color */
+        .btn-secondary { color: #fff; background-color: var(--secondary-color); border-color: var(--secondary-color); } .btn-secondary:hover { background-color: #5a6268; border-color: #545b62; }
+
+        /* Botões de ação na tabela e modais */
+        .btn-sm { padding: 4px 8px; font-size: 0.8rem; margin: 0 2px; }
+
+        /* --- Modais (Geral) --- */
+        .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #ddd; width: 90%; max-width: 600px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .modal-header h2 { margin: 0; font-size: 1.4em; }
+        .close-modal-btn { color: #aaa; background: none; border: none; font-size: 28px; font-weight: bold; cursor: pointer; padding: 0 5px; }
+        .close-modal-btn:hover, .close-modal-btn:focus { color: black; }
+        .modal-footer { text-align: right; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; }
+        .modal-footer button { margin-left: 10px; }
+
+        /* --- Modal Específico de Pagamentos/Adiantamentos --- */
+        #payment-history-modal .modal-content { max-width: 750px; } /* Wider modal */
+        #payment-history-modal h3 { font-size: 1.1em; margin-top: 15px; padding-bottom: 5px; border-bottom: 1px dashed #eee; }
+        #payment-list { list-style: none; padding: 0; max-height: 350px; overflow-y: auto; } /* More height */
+        #payment-list li { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: var(--border-radius); padding: 10px 15px; margin-bottom: 10px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        #payment-list li strong { color: var(--dark-color); margin-right: 5px; font-size: 0.85rem; }
+        #payment-list li .payment-details { flex-grow: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px; }
+        #payment-list li .payment-details span { color: var(--text-muted); }
+         #payment-list li .payment-details .description { font-style: italic; flex-basis: 100%;} /* Description on new line */
+        #payment-list li .payment-details .value { font-weight: bold; color: var(--danger-color); }
+        #payment-list li .payment-details .date { font-size: 0.85rem; font-style: normal; }
+        #payment-list li .payment-actions { flex-shrink: 0; display: flex; gap: 5px;} /* Buttons side-by-side */
+        #payment-list li .payment-actions button { padding: 3px 8px; font-size: 0.75rem; }
+        /* Estilo para status PAGO/PENDENTE */
+        .status-pago { color: var(--success-color); font-weight: bold; white-space: nowrap; }
+        .status-pendente { color: var(--warning-color); font-weight: bold; white-space: nowrap; }
+        .status-pago i, .status-pendente i { margin-right: 3px; }
+
+
+        /* --- Modal Adicionar Pagamento/Adiantamento --- */
+        #add-payment-modal .modal-content { max-width: 500px; }
+
+
+        /* Loading/Empty Messages */
+        #loading-message, #empty-message { text-align: center; padding: 20px; color: var(--text-muted); font-size: 1.1rem; }
+        #empty-history-message { text-align: center; padding: 15px 0; color: var(--text-muted); font-size: 1rem;}
+
+
+        /* --- Responsividade --- */
+        @media (max-width: 767.98px) {
+            body { padding: 10px; font-size: 15px; }
+            .container { padding: 15px; }
+            .page-header { flex-direction: column; align-items: flex-start; margin-bottom: 20px; }
+            .page-header h1 { font-size: 1.5rem; margin-bottom: 10px; }
+            #form-funcionario-modal { grid-template-columns: 1fr; gap: 12px; }
+            #form-funcionario-modal .full-width { grid-column: span 1; }
+            .filter-controls { flex-direction: column; gap: 12px; padding: 12px; }
+            .filter-controls > div { flex: 1 1 auto; min-width: 0; width: 100%; }
+            .filter-controls button { width: 100%; margin-top: 5px; }
+            th, td { padding: 8px; font-size: 0.9rem; }
+            .col-actions button { padding: 5px 8px; font-size: 0.8rem; margin-bottom: 3px; } /* Add margin for stacking */
+             .col-actions { white-space: normal; } /* Allow action buttons to wrap on small screens */
+            .modal-content { width: 95%; margin: 15px auto; padding: 20px; }
+            .modal-header h2 { font-size: 1.25rem; }
+            #payment-list li { flex-direction: column; align-items: flex-start; }
+            #payment-list li .payment-details .description { flex-basis: auto; } /* Allow description inline again */
+            #payment-list li .payment-actions { margin-top: 8px; width: 100%; justify-content: flex-end; }
+            .modal-footer { display: flex; flex-direction: column; gap: 10px; align-items: stretch;} /* Flex column for buttons */
+            .modal-footer button { margin-left: 0; width: 100%;}
+        }
+        @media (max-width: 479.98px) {
+            body { font-size: 14px; }
+            .page-header h1 { font-size: 1.3rem; }
+            th, td { font-size: 0.85rem; padding: 6px; }
+            .col-actions button { font-size: 0.75rem; padding: 4px 6px; }
+            .modal-content { padding: 15px; }
+            .modal-header h2 { font-size: 1.1rem; }
+             #payment-list li .payment-actions { justify-content: space-around; } /* Space out buttons more on very small screens */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>Cadastro de Funcionários</h1>
+            <button id="btn-add-funcionario" class="btn-success"><i class="fas fa-user-plus"></i> Novo Funcionário</button>
+        </div>
+
+        <div class="filter-controls">
+            <div>
+                <label for="busca-funcionario">Buscar Funcionário</label>
+                <input type="text" id="busca-funcionario" placeholder="Nome...">
+            </div>
+             <div>
+                <label for="filtro-tipo">Tipo</label>
+                <select id="filtro-tipo">
+                    <option value="">Todos</option>
+                    <option value="fixo">Fixo</option>
+                    <option value="freelancer">Freelancer</option>
+                </select>
+            </div>
+            <button id="btn-limpar-filtros" class="btn-secondary"><i class="fas fa-eraser"></i> Limpar</button>
+        </div>
+
+        <div class="table-container">
+            <table id="tabela-funcionarios">
+                <thead>
+                    <tr>
+                        <th>Nome Completo</th>
+                        <th class="col-tipo">Tipo</th>
+                        <th>Contato</th>
+                        <th class="col-salario">Salário Fixo</th>
+                        <th class="col-parcelas">Parcelas Pagamento</th> <th class="col-actions">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-funcionarios-body">
+                    </tbody>
+            </table>
+             <div id="loading-message" style="display: none;"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
+             <div id="empty-message" style="display: none;">Nenhum funcionário cadastrado.</div>
+        </div>
+    </div>
+
+    <div id="funcionario-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-funcionario-title">Novo Funcionário</h2>
+                <button class="close-modal-btn" data-modal-id="funcionario-modal">&times;</button>
+            </div>
+            <form id="form-funcionario-modal" novalidate> <input type="hidden" id="funcionario-id">
+                <div class="form-group full-width">
+                    <label for="nome-completo">Nome Completo</label>
+                    <input type="text" id="nome-completo" required>
+                </div>
+                 <div class="form-group">
+                    <label for="telefone">Telefone</label>
+                    <input type="tel" id="telefone" placeholder="+55 (99) 91234-5678">
+                 </div>
+                 <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email">
+                 </div>
+                 <div class="form-group">
+                    <label for="tipo-funcionario">Tipo</label>
+                    <select id="tipo-funcionario" required>
+                        <option value="">Selecione...</option>
+                        <option value="fixo">Fixo</option>
+                        <option value="freelancer">Freelancer</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="salario-fixo-group" style="display: none;">
+                    <label for="salario-mensal">Salário Mensal (R$)</label>
+                    <input type="number" id="salario-mensal" step="0.01" min="0.01"> </div>
+
+                <div class="form-group full-width" id="parcelas-pagamento-group" style="display: none;">
+                    <label>Parcelas de Pagamento Fixo (Dia e %)</label>
+                    <div id="parcelas-container">
+                        </div>
+                    <button type="button" id="btn-add-parcela" class="btn-secondary btn-sm" style="margin-top: 10px;"><i class="fas fa-plus"></i> Adicionar Parcela</button>
+                    <small id="parcelas-total-percentual" style="display: block; margin-top: 8px; font-weight: bold; color: var(--dark-color);"></small> <small class="form-text text-muted" style="display: block; margin-top: 3px;">Informe os dias do mês e o percentual do salário pago em cada um. A soma dos percentuais deve ser exatamente 100%.</small>
+                    <div id="parcelas-validation-error" style="color: var(--danger-color); font-size: 0.85rem; margin-top: 5px; display: none;"></div>
+                </div>
+             </form>
+             <div class="modal-footer">
+                <button type="button" class="btn-secondary close-modal-btn" data-modal-id="funcionario-modal">Cancelar</button>
+                <button type="submit" form="form-funcionario-modal" class="btn-primary" id="salvar-funcionario-btn">Salvar</button>
+             </div>
+        </div>
+    </div>
+
+    <div id="payment-history-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-history-title">Histórico de Pagamentos - <span id="history-funcionario-nome"></span></h2>
+                <button class="close-modal-btn" data-modal-id="payment-history-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                 <button id="btn-add-payment" class="btn-success btn-sm" style="margin-bottom: 15px;"><i class="fas fa-plus"></i> Adicionar Pagamento/Adiantamento</button>
+                 <h3>Lançamentos</h3>
+                 <ul id="payment-list">
+                     </ul>
+                 <div id="empty-history-message" style="display: none;">Nenhum lançamento financeiro encontrado para este funcionário.</div>
+            </div>
+             <div class="modal-footer">
+                <button type="button" class="btn-secondary close-modal-btn" data-modal-id="payment-history-modal">Fechar</button>
+             </div>
+        </div>
+    </div>
+
+    <div id="add-payment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-add-payment-title">Novo Lançamento Financeiro</h2>
+                <button class="close-modal-btn" data-modal-id="add-payment-modal">&times;</button>
+            </div>
+            <form id="form-add-payment" novalidate>
+                <input type="hidden" id="payment-funcionario-id">
+                <div class="form-group full-width">
+                    <label for="payment-tipo">Tipo de Lançamento</label>
+                    <select id="payment-tipo" required>
+                        <option value="salario">Salário (Fixo)</option>
+                        <option value="adiantamento">Adiantamento</option>
+                        <option value="freelancer">Pagamento Freelancer</option>
+                        </select>
+                </div>
+                <div class="form-group full-width">
+                    <label for="payment-descricao">Descrição</label>
+                    <input type="text" id="payment-descricao" placeholder="Ex: Salário Ref. Out/2025 (Dia 5 - 40%), Adiantamento, Serviço Projeto X" required>
+                </div>
+                 <div class="form-group">
+                    <label for="payment-valor">Valor (R$)</label>
+                    <input type="number" id="payment-valor" step="0.01" min="0.01" required>
+                 </div>
+                 <div class="form-group">
+                    <label for="payment-data">Data Pagamento/Vencimento</label>
+                    <input type="date" id="payment-data" required>
+                 </div>
+                 <div class="form-group full-width" style="flex-direction: row; align-items: center;"> <input type="checkbox" id="payment-is-paid" checked >
+                     <label for="payment-is-paid">Marcar como Pago</label>
+                 </div>
+              </form>
+              <div class="modal-footer">
+                <button type="button" class="btn-secondary close-modal-btn" data-modal-id="add-payment-modal">Cancelar</button>
+                <button type="submit" form="form-add-payment" class="btn-primary" id="salvar-pagamento-btn">Registrar Lançamento</button>
+             </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // --- Imports Firebase ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, query, orderBy, where, addDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        // --- Configuração Firebase (FORNECIDA PELO USUÁRIO) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc",
+            authDomain: "testebosspro.firebaseapp.com",
+            projectId: "testebosspro",
+            storageBucket: "testebosspro.appspot.com",
+            messagingSenderId: "73684788134",
+            appId: "1:73684788134:web:7c8250c83f10a2df59e567",
+            measurementId: "G-1H29L5B830"
+        };
+
+        // Inicializar Firebase
+        let app;
+        let db;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            console.log("Firebase conectado com a configuração fornecida!");
+        } catch (error) {
+            console.error("Erro ao inicializar Firebase:", error);
+            alert("Erro crítico ao conectar ao Firebase. Verifique a configuração fornecida e as Regras de Segurança. A aplicação pode não funcionar corretamente.");
+            // Tenta desabilitar funcionalidades se a conexão falhar
+            const btnAdd = document.getElementById('btn-add-funcionario');
+            if (btnAdd) btnAdd.disabled = true;
+            const loadingMsg = document.getElementById('loading-message');
+            if(loadingMsg) {
+                loadingMsg.textContent = "Erro de conexão com o banco de dados.";
+                loadingMsg.style.display = 'block';
+            }
+            const tableBody = document.getElementById('tabela-funcionarios-body');
+            if(tableBody) tableBody.innerHTML = '';
+            const emptyMsg = document.getElementById('empty-message');
+            if(emptyMsg) emptyMsg.style.display = 'none';
+        }
+
+
+        // --- Elementos DOM ---
+        const tabelaBody = document.getElementById('tabela-funcionarios-body');
+        const loadingMessage = document.getElementById('loading-message');
+        const emptyMessage = document.getElementById('empty-message');
+        const buscaFuncionarioInput = document.getElementById('busca-funcionario');
+        const filtroTipoSelect = document.getElementById('filtro-tipo');
+        const btnLimparFiltros = document.getElementById('btn-limpar-filtros');
+        const btnAddFuncionario = document.getElementById('btn-add-funcionario');
+
+        // Modal Funcionário (Cadastro/Edição)
+        const funcionarioModal = document.getElementById('funcionario-modal');
+        const modalFuncionarioTitle = document.getElementById('modal-funcionario-title');
+        const formFuncionarioModal = document.getElementById('form-funcionario-modal');
+        const funcionarioIdInput = document.getElementById('funcionario-id');
+        const nomeCompletoInput = document.getElementById('nome-completo');
+        const telefoneInput = document.getElementById('telefone');
+        const emailInput = document.getElementById('email');
+        const tipoFuncionarioSelect = document.getElementById('tipo-funcionario');
+        const salarioFixoGroup = document.getElementById('salario-fixo-group');
+        const salarioMensalInput = document.getElementById('salario-mensal');
+        // Novos elementos para parcelas
+        const parcelasPagamentoGroup = document.getElementById('parcelas-pagamento-group');
+        const parcelasContainer = document.getElementById('parcelas-container');
+        const btnAddParcela = document.getElementById('btn-add-parcela');
+        const parcelasTotalPercentualSpan = document.getElementById('parcelas-total-percentual');
+        const parcelasValidationErrorDiv = document.getElementById('parcelas-validation-error');
+        const salvarFuncionarioBtn = document.getElementById('salvar-funcionario-btn');
+
+
+        // Modal Histórico de Pagamentos
+        const paymentHistoryModal = document.getElementById('payment-history-modal');
+        const historyFuncionarioNomeSpan = document.getElementById('history-funcionario-nome');
+        const paymentList = document.getElementById('payment-list');
+        const emptyHistoryMessage = document.getElementById('empty-history-message');
+        const btnAddPayment = document.getElementById('btn-add-payment');
+
+        // Modal Adicionar Pagamento/Adiantamento
+        const addPaymentModal = document.getElementById('add-payment-modal');
+        const formAddPayment = document.getElementById('form-add-payment');
+        const paymentFuncionarioIdInput = document.getElementById('payment-funcionario-id');
+        const paymentTipoSelect = document.getElementById('payment-tipo');
+        const paymentDescricaoInput = document.getElementById('payment-descricao');
+        const paymentValorInput = document.getElementById('payment-valor');
+        const paymentDataInput = document.getElementById('payment-data');
+        const paymentIsPaidCheckbox = document.getElementById('payment-is-paid'); // Checkbox Pago/Pendente
+        const salvarPagamentoBtn = document.getElementById('salvar-pagamento-btn');
+
+        // Botões de fechar modal genéricos
+        const closeModalsBtns = document.querySelectorAll('.close-modal-btn');
+
+
+        // --- Variáveis Globais ---
+        let todosFuncionariosArray = [];
+        let funcionarioSelecionadoParaPagamento = null; // Armazena o funcionário ativo no modal de histórico
+
+        // --- Funções Utilitárias ---
+        function formatarValorBRL(valor) { return `R$ ${(parseFloat(valor) || 0).toFixed(2).replace('.', ',')}`; }
+        function formatarDataExibicao(dataString) { if (!dataString) return 'N/A'; try { const [y, m, d] = dataString.split('-'); return `${d}/${m}/${y}`; } catch { return 'Inválida'; } }
+        function formatarTelefone(telefone) {
+             if (!telefone) return 'N/A';
+             const cleaned = ('' + telefone).replace(/\D/g, '');
+             // Tenta formatar como celular +55 (XX) 9XXXX-XXXX (considera 9 dígitos no celular)
+             const matchMobile = cleaned.match(/^(\d{2})(9\d{4})(\d{4})$/);
+             if (matchMobile) {
+                 return `+55 (${matchMobile[1]}) ${matchMobile[2]}-${matchMobile[3]}`;
+             }
+             // Tenta formatar como fixo +55 (XX) XXXX-XXXX
+             const matchLandline = cleaned.match(/^(\d{2})(\d{4})(\d{4})$/);
+             if (matchLandline) {
+                 return `+55 (${matchLandline[1]}) ${matchLandline[2]}-${matchLandline[3]}`;
+             }
+             return telefone; // Retorna o original se não conseguir formatar
+         }
+
+        // Função para formatar array de parcelas para exibição na tabela
+        function formatarParcelasParaExibicao(parcelas) {
+            if (!parcelas || parcelas.length === 0) return 'N/A';
+            // Ordena por dia apenas para exibição, caso não estejam ordenadas nos dados
+            const parcelasOrdenadas = [...parcelas].sort((a, b) => a.dia - b.dia);
+            return parcelasOrdenadas
+                .map(p => `Dia ${p.dia} (${p.percentual.toFixed(2).replace('.', ',')}%)`)
+                .join(', ');
+        }
+
+
+        // Função para obter a data de hoje no formato<x_bin_398>-MM-DD
+        function getTodayDateString() {
+            const today = new Date();
+            return dateToYYYYMMDD(today);
+        }
+
+        // Função para formatar objeto Date para YYYY-MM-DD
+        function dateToYYYYMMDD(date) {
+            if (!date || !(date instanceof Date)) return ''; // Retorna vazio se data inválida
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Helper para obter nome do mês (usado na descrição do lançamento gerado)
+         function getMonthName(monthIndex) {
+             const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']; // Abrev.
+             // Certifica que o índice é válido
+             if (monthIndex >= 0 && monthIndex < months.length) {
+                return months[monthIndex];
+             }
+             return 'Mês Inválido';
+         }
+
+
+        // --- Funções Principais (Funcionários) ---
+
+        async function carregarFuncionarios() {
+             if (!db) { // Verifica se DB foi inicializado corretamente
+                 console.error("Firestore não inicializado. Carregamento cancelado.");
+                 // Tenta exibir mensagem na UI
+                  const loadingMsg = document.getElementById('loading-message');
+                  if (loadingMsg) {
+                     loadingMsg.textContent = "Erro de conexão com o banco de dados.";
+                     loadingMsg.style.display = 'block';
+                  }
+                   const emptyMsg = document.getElementById('empty-message');
+                   if(emptyMsg) emptyMsg.style.display = 'none';
+                 return; // Interrompe a função
+             }
+
+            loadingMessage.style.display = 'block';
+            emptyMessage.style.display = 'none';
+            tabelaBody.innerHTML = '';
+            todosFuncionariosArray = [];
+            try {
+                // Ordena por nome para facilitar a visualização inicial
+                const q = query(collection(db, "funcionarios"), orderBy("nomeCompleto"));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    todosFuncionariosArray.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                console.log(`Total de ${todosFuncionariosArray.length} funcionários carregados.`);
+
+                // Gera pagamentos recorrentes APÓS carregar os funcionários
+                await generateRecurringPayments();
+                console.log("Verificação/geração de pagamentos recorrentes concluída.");
+
+
+                aplicarFiltrosFuncionarios(); // Aplica filtros e renderiza
+            } catch (error) {
+                console.error("Erro ao carregar funcionários ou gerar pagamentos:", error);
+                emptyMessage.textContent = "Erro ao carregar dados. Verifique o console.";
+                emptyMessage.style.display = 'block';
+            } finally {
+                loadingMessage.style.display = 'none';
+            }
+        }
+
+        function aplicarFiltrosFuncionarios() {
+            const termoBusca = buscaFuncionarioInput.value.trim().toLowerCase();
+            const tipoFiltro = filtroTipoSelect.value;
+
+            const funcionariosFiltrados = todosFuncionariosArray.filter(funcionario => {
+                const matchNome = !termoBusca || (funcionario.nomeCompleto && funcionario.nomeCompleto.toLowerCase().includes(termoBusca));
+                const matchTipo = !tipoFiltro || (funcionario.tipo && funcionario.tipo === tipoFiltro);
+                return matchNome && matchTipo;
+            });
+
+            renderizarTabelaFuncionarios(funcionariosFiltrados);
+        }
+
+
+        function renderizarTabelaFuncionarios(funcionariosParaRenderizar) {
+            tabelaBody.innerHTML = '';
+            if (funcionariosParaRenderizar.length === 0 && db) { // Só mostra msg se DB conectado
+                emptyMessage.style.display = 'block';
+                emptyMessage.textContent = buscaFuncionarioInput.value || filtroTipoSelect.value
+                    ? "Nenhum funcionário encontrado com os filtros selecionados."
+                    : "Nenhum funcionário cadastrado.";
+            } else if (funcionariosParaRenderizar.length > 0){
+                emptyMessage.style.display = 'none';
+                funcionariosParaRenderizar.forEach(funcionario => {
+                    const tr = document.createElement('tr');
+                    tr.dataset.funcionarioId = funcionario.id;
+
+                     // Formata as parcelas para exibição na tabela
+                     const parcelasFormatadas = funcionario.tipo === 'fixo'
+                         ? formatarParcelasParaExibicao(funcionario.parcelasPagamento)
+                         : 'N/A';
+
+                    tr.innerHTML = `
+                        <td>${funcionario.nomeCompleto || 'N/A'}</td>
+                        <td class="col-tipo">${funcionario.tipo === 'fixo' ? 'Fixo' : 'Freelancer'}</td>
+                        <td>${funcionario.telefone ? formatarTelefone(funcionario.telefone) : 'N/A'}${funcionario.email ? '<br>' + funcionario.email : ''}</td>
+                        <td class="col-salario">${funcionario.tipo === 'fixo' && funcionario.salarioMensal != null ? formatarValorBRL(funcionario.salarioMensal) : 'N/A'}</td>
+                        <td class="col-parcelas">${parcelasFormatadas}</td>
+                        <td class="col-actions">
+                             <button class="btn-info btn-sm btn-view-payments" title="Ver/Gerenciar Pagamentos"><i class="fas fa-dollar-sign"></i> Pgts</button>
+                             <button class="btn-warning btn-sm btn-edit-funcionario" title="Editar Funcionário"><i class="fas fa-edit"></i> Edit</button>
+                             <button class="btn-danger btn-sm btn-delete-funcionario" title="Excluir Funcionário"><i class="fas fa-trash-alt"></i> Del</button>
+                        </td>
+                    `;
+                    tabelaBody.appendChild(tr);
+                });
+                addListenersBotoesTabela(); // Adiciona listeners aos botões da tabela
+            } else if (!db) {
+                 // Mensagem específica se o DB não conectou
+                 emptyMessage.style.display = 'none'; // Esconde a msg padrão
+                 tabelaBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--danger-color);">Erro de conexão com o banco de dados. Não é possível listar funcionários.</td></tr>';
+            }
+        }
+
+        function addListenersBotoesTabela() {
+             if (!db) return; // Não adiciona listeners se o DB não conectou
+
+            // Botão Ver Pagamentos
+            document.querySelectorAll('.btn-view-payments').forEach(btn => {
+                // Usa replaceWith para garantir que não haja listeners duplicados
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', (e) => {
+                    const funcionarioId = e.currentTarget.closest('tr').dataset.funcionarioId;
+                    const funcionario = todosFuncionariosArray.find(f => f.id === funcionarioId);
+                    if (funcionario) {
+                        funcionarioSelecionadoParaPagamento = funcionario;
+                        abrirModalHistoricoPagamentos(funcionario);
+                    } else {
+                         console.error("Funcionário não encontrado no array local:", funcionarioId);
+                         alert("Erro: Não foi possível encontrar os dados deste funcionário.");
+                    }
+                });
+            });
+
+            // Botão Editar Funcionário
+             document.querySelectorAll('.btn-edit-funcionario').forEach(btn => {
+                 const newBtn = btn.cloneNode(true);
+                 btn.parentNode.replaceChild(newBtn, btn);
+                 newBtn.addEventListener('click', (e) => {
+                     const funcionarioId = e.currentTarget.closest('tr').dataset.funcionarioId;
+                      abrirModalEdicaoFuncionario(funcionarioId); // Chama a função de edição
+                 });
+             });
+
+
+            // Botão Excluir Funcionário
+            document.querySelectorAll('.btn-delete-funcionario').forEach(btn => {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', async (e) => {
+                    if (!db) { console.error("Firestore não inicializado."); return; }
+                    const tr = e.currentTarget.closest('tr');
+                    const funcionarioId = tr.dataset.funcionarioId;
+                    const funcionarioNome = tr.cells[0].textContent;
+
+                    if (!confirm(`Tem certeza que deseja excluir o funcionário "${funcionarioNome}"? \n\nATENÇÃO: Os lançamentos financeiros associados a ele serão MANTIDOS no histórico geral, mas desvinculados deste funcionário.`)) return;
+
+                    const deleteButton = e.currentTarget;
+                    deleteButton.disabled = true;
+                    deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                    try {
+                        // 1. Desvincular lançamentos em 'pagamentos'
+                         const pagamentosFuncQuery = query(collection(db, "pagamentos"), where("funcionarioId", "==", funcionarioId));
+                         const pagamentosFuncSnapshot = await getDocs(pagamentosFuncQuery);
+                         const batchPagamentos = writeBatch(db);
+                         let countDesvinculados = 0;
+                         pagamentosFuncSnapshot.forEach(doc => {
+                             batchPagamentos.update(doc.ref, { funcionarioId: null });
+                             countDesvinculados++;
+                         });
+                         if (countDesvinculados > 0) {
+                            await batchPagamentos.commit();
+                            console.log(`${countDesvinculados} pagamentos desvinculados para funcionário excluído ${funcionarioId}.`);
+                         } else {
+                            console.log(`Nenhum pagamento encontrado para desvincular do funcionário ${funcionarioId}.`);
+                         }
+
+                        // 2. EXCLUI o documento do funcionário
+                        await deleteDoc(doc(db, "funcionarios", funcionarioId));
+
+                        alert(`Funcionário "${funcionarioNome}" excluído com sucesso!`);
+                        // Remove da lista local e renderiza novamente OU recarrega tudo
+                         todosFuncionariosArray = todosFuncionariosArray.filter(f => f.id !== funcionarioId);
+                         aplicarFiltrosFuncionarios(); // Re-renderiza a tabela filtrada
+                        // await carregarFuncionarios(); // Alternativa: recarrega tudo do Firebase
+
+                    } catch (err) {
+                        console.error("Erro ao excluir funcionário:", err);
+                        alert("Ocorreu um erro ao tentar excluir o funcionário.");
+                        // Reabilita botão em caso de erro
+                        deleteButton.disabled = false;
+                        deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i> Del';
+                    }
+                });
+            });
+        }
+
+
+        // --- Funções do Modal de Cadastro/Edição ---
+
+        function abrirModalCadastroFuncionario() {
+            formFuncionarioModal.reset();
+            funcionarioIdInput.value = ''; // Limpa o ID para indicar modo cadastro
+            modalFuncionarioTitle.textContent = 'Novo Funcionário';
+            parcelasContainer.innerHTML = ''; // Limpa parcelas dinâmicas
+            toggleSalarioDiasFields(''); // Reseta para estado inicial (esconde campos fixo)
+            parcelasValidationErrorDiv.style.display = 'none'; // Esconde msg de erro
+             // Garante que a validação visual seja resetada
+             atualizarTotalPercentual();
+
+            funcionarioModal.style.display = 'block';
+            nomeCompletoInput.focus(); // Foco no primeiro campo
+        }
+
+
+         // Função para abrir modal de edição (IMPLEMENTADA)
+         async function abrirModalEdicaoFuncionario(funcionarioId) {
+              if (!db) {
+                    alert("Erro de conexão. Não é possível editar.");
+                    return;
+              }
+              console.log("Tentando abrir modal de edição para ID:", funcionarioId); // Log
+
+              // Busca os dados mais recentes do funcionário no Firebase
+              try {
+                   const funcRef = doc(db, "funcionarios", funcionarioId);
+                   const funcSnap = await getDoc(funcRef);
+
+                   if (!funcSnap.exists()) {
+                       alert("Funcionário não encontrado no banco de dados. Pode ter sido excluído.");
+                       // Talvez recarregar a lista principal?
+                       await carregarFuncionarios();
+                       return;
+                   }
+                   const funcionario = { id: funcSnap.id, ...funcSnap.data() };
+                    console.log("Dados do funcionário para edição:", funcionario); // Log
+
+                   // Preencher o formulário
+                   formFuncionarioModal.reset(); // Limpa antes de preencher
+                   funcionarioIdInput.value = funcionario.id; // IMPORTANTE: Setar o ID para modo edição
+                   modalFuncionarioTitle.textContent = 'Editar Funcionário';
+                   nomeCompletoInput.value = funcionario.nomeCompleto || '';
+                   telefoneInput.value = funcionario.telefone || '';
+                   emailInput.value = funcionario.email || '';
+                   tipoFuncionarioSelect.value = funcionario.tipo || '';
+
+                   // Mostra/esconde campos e preenche salário/parcelas
+                   toggleSalarioDiasFields(funcionario.tipo); // ATIVA OS CAMPOS CORRETOS
+
+                   if (funcionario.tipo === 'fixo') {
+                        console.log("Preenchendo dados de funcionário fixo..."); // Log
+                        salarioMensalInput.value = funcionario.salarioMensal || '';
+                        // Limpa parcelas antigas e adiciona as do funcionário
+                        parcelasContainer.innerHTML = ''; // Limpa antes de adicionar
+                        if (funcionario.parcelasPagamento && Array.isArray(funcionario.parcelasPagamento) && funcionario.parcelasPagamento.length > 0) {
+                             console.log("Adicionando parcelas:", funcionario.parcelasPagamento); // Log
+                             funcionario.parcelasPagamento.forEach(p => {
+                                 adicionarNovaParcelaInput(p.dia, p.percentual);
+                             });
+                        } else {
+                             console.log("Funcionário fixo sem parcelas definidas, adicionando campo vazio."); // Log
+                             // Se for fixo mas não tiver parcelas salvas, adiciona um campo vazio
+                             adicionarNovaParcelaInput();
+                        }
+                         atualizarTotalPercentual(); // Atualiza total %
+                   }
+
+                   parcelasValidationErrorDiv.style.display = 'none'; // Limpa erro inicial
+                   funcionarioModal.style.display = 'block';
+                   nomeCompletoInput.focus(); // Foco no primeiro campo
+
+              } catch (error) {
+                   console.error("Erro ao carregar dados do funcionário para edição:", error);
+                   alert("Erro ao carregar dados para edição. Verifique o console.");
+              }
+         }
+
+
+
+        // Alterna visibilidade e estado dos campos de Salário Fixo e PARCELAS de Pagamento
+        function toggleSalarioDiasFields(tipo) {
+            const isFixo = tipo === 'fixo';
+            salarioFixoGroup.style.display = isFixo ? 'flex' : 'none';
+            parcelasPagamentoGroup.style.display = isFixo ? 'block' : 'none';
+
+            // Limpa e reseta os campos se não for fixo
+            if (!isFixo) {
+                parcelasContainer.innerHTML = ''; // Limpa parcelas existentes
+                salarioMensalInput.removeAttribute('required');
+                salarioMensalInput.value = '';
+                atualizarTotalPercentual(); // Reseta a exibição do total
+                 parcelasValidationErrorDiv.style.display = 'none'; // Esconde erro
+            } else {
+                 salarioMensalInput.setAttribute('required', 'required');
+                 // SÓ Adiciona uma parcela inicial se NÃO estiver no modo de edição E o container estiver vazio
+                 if (!funcionarioIdInput.value && parcelasContainer.children.length === 0) {
+                      console.log("Adicionando parcela inicial para novo funcionário fixo."); // Log
+                     adicionarNovaParcelaInput();
+                 } else if (funcionarioIdInput.value && parcelasContainer.children.length === 0){
+                     // Se está editando e não carregou parcelas (caso raro), adiciona uma
+                     console.log("Editando funcionário fixo sem parcelas, adicionando campo vazio."); // Log
+                     adicionarNovaParcelaInput();
+                 }
+                 atualizarTotalPercentual(); // Calcula o total ao exibir/mudar tipo
+            }
+        }
+
+         // --- Funções para Gerenciar Parcelas de Pagamento Dinâmicas ---
+         function adicionarNovaParcelaInput(dia = '', percentual = '') {
+            const divPair = document.createElement('div');
+            divPair.className = 'parcela-input-pair';
+            // Usar text/tel para dia e percentual pode facilitar em alguns browsers/mobile
+            divPair.innerHTML = `
+                <input type="number" class="parcela-dia form-control form-control-sm" placeholder="Dia" min="1" max="31" required value="${dia}">
+                <input type="number" class="parcela-percentual form-control form-control-sm" placeholder="%" min="0.01" max="100" step="0.01" required value="${percentual}">
+                <button type="button" class="btn-danger btn-sm btn-remove-parcela" title="Remover Parcela"><i class="fas fa-times"></i></button>
+            `;
+            parcelasContainer.appendChild(divPair);
+
+            // Adiciona listener para recalcular total ao digitar percentual ou dia
+            const diaInput = divPair.querySelector('.parcela-dia');
+            const percentualInput = divPair.querySelector('.parcela-percentual');
+            const removeBtn = divPair.querySelector('.btn-remove-parcela');
+
+            diaInput.addEventListener('input', () => {
+                 diaInput.style.borderColor = ''; // Limpa erro visual ao digitar
+                 atualizarTotalPercentual();
+            });
+            percentualInput.addEventListener('input', () => {
+                 percentualInput.style.borderColor = ''; // Limpa erro visual ao digitar
+                 atualizarTotalPercentual();
+            });
+
+            // Adiciona listener para o botão de remover
+             removeBtn.addEventListener('click', (e) => {
+                 e.target.closest('.parcela-input-pair').remove();
+                 atualizarTotalPercentual(); // Recalcula ao remover
+             });
+              atualizarTotalPercentual(); // Recalcula ao adicionar
+        }
+
+        function atualizarTotalPercentual() {
+             // Verifica se o grupo de parcelas está visível (só calcula se for fixo)
+             if (parcelasPagamentoGroup.style.display === 'none') {
+                 parcelasTotalPercentualSpan.textContent = '';
+                 parcelasTotalPercentualSpan.className = '';
+                 parcelasValidationErrorDiv.style.display = 'none';
+                 return;
+             }
+
+            let total = 0;
+            const percentuaisInputs = parcelasContainer.querySelectorAll('.parcela-percentual');
+            percentuaisInputs.forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+
+            parcelasTotalPercentualSpan.textContent = `Total: ${total.toFixed(2)}%`;
+
+            // Validação visual simples do total
+             const isValidTotal = Math.abs(total - 100) < 0.001; // Tolerância pequena
+            if (isValidTotal && total > 0) {
+                parcelasTotalPercentualSpan.className = 'valid';
+                 // Não esconde erro aqui, pois pode haver outros erros (dia duplicado, etc)
+            } else if (total === 0 && percentuaisInputs.length === 0) {
+                 parcelasTotalPercentualSpan.textContent = 'Nenhuma parcela adicionada.';
+                 parcelasTotalPercentualSpan.className = '';
+                 // parcelasValidationErrorDiv.style.display = 'none'; // Não mexer no erro aqui
+            } else {
+                parcelasTotalPercentualSpan.className = 'invalid';
+            }
+        }
+
+        function coletarEValidarParcelas() {
+            parcelasValidationErrorDiv.style.display = 'none'; // Reseta erro
+            parcelasValidationErrorDiv.textContent = '';
+             // Limpa erros visuais antigos
+             parcelasContainer.querySelectorAll('input').forEach(input => input.style.borderColor = '');
+
+
+            const parcelas = [];
+            const diasAdicionados = new Set();
+            let somaPercentuais = 0;
+            let erro = null;
+
+            const inputsPairs = parcelasContainer.querySelectorAll('.parcela-input-pair');
+
+            if (inputsPairs.length === 0) {
+                 erro = "Adicione pelo menos uma parcela de pagamento (Dia e Percentual).";
+            }
+
+            inputsPairs.forEach((pair, index) => {
+                 if (erro) return; // Se já encontrou erro, não processa mais
+
+                const diaInput = pair.querySelector('.parcela-dia');
+                const percentualInput = pair.querySelector('.parcela-percentual');
+
+                const dia = parseInt(diaInput.value);
+                const percentual = parseFloat(percentualInput.value);
+
+                if (isNaN(dia) || dia < 1 || dia > 31) {
+                    erro = `Dia inválido (${diaInput.value || 'vazio'}) na Parcela ${index + 1}. Deve ser entre 1 e 31.`;
+                    diaInput.style.borderColor = 'var(--danger-color)'; // Highlight erro
+                    diaInput.focus();
+                } else if (diasAdicionados.has(dia)) {
+                     erro = `Dia ${dia} está duplicado. Informe cada dia de pagamento apenas uma vez.`;
+                      diaInput.style.borderColor = 'var(--danger-color)'; // Highlight erro
+                     diaInput.focus();
+                } else if (isNaN(percentual) || percentual <= 0 || percentual > 100) {
+                     erro = `Percentual inválido (${percentualInput.value || 'vazio'}) na Parcela ${index + 1}. Deve ser entre 0.01 e 100.`;
+                      percentualInput.style.borderColor = 'var(--danger-color)'; // Highlight erro
+                     percentualInput.focus();
+                } else {
+                    diasAdicionados.add(dia);
+                    somaPercentuais += percentual;
+                    parcelas.push({ dia: dia, percentual: parseFloat(percentual.toFixed(2)) });
+                }
+            });
+
+             // Validação final da soma dos percentuais (com tolerância mínima)
+            // Só valida a soma se não houver outros erros antes
+            if (!erro && inputsPairs.length > 0 && Math.abs(somaPercentuais - 100) > 0.001) {
+                 erro = `A soma dos percentuais (${somaPercentuais.toFixed(2)}%) deve ser exatamente 100%.`;
+                 // Destaca todos os campos de percentual se a soma estiver errada
+                  parcelasContainer.querySelectorAll('.parcela-percentual').forEach(inp => inp.style.borderColor = 'var(--danger-color)');
+            }
+
+
+            if (erro) {
+                 parcelasValidationErrorDiv.textContent = erro;
+                 parcelasValidationErrorDiv.style.display = 'block';
+                return null; // Indica falha na validação
+            }
+
+            parcelas.sort((a, b) => a.dia - b.dia); // Ordena por dia antes de retornar
+            return parcelas; // Retorna array de objetos [{dia: 5, percentual: 30}, ...]
+        }
+
+        // Adiciona listener para o botão de adicionar parcela
+        btnAddParcela.addEventListener('click', () => adicionarNovaParcelaInput());
+
+        // Atualiza campos dinâmicos ao mudar o tipo de funcionário
+        tipoFuncionarioSelect.addEventListener('change', (e) => {
+            toggleSalarioDiasFields(e.target.value);
+        });
+
+
+        // Função separada para o processamento de salvamento após validação
+        async function processarSalvamentoFuncionario() {
+             if (!db) { // Verifica DB novamente antes de salvar
+                 alert("Erro de conexão com o banco de dados. Não é possível salvar.");
+                 return;
+             }
+
+            const id = funcionarioIdInput.value; // Pega ID para saber se é edição
+            const nomeCompleto = nomeCompletoInput.value.trim();
+            const telefone = telefoneInput.value.trim();
+            const email = emailInput.value.trim();
+            const tipo = tipoFuncionarioSelect.value;
+            const salarioMensal = tipo === 'fixo' ? parseFloat(salarioMensalInput.value) || 0 : null;
+
+            let parcelasPagamento = null;
+
+             // Validação básica inicial
+             if (!nomeCompleto || !tipo) {
+                  alert("Nome completo e Tipo são obrigatórios.");
+                   return;
+             }
+
+            // Validação específica para tipo Fixo
+            if (tipo === 'fixo') {
+                 if (isNaN(salarioMensal) || salarioMensal <= 0) {
+                     alert("Informe um salário mensal válido maior que zero para funcionário Fixo com parcelas de pagamento.");
+                     salarioMensalInput.focus();
+                     salarioMensalInput.style.borderColor = 'var(--danger-color)';
+                     return;
+                 } else {
+                     salarioMensalInput.style.borderColor = ''; // Limpa erro visual
+                 }
+                // Coleta e valida as parcelas
+                parcelasPagamento = coletarEValidarParcelas();
+                if (!parcelasPagamento) {
+                    // Erro de validação nas parcelas já foi mostrado na tela
+                    return; // Para a execução se a validação das parcelas falhar
+                }
+            }
+
+            // Se chegou aqui, a validação passou
+            salvarFuncionarioBtn.disabled = true;
+            salvarFuncionarioBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+
+            const dadosFuncionario = {
+                nomeCompleto: nomeCompleto,
+                telefone: telefone || null,
+                email: email || null,
+                tipo: tipo,
+                salarioMensal: salarioMensal,
+                parcelasPagamento: parcelasPagamento, // Será null se não for fixo
+                // diasPagamentoFixo: null // Remove o campo antigo se existir
+            };
+
+            try {
+                if (id) {
+                    // Edição
+                    console.log("Atualizando funcionário ID:", id, " com dados:", dadosFuncionario);
+                    const funcionarioRef = doc(db, "funcionarios", id);
+                    await updateDoc(funcionarioRef, dadosFuncionario);
+                    alert("Funcionário atualizado com sucesso!");
+                } else {
+                    // Cadastro
+                    dadosFuncionario.createdAt = new Date(); // Adiciona createdAt apenas ao criar
+                    console.log("Cadastrando novo funcionário com dados:", dadosFuncionario);
+                    await addDoc(collection(db, "funcionarios"), dadosFuncionario);
+                    alert(`Funcionário "${nomeCompleto}" cadastrado com sucesso!`);
+                }
+
+                funcionarioModal.style.display = 'none';
+                formFuncionarioModal.reset();
+                parcelasContainer.innerHTML = '';
+                toggleSalarioDiasFields('');
+
+                await carregarFuncionarios(); // Recarrega a lista da tabela
+            } catch (error) {
+                console.error("Erro ao salvar funcionário:", error);
+                alert(`Ocorreu um erro ao salvar o funcionário: ${error.message}`);
+            } finally {
+                 // Garante que o botão seja reabilitado
+                 salvarFuncionarioBtn.disabled = false;
+                 salvarFuncionarioBtn.innerHTML = 'Salvar';
+            }
+        }
+
+        // Listener de submit do formulário do funcionário
+        formFuncionarioModal.addEventListener('submit', (e) => {
+             e.preventDefault();
+             console.log("Submit do formulário de funcionário acionado."); // Log
+             processarSalvamentoFuncionario();
+        });
+
+
+        // --- Funções de Geração de Pagamentos Recorrentes (Fixos) ---
+
+        async function generateRecurringPayments() {
+             if (!db) { console.error("Firestore não inicializado, geração de recorrentes cancelada."); return; }
+
+            console.log("Verificando e gerando pagamentos recorrentes...");
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Zera horas para comparar apenas datas
+            const currentYear = today.getFullYear();
+            const currentMonth = today.getMonth(); // 0-indexed
+
+            // Gera para mês atual + próximos X meses
+            const monthsToGenerateAhead = 2; // Ex: 0=Atual, 1=Próximo, 2=Subsequente
+            const limitDate = new Date(currentYear, currentMonth + monthsToGenerateAhead + 1, 0); // Último dia do último mês a gerar
+            limitDate.setHours(23, 59, 59, 999); // Garante incluir o último dia completo
+
+
+            const fixedEmployeesWithSchedule = todosFuncionariosArray.filter(f =>
+                f.tipo === 'fixo' &&
+                f.salarioMensal > 0 &&
+                f.parcelasPagamento && Array.isArray(f.parcelasPagamento) && f.parcelasPagamento.length > 0
+            );
+
+            if (fixedEmployeesWithSchedule.length === 0) {
+                console.log("Nenhum funcionário fixo com salário e parcelas de pagamento válidas para gerar recorrências.");
+                return;
+            }
+
+            const batch = writeBatch(db);
+            let generatedCount = 0;
+            const MAX_BATCH_WRITES = 490; // Firestore limit is 500, keep a margin
+
+            for (const funcionario of fixedEmployeesWithSchedule) {
+                if (!funcionario.id || !funcionario.nomeCompleto) {
+                    console.warn("Funcionário inválido encontrado, pulando:", funcionario);
+                    continue; // Pula funcionário sem ID ou nome
+                }
+                 if (generatedCount >= MAX_BATCH_WRITES) {
+                     console.warn("Limite do batch quase atingido, salvando e criando novo batch...");
+                     try {
+                        await batch.commit();
+                        console.log(`Batch parcial (${generatedCount} escritas) salvo com sucesso.`);
+                        batch = writeBatch(db); // Cria novo batch
+                        generatedCount = 0;
+                     } catch(commitError) {
+                         console.error("Erro ao commitar batch parcial:", commitError);
+                         alert("Erro ao salvar parte dos pagamentos recorrentes. Verifique o console.");
+                         return; // Interrompe o processo se um batch falhar
+                     }
+                 }
+
+
+                const salarioMensal = funcionario.salarioMensal;
+
+                for (let monthOffset = 0; monthOffset <= monthsToGenerateAhead; monthOffset++) {
+                    const targetMonthDate = new Date(currentYear, currentMonth + monthOffset, 1);
+                    const targetYear = targetMonthDate.getFullYear();
+                    const targetMonthIndex = targetMonthDate.getMonth();
+
+                    for (const parcela of funcionario.parcelasPagamento) {
+                        const dia = parcela.dia;
+                        const percentual = parcela.percentual;
+
+                        if (isNaN(dia) || isNaN(percentual) || percentual <= 0) {
+                             console.warn(`Parcela inválida para ${funcionario.nomeCompleto}, pulando:`, parcela);
+                             continue;
+                        }
+
+                        const lastDayOfMonth = new Date(targetYear, targetMonthIndex + 1, 0).getDate();
+                        const paymentDay = Math.min(dia, lastDayOfMonth);
+                        const paymentDate = new Date(targetYear, targetMonthIndex, paymentDay);
+                         paymentDate.setHours(0,0,0,0); // Zera hora para comparação
+
+                        // Ignorar datas estritamente passadas (antes de hoje)
+                        if (paymentDate < today) {
+                            continue;
+                        }
+                        // Ignorar datas futuras além do limite
+                        if (paymentDate > limitDate) {
+                            continue;
+                        }
+
+                        const paymentDateString = dateToYYYYMMDD(paymentDate);
+                        const valorParcela = parseFloat(((salarioMensal * percentual) / 100).toFixed(2));
+
+                        if (valorParcela <= 0) continue;
+
+                        const descricao = `Salário Fixo Ref. ${getMonthName(targetMonthIndex)}/${targetYear} (Dia ${dia} - ${percentual.toFixed(2).replace('.',',')}%)`;
+
+                        // Verificar se já existe um lançamento gerado automaticamente idêntico
+                        // Query mais específica para evitar colisões
+                         const uniqueCheckQuery = query(
+                             collection(db, "pagamentos"),
+                             where("funcionarioId", "==", funcionario.id),
+                             where("dataPagamento", "==", paymentDateString),
+                             where("tipoLancamentoFunc", "==", "salario"),
+                             where("generatedByRecurrence", "==", true)
+                             // A verificação de valor agora é feita no loop abaixo
+                         );
+
+                        try {
+                            const existingPaymentsSnapshot = await getDocs(uniqueCheckQuery);
+                            const alreadyExists = existingPaymentsSnapshot.docs.some(doc =>
+                                 Math.abs(doc.data().valor - valorParcela) < 0.01 // Verifica valor próximo
+                             );
+
+                            if (!alreadyExists) {
+                                // Se não existe, criar o lançamento pendente no batch
+                                console.log(`Agendando para gerar lançamento PENDENTE: ${funcionario.nomeCompleto} - ${descricao} - ${formatarValorBRL(valorParcela)} em ${formatarDataExibicao(paymentDateString)}`);
+                                const newPaymentRef = doc(collection(db, "pagamentos"));
+                                batch.set(newPaymentRef, {
+                                    descricao: descricao,
+                                    valor: valorParcela,
+                                    dataPagamento: paymentDateString,
+                                    pago: false, // Lançado como PENDENTE
+                                    funcionarioId: funcionario.id,
+                                    tipoLancamentoFunc: 'salario',
+                                    generatedByRecurrence: true,
+                                    createdAt: new Date()
+                                });
+                                generatedCount++;
+                                 if (generatedCount >= MAX_BATCH_WRITES) { // Verifica limite após adicionar
+                                     console.warn("Limite do batch quase atingido, salvando e criando novo batch...");
+                                     await batch.commit();
+                                     console.log(`Batch parcial (${generatedCount} escritas) salvo com sucesso.`);
+                                     batch = writeBatch(db); // Cria novo batch
+                                     generatedCount = 0;
+                                 }
+                            }
+                        } catch(queryError) {
+                             console.error(`Erro ao verificar pagamentos existentes para ${funcionario.nomeCompleto} em ${paymentDateString}:`, queryError);
+                             // Considerar se deve continuar ou parar
+                        }
+                    } // Fim loop parcelas
+                } // Fim loop meses
+            } // Fim loop funcionários
+
+            // Commit o batch final (se houver algo nele)
+            if (generatedCount > 0) {
+                 try {
+                     await batch.commit();
+                     console.log(`Batch final de ${generatedCount} lançamentos recorrentes gerado e salvo com sucesso.`);
+                 } catch (error) {
+                     console.error("Erro ao commitar batch final de pagamentos recorrentes:", error);
+                     alert("Ocorreu um erro ao salvar os pagamentos recorrentes gerados.");
+                 }
+             } else {
+                 console.log("Nenhum lançamento recorrente novo para gerar no batch final.");
+             }
+        }
+
+
+        // --- Funções do Modal de Histórico de Pagamentos ---
+
+        async function abrirModalHistoricoPagamentos(funcionario) {
+             if (!funcionario || !funcionario.id) { // Verifica se funcionário é válido
+                alert("Erro: Dados do funcionário inválidos.");
+                return;
+             }
+             if (!db) { console.error("Firestore não inicializado."); return; }
+
+            historyFuncionarioNomeSpan.textContent = funcionario.nomeCompleto || 'Funcionário';
+            paymentList.innerHTML = '<li><i class="fas fa-spinner fa-spin"></i> Carregando histórico...</li>';
+            emptyHistoryMessage.style.display = 'none';
+            paymentFuncionarioIdInput.value = funcionario.id; // Seta o ID no form de add pagamento
+
+            // Botão adicionar pagamento no modal de histórico (recria listener para garantir contexto correto)
+            const newAddBtn = btnAddPayment.cloneNode(true);
+            btnAddPayment.parentNode.replaceChild(newAddBtn, btnAddPayment);
+            btnAddPayment = newAddBtn; // Atualiza referência global
+            btnAddPayment.onclick = () => abrirModalAddPayment(funcionario.id);
+
+
+            try {
+                const q = query(collection(db, "pagamentos"),
+                                where("funcionarioId", "==", funcionario.id),
+                                orderBy("dataPagamento", "desc"),
+                                orderBy("createdAt", "desc"));
+                const querySnapshot = await getDocs(q);
+
+                 paymentList.innerHTML = ''; // Limpa o carregando...
+
+                if (querySnapshot.empty) {
+                    emptyHistoryMessage.style.display = 'block';
+                } else {
+                     querySnapshot.forEach(doc => {
+                         const pagamento = doc.data();
+                         const li = document.createElement('li');
+                         li.dataset.paymentId = doc.id;
+
+                         let tipoTexto = 'Lanç.'; // Default
+                         if(pagamento.tipoLancamentoFunc === 'salario') tipoTexto = 'Salário';
+                         else if(pagamento.tipoLancamentoFunc === 'adiantamento') tipoTexto = 'Adiant.';
+                         else if(pagamento.tipoLancamentoFunc === 'freelancer') tipoTexto = 'Freelance';
+
+                         const statusClass = pagamento.pago ? 'status-pago' : 'status-pendente';
+                         const statusIcon = pagamento.pago ? 'fa-check-circle' : 'fa-clock';
+                         const statusText = pagamento.pago ? 'Pago' : 'Pendente';
+
+                         let statusToggleButton = '';
+                          if (pagamento.pago) {
+                               statusToggleButton = `<button class="btn-warning btn-sm btn-toggle-paid" data-target-status="false" title="Marcar como Pendente"><i class="fas fa-undo"></i> Pendente</button>`;
+                          } else {
+                               statusToggleButton = `<button class="btn-success btn-sm btn-toggle-paid" data-target-status="true" title="Marcar como Pago"><i class="fas fa-check"></i> Pago</button>`;
+                          }
+
+
+                         li.innerHTML = `
+                             <div class="payment-details">
+                                 <strong>${tipoTexto}:</strong>
+                                 <span class="value">${formatarValorBRL(pagamento.valor || 0)}</span>
+                                 <span class="date">(${formatarDataExibicao(pagamento.dataPagamento)})</span>
+                                 <span class="${statusClass}"><i class="fas ${statusIcon}"></i> ${statusText}</span>
+                                  ${pagamento.generatedByRecurrence ? '<i class="fas fa-sync-alt" title="Gerado Automaticamente" style="color: var(--info-color); margin-left: 5px; font-size: 0.8em;"></i>': ''}
+                                  <span class="description">${pagamento.descricao || 'Sem descrição'}</span>
+                             </div>
+                             <div class="payment-actions">
+                                 ${statusToggleButton}
+                                 <button class="btn-danger btn-sm btn-delete-payment" title="Excluir Lançamento"><i class="fas fa-trash-alt"></i> Del</button>
+                             </div>
+                         `;
+                         paymentList.appendChild(li);
+                     });
+                     // Adiciona listeners DEPOIS que todos os itens foram adicionados ao DOM
+                     addListenersBotoesPagamento();
+                 }
+
+            } catch (error) {
+                console.error("Erro ao carregar histórico de pagamentos:", error);
+                paymentList.innerHTML = '<li style="color: var(--danger-color);">Erro ao carregar histórico. Tente novamente.</li>';
+            } finally {
+                paymentHistoryModal.style.display = 'block'; // Mostra o modal
+            }
+          }
+
+         // Adiciona/Recria listeners para os botões dentro da lista de pagamentos
+         function addListenersBotoesPagamento() {
+             if (!db) return;
+
+             const paymentItems = paymentList.querySelectorAll('li[data-payment-id]'); // Pega todos os itens com ID
+
+              paymentItems.forEach(li => {
+                  const paymentId = li.dataset.paymentId;
+
+                  // Botão Excluir
+                  const deleteBtn = li.querySelector('.btn-delete-payment');
+                  if (deleteBtn) {
+                      const newDeleteBtn = deleteBtn.cloneNode(true);
+                      deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+                      newDeleteBtn.addEventListener('click', async (e) => {
+                          const currentLi = e.currentTarget.closest('li'); // Pega o LI atual
+                          const currentPaymentId = currentLi.dataset.paymentId;
+                          const descricao = currentLi.querySelector('.description')?.textContent || 'Lançamento';
+                          if (!confirm(`Tem certeza que deseja excluir este lançamento ("${descricao}")?`)) return;
+
+                          const button = e.currentTarget;
+                          button.disabled = true;
+                          button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                          try {
+                              await deleteDoc(doc(db, "pagamentos", currentPaymentId));
+                              currentLi.remove(); // Remove visualmente
+                              if (paymentList.children.length === 0) {
+                                  emptyHistoryMessage.style.display = 'block';
+                              }
+                          } catch (err) {
+                              console.error("Erro ao excluir lançamento:", err);
+                              alert("Ocorreu um erro ao tentar excluir o lançamento.");
+                              button.disabled = false;
+                              button.innerHTML = '<i class="fas fa-trash-alt"></i> Del';
+                          }
+                      });
+                  }
+
+                   // Botão Toggle Pago/Pendente
+                   const toggleBtn = li.querySelector('.btn-toggle-paid');
+                   if(toggleBtn) {
+                       const newToggleBtn = toggleBtn.cloneNode(true);
+                       toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
+                       newToggleBtn.addEventListener('click', async (e) => {
+                           const currentLi = e.currentTarget.closest('li');
+                           const currentPaymentId = currentLi.dataset.paymentId;
+                           const targetStatus = e.currentTarget.dataset.targetStatus === 'true'; // true para pago, false para pendente
+
+                           const button = e.currentTarget;
+                           button.disabled = true;
+                           button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                           try {
+                                const paymentRef = doc(db, "pagamentos", currentPaymentId);
+                                await updateDoc(paymentRef, { pago: targetStatus });
+
+                                // Atualiza a interface do item específico
+                                const statusSpan = currentLi.querySelector('.status-pago, .status-pendente');
+                                const statusIconElement = statusSpan.querySelector('i');
+
+                                let newButtonHTML = '';
+                                if (targetStatus) { // Marcou como PAGO
+                                     statusSpan.className = 'status-pago';
+                                     statusIconElement.className = 'fas fa-check-circle';
+                                     statusSpan.textContent = ''; // Limpa texto antigo
+                                     statusSpan.appendChild(statusIconElement); // Readiciona ícone
+                                     statusSpan.append(' Pago'); // Adiciona novo texto
+                                     newButtonHTML = `<button class="btn-warning btn-sm btn-toggle-paid" data-target-status="false" title="Marcar como Pendente"><i class="fas fa-undo"></i> Pendente</button>`;
+                                } else { // Marcou como PENDENTE
+                                     statusSpan.className = 'status-pendente';
+                                     statusIconElement.className = 'fas fa-clock';
+                                     statusSpan.textContent = '';
+                                     statusSpan.appendChild(statusIconElement);
+                                     statusSpan.append(' Pendente');
+                                     newButtonHTML = `<button class="btn-success btn-sm btn-toggle-paid" data-target-status="true" title="Marcar como Pago"><i class="fas fa-check"></i> Pago</button>`;
+                                }
+                                // Substitui o botão antigo pelo novo e readiciona listener
+                                const actionsDiv = currentLi.querySelector('.payment-actions');
+                                const oldToggleBtn = actionsDiv.querySelector('.btn-toggle-paid');
+                                if(oldToggleBtn) {
+                                    oldToggleBtn.insertAdjacentHTML('afterend', newButtonHTML); // Insere o novo botão
+                                    oldToggleBtn.remove(); // Remove o botão antigo (que estava desabilitado)
+                                    addListenersBotoesPagamento(); // Re-executa para adicionar listener ao novo botão
+                                }
+
+
+                           } catch(err) {
+                                console.error("Erro ao atualizar status do pagamento:", err);
+                                alert("Erro ao atualizar status.");
+                                // Reabilita o botão original em caso de erro
+                                button.disabled = false;
+                                button.innerHTML = targetStatus ? '<i class="fas fa-check"></i> Pago' : '<i class="fas fa-undo"></i> Pendente';
+                           }
+
+                       });
+                   }
+
+                   // Listener para Editar (Placeholder)
+                    /*
+                    const editBtn = li.querySelector('.btn-edit-payment');
+                    if (editBtn) {
+                        const newEditBtn = editBtn.cloneNode(true);
+                        editBtn.parentNode.replaceChild(newEditBtn, editBtn);
+                        newEditBtn.addEventListener('click', (e) => {
+                             const currentPaymentId = e.currentTarget.closest('li').dataset.paymentId;
+                             alert(`Editar pagamento ID: ${currentPaymentId} - Não implementado`);
+                        });
+                    }
+                    */
+
+              }); // Fim forEach li
+         }
+
+
+        // --- Funções do Modal Adicionar Pagamento/Adiantamento ---
+
+        function abrirModalAddPayment(funcionarioId) {
+            formAddPayment.reset();
+            paymentFuncionarioIdInput.value = funcionarioId; // Seta o ID do funcionário
+            // Define a data atual como padrão
+            paymentDataInput.value = getTodayDateString();
+            paymentIsPaidCheckbox.checked = true; // Padrão é marcar como pago
+
+            // Pre-seleciona o tipo baseado no tipo do funcionário
+            const funcionario = todosFuncionariosArray.find(f => f.id === funcionarioId);
+            if (funcionario) {
+                 paymentTipoSelect.querySelector('option[value="salario"]').disabled = (funcionario.tipo !== 'fixo');
+                 paymentTipoSelect.querySelector('option[value="freelancer"]').disabled = (funcionario.tipo !== 'freelancer');
+
+                if (funcionario.tipo === 'fixo') {
+                    paymentTipoSelect.value = 'salario';
+                } else if (funcionario.tipo === 'freelancer') {
+                    paymentTipoSelect.value = 'freelancer';
+                } else {
+                     paymentTipoSelect.value = 'adiantamento';
+                }
+            } else {
+                 paymentTipoSelect.querySelector('option[value="salario"]').disabled = false;
+                 paymentTipoSelect.querySelector('option[value="freelancer"]').disabled = false;
+                 paymentTipoSelect.value = 'adiantamento';
+            }
+
+            addPaymentModal.style.display = 'block';
+            paymentDescricaoInput.focus(); // Foco na descrição
+        }
+
+        formAddPayment.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!db) { console.error("Firestore não inicializado."); return; }
+
+            salvarPagamentoBtn.disabled = true;
+            salvarPagamentoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+
+            const funcionarioId = paymentFuncionarioIdInput.value;
+            const tipoLancamentoFunc = paymentTipoSelect.value;
+            const descricao = paymentDescricaoInput.value.trim();
+            const valor = parseFloat(paymentValorInput.value) || 0;
+            const dataPagamento = paymentDataInput.value;
+            const isPaid = paymentIsPaidCheckbox.checked;
+
+            if (!funcionarioId || !tipoLancamentoFunc || !descricao || valor <= 0 || !dataPagamento) {
+                alert("Por favor, preencha todos os campos corretamente (Valor > 0, Data válida).");
+                salvarPagamentoBtn.disabled = false;
+                salvarPagamentoBtn.innerHTML = 'Registrar Lançamento';
+                return;
+            }
+
+
+            try {
+                await addDoc(collection(db, "pagamentos"), {
+                    descricao: descricao,
+                    valor: valor,
+                    dataPagamento: dataPagamento,
+                    pago: isPaid,
+                    funcionarioId: funcionarioId,
+                    tipoLancamentoFunc: tipoLancamentoFunc,
+                    generatedByRecurrence: false, // Manual
+                    createdAt: new Date()
+                });
+
+                // alert(`Lançamento registrado como ${isPaid ? 'Pago' : 'Pendente'}!`); // Opcional
+
+                addPaymentModal.style.display = 'none';
+                formAddPayment.reset();
+
+                // Recarrega o histórico SE o modal de histórico ainda estiver aberto E for do mesmo funcionário
+                 if (paymentHistoryModal.style.display === 'block' && funcionarioSelecionadoParaPagamento && funcionarioSelecionadoParaPagamento.id === funcionarioId) {
+                    await abrirModalHistoricoPagamentos(funcionarioSelecionadoParaPagamento);
+                 }
+
+
+            } catch (error) {
+                console.error("Erro ao registrar lançamento financeiro:", error);
+                alert(`Ocorreu um erro ao registrar o lançamento: ${error.message}`);
+            } finally {
+                salvarPagamentoBtn.disabled = false;
+                salvarPagamentoBtn.innerHTML = 'Registrar Lançamento';
+            }
+        });
+
+
+        // --- Listeners Gerais de Modais ---
+         closeModalsBtns.forEach(btn => {
+             btn.addEventListener('click', (e) => {
+                 const modalId = e.target.dataset.modalId || e.target.closest('.close-modal-btn')?.dataset.modalId;
+                 if (modalId) {
+                     const modalToClose = document.getElementById(modalId);
+                     if (modalToClose) {
+                         modalToClose.style.display = 'none';
+                         if (modalId === 'payment-history-modal') {
+                             funcionarioSelecionadoParaPagamento = null;
+                         }
+                         if (modalId === 'funcionario-modal') {
+                              parcelasValidationErrorDiv.style.display = 'none';
+                              parcelasContainer.querySelectorAll('input').forEach(input => input.style.borderColor = '');
+                         }
+                     }
+                 }
+             });
+         });
+
+         // Fechar modais clicando fora
+         window.addEventListener('click', (event) => {
+             if (event.target == funcionarioModal) {
+                  funcionarioModal.style.display = 'none';
+                  parcelasValidationErrorDiv.style.display = 'none';
+                  parcelasContainer.querySelectorAll('input').forEach(input => input.style.borderColor = '');
+             }
+             if (event.target == paymentHistoryModal) {
+                  paymentHistoryModal.style.display = 'none';
+                  funcionarioSelecionadoParaPagamento = null;
+             }
+              if (event.target == addPaymentModal) {
+                   addPaymentModal.style.display = 'none';
+              }
+         });
+
+
+        // --- Inicialização ---
+        // Usar DOMContentLoaded é geralmente mais rápido que 'load'
+        document.addEventListener("DOMContentLoaded", async () => {
+            console.log("DOM carregado. Inicializando aplicação...");
+             if (!db) {
+                 console.warn("Inicialização principal adiada: Firestore não conectado.");
+                 // A mensagem de erro já deve ter sido mostrada na inicialização do Firebase
+                 return;
+             }
+
+            // Tenta carregar funcionários assim que o DOM estiver pronto
+            await carregarFuncionarios();
+
+            // Listeners para filtros e busca
+            buscaFuncionarioInput.addEventListener('input', aplicarFiltrosFuncionarios);
+            filtroTipoSelect.addEventListener('change', aplicarFiltrosFuncionarios);
+            btnLimparFiltros.addEventListener('click', () => {
+                buscaFuncionarioInput.value = '';
+                filtroTipoSelect.value = '';
+                aplicarFiltrosFuncionarios();
+            });
+
+            // Listener para botão "Novo Funcionário"
+             // Verifica se o botão não foi desabilitado pela falha de conexão
+             if (btnAddFuncionario && !btnAddFuncionario.disabled) {
+                btnAddFuncionario.addEventListener('click', abrirModalCadastroFuncionario);
+             } else if (!btnAddFuncionario) {
+                 console.error("Botão 'Novo Funcionário' não encontrado no DOM.");
+             } else {
+                 console.warn("Botão 'Novo Funcionário' está desabilitado (provavelmente falha na conexão com Firebase).");
+             }
+
+        });
+
+    </script>
+</body>
+</html>
