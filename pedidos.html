@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Pedidos v4 - Responsivo</title>
+    <title>Gestão de Pedidos v5 - Recorrência</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* --- Estilos (Base anterior + Ajustes Modal Parcelamento Manual) --- */
-        :root { /* ... Variáveis de cor ... */
+        :root {
             --primary-color: #007bff; --secondary-color: #6c757d; --success-color: #28a745;
             --danger-color: #dc3545; --warning-color: #ffc107; --info-color: #17a2b8;
             --light-color: #f8f9fa; --dark-color: #343a40; --border-color: #dee2e6;
@@ -42,8 +41,8 @@
         .status-pendente { background-color: var(--light-color); color: var(--text-muted); border-color: var(--border-color); }
         .status-pago { background-color: var(--info-color); color: white; border-color: #0c7a8a;}
         .status-parcelado { background-color: #6f42c1; color:white; border-color: #5a349a;}
+        .status-recorrente { background-color: #fd7e14; color:white; border-color: #e06200;} /* NOVO STATUS */
 
-        /* --- Botões --- */
         button, .button-link { display: inline-block; padding: 8px 15px; font-size: 0.9rem; font-weight: 500; text-align: center; white-space: nowrap; vertical-align: middle; user-select: none; border: 1px solid transparent; border-radius: var(--border-radius); transition: all 0.15s ease-in-out; cursor: pointer; text-decoration: none; }
         button i, .button-link i { margin-right: 5px; }
         button:disabled { opacity: 0.65; cursor: not-allowed; }
@@ -54,7 +53,6 @@
         .btn-info { color: #fff; background-color: var(--info-color); border-color: var(--info-color); } .btn-info:hover { background-color: #138496; border-color: #117a8b; }
         .btn-sm { padding: 4px 8px; font-size: 0.8rem; margin: 0 2px; }
 
-        /* --- Modal (Geral) --- */
         .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
         .modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #ddd; width: 90%; max-width: 650px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); position: relative; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
@@ -66,152 +64,49 @@
         .modal-footer { text-align: right; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; }
         .modal-footer button { margin-left: 10px; }
 
-        /* --- Estilos Específicos Modal Pagamento --- */
         .payment-type-selector { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #eee; }
-        .payment-type-selector label { margin-right: 15px; font-weight: normal; display: inline-block; }
+        .payment-type-selector label { margin-right: 15px; font-weight: normal; display: inline-block; cursor:pointer;}
         .payment-method-selector { margin-top: 15px; margin-bottom: 15px; }
-        .payment-method-selector label { margin-right: 15px; font-weight: normal; display: inline-block; }
+        .payment-method-selector label { margin-right: 15px; font-weight: normal; display: inline-block; cursor:pointer;}
         .payment-details { margin-top: 15px; padding-top: 15px; border-top: 1px solid #f0f0f0; }
-        .parcelas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .parcelas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
         .manual-dates-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; max-height: 250px; overflow-y: auto; padding-top: 10px;}
         .manual-date-item label { font-size: 0.85em; margin-bottom: 2px; color: var(--text-muted); }
         .hidden { display: none; }
 
-        /* Loading/Empty Messages */
         #loading-message, #empty-message { text-align: center; padding: 20px; color: var(--text-muted); font-size: 1.1rem; }
 
-        /* --- Responsividade --- */
-
-        /* Telas Médias (Tablets e Smartphones Grandes - < 992px) */
         @media (max-width: 991.98px) {
-            .filter-controls {
-                /* grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Permitir mais flexibilidade - REMOVIDO, usando flex-wrap padrão */
-                gap: 10px; /* Reduzir gap */
-            }
-            .container {
-                padding: 20px; /* Reduzir padding container */
-            }
-             th, td {
-                padding: 8px 10px; /* Reduzir padding células */
-             }
+            .filter-controls { gap: 10px; }
+            .container { padding: 20px; }
+            th, td { padding: 8px 10px; }
         }
-
-        /* Telas Pequenas (Smartphones - < 768px) */
         @media (max-width: 767.98px) {
-            body {
-                padding: 10px; /* Menos padding no body */
-                font-size: 15px; /* Leve redução fonte base */
-            }
-            .container {
-                padding: 15px; /* Menos padding */
-            }
-            .page-header {
-                flex-direction: column; /* Empilhar título e talvez botões (se houver) */
-                align-items: flex-start; /* Alinhar à esquerda */
-                margin-bottom: 20px;
-            }
-            .page-header h1 {
-                font-size: 1.5rem; /* Reduzir título */
-                margin-bottom: 10px; /* Espaço se empilhado */
-            }
-
-            /* Filtros empilhados */
-            .filter-controls {
-                display: flex; /* Mudar pra flex para empilhar */
-                flex-direction: column;
-                gap: 12px; /* Espaçamento entre filtros empilhados */
-                 padding: 12px;
-            }
-            .filter-controls > div {
-                flex: 1 1 auto; /* Ocupar largura disponível */
-                min-width: 0; /* Resetar min-width */
-                 width: 100%; /* Garantir largura total */
-            }
-            .filter-controls button {
-                width: 100%; /* Botão ocupa largura toda */
-                margin-top: 5px; /* Espaço acima do botão */
-            }
-
-            /* Tabela: Manter scroll horizontal mas garantir boa leitura */
-            th, td {
-                padding: 8px; /* Menos padding ainda */
-                font-size: 0.9rem; /* Reduzir fonte da tabela */
-                white-space: nowrap; /* Evitar quebra de linha em células importantes */
-            }
-             /* Opcional: Ocultar colunas menos importantes */
-             /*
-             th:nth-child(3), td:nth-child(3) { display: none; } // Ex: Esconder Data Pedido
-             */
-
-             /* Ajuste nos botões de ação */
-             .col-actions button, .col-actions .button-link {
-                 padding: 5px 8px; /* Botões menores */
-                 font-size: 0.8rem;
-                 margin-bottom: 3px; /* Espaço se quebrar linha */
-                 display: inline-block; /* Garantir que fiquem na linha se couber */
-             }
-
-            /* Modal */
-            .modal-content {
-                width: 95%; /* Usar quase toda a largura */
-                margin: 15px auto; /* Reduzir margem */
-                padding: 20px; /* Menos padding */
-                max-height: 90vh; /* Limitar altura e habilitar scroll interno se necessário */
-                overflow-y: auto; /* Scroll se conteúdo for maior */
-            }
-            .modal-header h2 {
-                font-size: 1.25rem; /* Título menor */
-            }
-            .modal-body {
-                font-size: 0.95rem; /* Fonte do corpo do modal */
-            }
-             .modal-footer {
-                 display: flex;
-                 flex-direction: column; /* Empilhar botões do footer */
-                 gap: 10px;
-                 align-items: stretch; /* Esticar botões */
-             }
-             .modal-footer button {
-                 width: 100%;
-                 margin-left: 0; /* Remover margem esquerda */
-             }
-
-            /* Ajustar grids internos do modal */
-            .parcelas-grid, .manual-dates-grid {
-                 grid-template-columns: 1fr; /* Uma coluna apenas */
-                 gap: 12px;
-             }
-             .manual-dates-grid {
-                 max-height: 200px; /* Reduzir altura scroll */
-             }
+            body { padding: 10px; font-size: 15px; }
+            .container { padding: 15px; }
+            .page-header { flex-direction: column; align-items: flex-start; margin-bottom: 20px; }
+            .page-header h1 { font-size: 1.5rem; margin-bottom: 10px; }
+            .filter-controls { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
+            .filter-controls > div { flex: 1 1 auto; min-width: 0; width: 100%; }
+            .filter-controls button { width: 100%; margin-top: 5px; }
+            th, td { padding: 8px; font-size: 0.9rem; white-space: nowrap; }
+            .col-actions button, .col-actions .button-link { padding: 5px 8px; font-size: 0.8rem; margin-bottom: 3px; display: inline-block; }
+            .modal-content { width: 95%; margin: 15px auto; padding: 20px; max-height: 90vh; overflow-y: auto; }
+            .modal-header h2 { font-size: 1.25rem; }
+            .modal-body { font-size: 0.95rem; }
+            .modal-footer { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+            .modal-footer button { width: 100%; margin-left: 0; }
+            .parcelas-grid, .manual-dates-grid { grid-template-columns: 1fr; gap: 12px; }
+            .manual-dates-grid { max-height: 200px; }
         }
-
-        /* Telas Muito Pequenas (< 480px) */
         @media (max-width: 479.98px) {
-            body {
-                font-size: 14px; /* Reduzir ainda mais fonte base */
-            }
-            .page-header h1 {
-                font-size: 1.3rem;
-            }
-             th, td {
-                font-size: 0.85rem; /* Fonte da tabela ainda menor */
-                 padding: 6px;
-            }
-             .status-badge {
-                 padding: 3px 6px;
-                 font-size: 0.7rem;
-             }
-            .col-actions button, .col-actions .button-link {
-                 font-size: 0.75rem;
-                 padding: 4px 6px;
-            }
-             .modal-content {
-                 padding: 15px;
-             }
-             .modal-header h2 {
-                 font-size: 1.1rem;
-             }
+            body { font-size: 14px; }
+            .page-header h1 { font-size: 1.3rem; }
+            th, td { font-size: 0.85rem; padding: 6px; }
+            .status-badge { padding: 3px 6px; font-size: 0.7rem; }
+            .col-actions button, .col-actions .button-link { font-size: 0.75rem; padding: 4px 6px; }
+            .modal-content { padding: 15px; }
+            .modal-header h2 { font-size: 1.1rem; }
         }
     </style>
 </head>
@@ -224,7 +119,7 @@
         <div class="filter-controls">
             <div> <label for="filtro-cliente">Cliente</label> <select id="filtro-cliente"><option value="">Todos</option></select> </div>
             <div> <label for="filtro-status-entrega">Status Entrega</label> <select id="filtro-status-entrega"><option value="">Todos</option><option value="pendente">Pendente</option><option value="proximo">Próximo</option><option value="atrasado">Atrasado</option><option value="entregue">Entregue</option></select> </div>
-            <div> <label for="filtro-status-pagamento">Status Pagamento</label> <select id="filtro-status-pagamento"><option value="">Todos</option><option value="pendente">Pendente</option><option value="pago">Pago</option><option value="parcelado">Parcelado</option></select> </div>
+            <div> <label for="filtro-status-pagamento">Status Pagamento</label> <select id="filtro-status-pagamento"><option value="">Todos</option><option value="pendente">Pendente</option><option value="pago">Pago</option><option value="parcelado">Parcelado</option><option value="recorrente">Recorrente</option></select> </div>
             <div> <label for="busca-numero-pedido">Buscar Nº Pedido</label> <input type="text" id="busca-numero-pedido" placeholder="Número..."> </div>
             <button id="btn-limpar-filtros" class="btn-secondary"><i class="fas fa-eraser"></i> Limpar</button>
         </div>
@@ -254,7 +149,8 @@
             <div class="modal-body">
                 <input type="hidden" id="modal-pedido-id">
                 <input type="hidden" id="modal-pedido-total">
-                <input type="hidden" id="modal-cliente-info"> <div>
+                <input type="hidden" id="modal-cliente-info">
+                <div>
                     <label for="modal-data-entrega">Data Oficial de Entrega:</label>
                     <input type="date" id="modal-data-entrega">
                 </div>
@@ -264,6 +160,7 @@
                     <strong>Tipo de Pagamento:</strong>
                     <label><input type="radio" name="tipoPagamento" value="unico" checked> Único</label>
                     <label><input type="radio" name="tipoPagamento" value="parcelado"> Parcelado</label>
+                    <label><input type="radio" name="tipoPagamento" value="recorrente"> Recorrente</label>
                 </div>
 
                 <div id="detalhes-pagamento-unico" class="payment-details">
@@ -275,7 +172,8 @@
                     <div class="parcelas-grid">
                         <div>
                             <label for="modal-num-parcelas">Nº de Parcelas:</label>
-                            <input type="number" id="modal-num-parcelas" min="1" value="2"> </div>
+                            <input type="number" id="modal-num-parcelas" min="1" value="2">
+                        </div>
                         <div>
                             <label for="modal-valor-parcela">Valor Parcela (R$):</label>
                             <input type="number" id="modal-valor-parcela" step="0.01" placeholder="Automático se vazio">
@@ -304,10 +202,41 @@
 
                     <div id="manual-dates-container" class="hidden">
                         <label>Datas das Parcelas:</label>
-                        <div id="manual-dates-grid" class="manual-dates-grid">
-                            </div>
+                        <div id="manual-dates-grid" class="manual-dates-grid"></div>
                     </div>
                 </div>
+
+                <div id="detalhes-pagamento-recorrente" class="payment-details hidden">
+                    <div>
+                        <label for="modal-data-inicio-recorrencia">Data Início 1ª Recorrência:</label>
+                        <input type="date" id="modal-data-inicio-recorrencia">
+                    </div>
+                    <div class="parcelas-grid"> <div>
+                            <label for="modal-intervalo-recorrencia">Intervalo:</label>
+                            <select id="modal-intervalo-recorrencia">
+                                <option value="diario">Diário</option>
+                                <option value="semanal">Semanal</option>
+                                <option value="quinzenal">Quinzenal (15 dias)</option>
+                                <option value="mensal" selected>Mensal</option>
+                                <option value="bimestral">Bimestral</option>
+                                <option value="trimestral">Trimestral</option>
+                                <option value="semestral">Semestral</option>
+                                <option value="anual">Anual</option>
+                                <option value="custom_days">Dias (Personalizado)</option>
+                            </select>
+                        </div>
+                        <div id="recorrencia-custom-days-container" class="hidden">
+                             <label for="modal-intervalo-recorrencia-dias">Intervalo Personalizado (dias):</label>
+                             <input type="number" id="modal-intervalo-recorrencia-dias" min="1" value="30">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="modal-numero-recorrencias">Número de Ocorrências (ex: 12 para 1 ano mensal):</label>
+                        <input type="number" id="modal-numero-recorrencias" min="1" value="12">
+                    </div>
+                    <small>Valor de cada ocorrência será o total do pedido: <strong id="valor-recorrencia-display">R$ 0,00</strong></small>
+                </div>
+
             </div>
             <div class="modal-footer">
                 <button id="btn-remover-config-pagamento" class="btn-danger"><i class="fas fa-times-circle"></i> Remover Config. Pagamento</button>
@@ -317,7 +246,6 @@
         </div>
     </div>
 
-
     <script type="module">
         // --- Imports Firebase ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
@@ -325,16 +253,17 @@
 
         // --- Configuração Firebase ---
         const firebaseConfig = { // --- COLOQUE SUA CONFIGURAÇÃO REAL AQUI ---
-              apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc",
-              authDomain: "testebosspro.firebaseapp.com",
-              projectId: "testebosspro",
-              storageBucket: "testebosspro.appspot.com",
-              messagingSenderId: "73684788134",
-              appId: "1:73684788134:web:7c8250c83f10a2df59e567",
-              measurementId: "G-1H29L5B830"
+            apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc", // SUBSTITUA PELA SUA API KEY
+            authDomain: "testebosspro.firebaseapp.com",     // SUBSTITUA PELO SEU AUTH DOMAIN
+            projectId: "testebosspro",                       // SUBSTITUA PELO SEU PROJECT ID
+            storageBucket: "testebosspro.appspot.com",       // SUBSTITUA PELO SEU STORAGE BUCKET
+            messagingSenderId: "73684788134",                // SUBSTITUA PELO SEU MESSAGING SENDER ID
+            appId: "1:73684788134:web:7c8250c83f10a2df59e567",// SUBSTITUA PELO SEU APP ID
+            measurementId: "G-1H29L5B830"                   // SUBSTITUA PELO SEU MEASUREMENT ID (OPCIONAL)
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        console.log("LOG: Gestão de Pedidos v5 (Recorrência) - Firebase Inicializado.");
 
         // --- Elementos DOM ---
         const filtroClienteSelect = document.getElementById('filtro-cliente');
@@ -345,6 +274,8 @@
         const tabelaBody = document.getElementById('tabela-pedidos-body');
         const loadingMessage = document.getElementById('loading-message');
         const emptyMessage = document.getElementById('empty-message');
+
+        // Modal de Pagamento
         const paymentConfigModal = document.getElementById('payment-config-modal');
         const closePaymentModalBtn = document.getElementById('close-payment-modal-btn');
         const cancelPaymentModalBtn = document.getElementById('btn-cancelar-payment-modal');
@@ -354,9 +285,13 @@
         const modalClienteInfoInput = document.getElementById('modal-cliente-info');
         const modalDataEntregaInput = document.getElementById('modal-data-entrega');
         const paymentTypeRadios = document.querySelectorAll('input[name="tipoPagamento"]');
+
+        // Detalhes Pagamento Único
         const detalhesUnicoDiv = document.getElementById('detalhes-pagamento-unico');
-        const detalhesParceladoDiv = document.getElementById('detalhes-pagamento-parcelado');
         const modalDataPagamentoUnicoInput = document.getElementById('modal-data-pagamento-unico');
+
+        // Detalhes Pagamento Parcelado
+        const detalhesParceladoDiv = document.getElementById('detalhes-pagamento-parcelado');
         const modalNumParcelasInput = document.getElementById('modal-num-parcelas');
         const modalValorParcelaInput = document.getElementById('modal-valor-parcela');
         const installmentMethodRadios = document.querySelectorAll('input[name="metodoParcela"]');
@@ -365,510 +300,528 @@
         const modalIntervaloParcelasInput = document.getElementById('modal-intervalo-parcelas');
         const manualDatesContainer = document.getElementById('manual-dates-container');
         const manualDatesGrid = document.getElementById('manual-dates-grid');
+
+        // Detalhes Pagamento Recorrente (NOVOS)
+        const detalhesRecorrenteDiv = document.getElementById('detalhes-pagamento-recorrente');
+        const modalDataInicioRecorrenciaInput = document.getElementById('modal-data-inicio-recorrencia');
+        const modalIntervaloRecorrenciaSelect = document.getElementById('modal-intervalo-recorrencia');
+        const recorrenciaCustomDaysContainer = document.getElementById('recorrencia-custom-days-container');
+        const modalIntervaloRecorrenciaDiasInput = document.getElementById('modal-intervalo-recorrencia-dias');
+        const modalNumeroRecorrenciasInput = document.getElementById('modal-numero-recorrencias');
+        const valorRecorrenciaDisplay = document.getElementById('valor-recorrencia-display');
+
+
         const btnSalvarConfigPagamento = document.getElementById('btn-salvar-config-pagamento');
         const btnRemoverConfigPagamento = document.getElementById('btn-remover-config-pagamento');
 
         // --- Variáveis Globais ---
         let todosPedidosArray = [];
-        let clientesMap = new Map(); // Para usar no filtro e na renderização
+        let clientesMap = new Map();
 
         // --- Funções Utilitárias ---
         function formatarValorBRL(valor) { return `R$ ${(parseFloat(valor) || 0).toFixed(2).replace('.', ',')}`; }
         function formatarDataExibicao(dataObj) { if (!dataObj || !(dataObj instanceof Date) || isNaN(dataObj)) return 'N/A'; try { return dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch { return 'Inválida'; } }
-        function dataStringToDate(dataString) { if (!dataString) return null; try { const [y, m, d] = dataString.split('-'); if (y && m && d) return new Date(Date.UTC(parseInt(y), parseInt(m) - 1, parseInt(d))); /* Use UTC */ } catch {} return null; }
+        function dataStringToDate(dataString) { if (!dataString) return null; try { const parts = dataString.split('-'); if (parts.length === 3) { const [y, m, d] = parts; return new Date(Date.UTC(parseInt(y), parseInt(m) - 1, parseInt(d))); } } catch {} return null; }
         function dateToYYYYMMDD(dateObj) { if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj)) return ''; try { const year = dateObj.getUTCFullYear(); const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0'); const day = String(dateObj.getUTCDate()).padStart(2, '0'); return `${year}-${month}-${day}`; } catch { return ''; } }
-        function addDays(date, days) { const result = new Date(date); result.setUTCDate(result.getUTCDate() + days); return result; }
 
-        // --- Funções Principais ---
-
-        async function carregarClientesFiltro() {
-              clientesMap = new Map();
-              filtroClienteSelect.innerHTML = '<option value="">Todos</option>'; // Reseta
-              try {
-                  const q = query(collection(db, "clientes"), orderBy("empresa")); // Ordena por nome/empresa
-                  const querySnapshot = await getDocs(q);
-                  querySnapshot.forEach((doc) => {
-                      const cliente = doc.data();
-                      const id = doc.id;
-                      const nomeExibicao = `${cliente.empresa || cliente.nome || 'Cliente Sem Nome'} (${cliente.codigo || 'S/C'})`;
-                      clientesMap.set(id, { nome: nomeExibicao, telefone: cliente.telefone }); // Armazena nome e telefone
-                      const option = document.createElement("option");
-                      option.value = id;
-                      option.textContent = nomeExibicao;
-                      filtroClienteSelect.appendChild(option);
-                  });
-                  console.log(`${clientesMap.size} Clientes carregados para o filtro.`);
-              } catch (error) {
-                  console.error("Erro ao carregar clientes para filtro:", error);
-              }
-          }
-
-        async function carregarPedidos() {
-            loadingMessage.style.display = 'block';
-            emptyMessage.style.display = 'none';
-            tabelaBody.innerHTML = '';
-            todosPedidosArray = []; // Limpa array de pedidos
-            try {
-                const q = query(collection(db, "pedidos"), orderBy("numeroPedido", "desc")); // Ordena por número desc.
-                const querySnapshot = await getDocs(q);
-                querySnapshot.forEach((doc) => {
-                    // Adiciona o nome e telefone do cliente diretamente ao objeto pedido se encontrado no map
-                    const pedidoData = doc.data();
-                    const clienteInfo = clientesMap.get(pedidoData.clienteId);
-                    todosPedidosArray.push({
-                        id: doc.id,
-                        ...pedidoData,
-                        clienteNome: clienteInfo?.nome || pedidoData.clienteNome || 'Cliente Desconhecido', // Usa nome do map se disponível
-                        clienteTelefone: clienteInfo?.telefone || pedidoData.clienteTelefone || null // Usa telefone do map se disponível
-                    });
-                });
-                console.log(`Total de ${todosPedidosArray.length} pedidos carregados.`);
-                aplicarFiltros(); // Aplica filtros e renderiza a tabela
-            } catch (error) {
-                console.error("Erro ao carregar pedidos:", error);
-                emptyMessage.textContent = "Erro ao carregar os pedidos.";
-                emptyMessage.style.display = 'block';
-            } finally {
-                loadingMessage.style.display = 'none'; // Esconde mensagem de carregamento
+        function addDays(date, days) {
+            if (!(date instanceof Date) || isNaN(date.getTime())) return null;
+            const result = new Date(date.getTime());
+            result.setUTCDate(result.getUTCDate() + parseInt(days));
+            return result;
+        }
+        function addMonths(dateObj, months) {
+            if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj.getTime())) return null;
+            const d = new Date(dateObj.getTime());
+            const originalDay = d.getUTCDate();
+            d.setUTCMonth(d.getUTCMonth() + parseInt(months));
+            // Ajuste para o dia do mês (ex: se era 31/01 e adicionou 1 mês, não pode ser 31/02)
+            if (d.getUTCDate() < originalDay) {
+                d.setUTCDate(0); // Vai para o último dia do mês anterior (que agora é o mês de destino correto)
             }
+            return d;
+        }
+        function addYears(dateObj, years) {
+            if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj.getTime())) return null;
+            const d = new Date(dateObj.getTime());
+            d.setUTCFullYear(d.getUTCFullYear() + parseInt(years));
+            return d;
         }
 
-        function calcularStatusEntrega(pedido) {
-              if (pedido.entregue) return { texto: 'Entregue', classe: 'status-entregue' };
-              if (pedido.dataEntregaOficial) {
-                  const hoje = new Date(); hoje.setUTCHours(0, 0, 0, 0); // Data de hoje em UTC
-                  const dataEntrega = dataStringToDate(pedido.dataEntregaOficial);
-                  if (!dataEntrega) return { texto: 'Pendente (Data Inv.)', classe: 'status-pendente' }; // Data inválida
+        // --- Funções Principais ---
+        async function carregarClientesFiltro() { /* ... (código igual ao anterior) ... */
+            clientesMap = new Map();
+            filtroClienteSelect.innerHTML = '<option value="">Todos</option>';
+            try {
+                const q = query(collection(db, "clientes"), orderBy("empresa"));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    const cliente = doc.data(); const id = doc.id;
+                    const nomeExibicao = `${cliente.empresa || cliente.nome || 'Cliente Sem Nome'} (${cliente.codigo || 'S/C'})`;
+                    clientesMap.set(id, { nome: nomeExibicao, telefone: cliente.telefone });
+                    const option = document.createElement("option"); option.value = id; option.textContent = nomeExibicao;
+                    filtroClienteSelect.appendChild(option);
+                });
+                console.log(`LOG: ${clientesMap.size} Clientes carregados para o filtro.`);
+            } catch (error) { console.error("Erro ao carregar clientes para filtro:", error); }
+        }
 
-                  if (dataEntrega < hoje) return { texto: 'Atrasado', classe: 'status-atrasado' };
+        async function carregarPedidos() { /* ... (código igual ao anterior) ... */
+            loadingMessage.style.display = 'block'; emptyMessage.style.display = 'none'; tabelaBody.innerHTML = '';
+            todosPedidosArray = [];
+            try {
+                const q = query(collection(db, "pedidos"), orderBy("numeroPedido", "desc"));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    const pedidoData = doc.data(); const clienteInfo = clientesMap.get(pedidoData.clienteId);
+                    todosPedidosArray.push({ id: doc.id, ...pedidoData, clienteNome: clienteInfo?.nome || pedidoData.clienteNome || 'Cliente Desconhecido', clienteTelefone: clienteInfo?.telefone || pedidoData.clienteTelefone || null });
+                });
+                console.log(`LOG: Total de ${todosPedidosArray.length} pedidos carregados.`);
+                aplicarFiltros();
+            } catch (error) { console.error("Erro ao carregar pedidos:", error); emptyMessage.textContent = "Erro ao carregar os pedidos."; emptyMessage.style.display = 'block';
+            } finally { loadingMessage.style.display = 'none'; }
+        }
 
-                  const diffTime = dataEntrega.getTime() - hoje.getTime();
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        function calcularStatusEntrega(pedido) { /* ... (código igual ao anterior) ... */
+            if (pedido.entregue) return { texto: 'Entregue', classe: 'status-entregue' };
+            if (pedido.dataEntregaOficial) {
+                const hoje = new Date(); hoje.setUTCHours(0, 0, 0, 0); const dataEntrega = dataStringToDate(pedido.dataEntregaOficial);
+                if (!dataEntrega) return { texto: 'Pendente (Data Inv.)', classe: 'status-pendente' };
+                if (dataEntrega < hoje) return { texto: 'Atrasado', classe: 'status-atrasado' };
+                const diffTime = dataEntrega.getTime() - hoje.getTime(); const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays <= 7) return { texto: 'Próximo', classe: 'status-proximo' };
+                return { texto: `Pendente (${formatarDataExibicao(dataEntrega)})`, classe: 'status-pendente' };
+            } return { texto: 'Pendente', classe: 'status-pendente' };
+        }
 
-                  if (diffDays <= 7) return { texto: 'Próximo', classe: 'status-proximo' };
-                  return { texto: `Pendente (${formatarDataExibicao(dataEntrega)})`, classe: 'status-pendente' };
-              }
-              return { texto: 'Pendente', classe: 'status-pendente' }; // Sem data definida
-          }
-
-        function calcularStatusPagamento(pedido) {
+        function calcularStatusPagamento(pedido) { // MODIFICADO
             if (pedido.dataPagamentoOficial) return { texto: 'Pago (Único)', classe: 'status-pago' };
             if (pedido.parcelamentoInfo && pedido.parcelamentoInfo.numero > 0) return { texto: 'Parcelado', classe: 'status-parcelado' };
+            if (pedido.recorrenciaInfo && pedido.recorrenciaInfo.tipoPagamento === 'recorrente') return { texto: 'Recorrente', classe: 'status-recorrente' }; // NOVO
             return { texto: 'Pendente', classe: 'status-pendente' };
         }
 
-        function aplicarFiltros() {
-            const clienteIdFiltro = filtroClienteSelect.value;
-            const statusEntregaFiltro = filtroStatusEntregaSelect.value;
-            const statusPagamentoFiltro = filtroStatusPagamentoSelect.value;
-            const numeroPedidoBusca = buscaNumeroPedidoInput.value.trim().toLowerCase();
-
+        function aplicarFiltros() { /* ... (código igual ao anterior) ... */
+            const clienteIdFiltro = filtroClienteSelect.value; const statusEntregaFiltro = filtroStatusEntregaSelect.value;
+            const statusPagamentoFiltro = filtroStatusPagamentoSelect.value; const numeroPedidoBusca = buscaNumeroPedidoInput.value.trim().toLowerCase();
             const pedidosFiltrados = todosPedidosArray.filter(pedido => {
-                // Filtro Cliente
                 const matchCliente = !clienteIdFiltro || pedido.clienteId === clienteIdFiltro;
-
-                // Filtro Número Pedido
                 const matchNumero = !numeroPedidoBusca || (pedido.numeroPedido && pedido.numeroPedido.toLowerCase().includes(numeroPedidoBusca));
-
-                // Filtro Status Entrega
-                const statusEntregaInfo = calcularStatusEntrega(pedido);
-                let matchStatusEntrega = true;
+                const statusEntregaInfo = calcularStatusEntrega(pedido); let matchStatusEntrega = true;
                 if (statusEntregaFiltro) {
-                    if (statusEntregaFiltro === 'pendente' && statusEntregaInfo.classe.includes('pendente')) matchStatusEntrega = true; // Inclui pendente com data
+                    if (statusEntregaFiltro === 'pendente' && statusEntregaInfo.classe.includes('pendente')) matchStatusEntrega = true;
                     else if (statusEntregaFiltro === 'proximo' && statusEntregaInfo.classe === 'status-proximo') matchStatusEntrega = true;
                     else if (statusEntregaFiltro === 'atrasado' && statusEntregaInfo.classe === 'status-atrasado') matchStatusEntrega = true;
                     else if (statusEntregaFiltro === 'entregue' && statusEntregaInfo.classe === 'status-entregue') matchStatusEntrega = true;
                     else matchStatusEntrega = false;
                 }
-
-                // Filtro Status Pagamento
-                const statusPagamentoInfo = calcularStatusPagamento(pedido);
-                let matchStatusPagamento = true;
+                const statusPagamentoInfo = calcularStatusPagamento(pedido); let matchStatusPagamento = true;
                 if (statusPagamentoFiltro) {
                     if (statusPagamentoFiltro === 'pendente' && statusPagamentoInfo.classe === 'status-pendente') matchStatusPagamento = true;
                     else if (statusPagamentoFiltro === 'pago' && statusPagamentoInfo.classe === 'status-pago') matchStatusPagamento = true;
                     else if (statusPagamentoFiltro === 'parcelado' && statusPagamentoInfo.classe === 'status-parcelado') matchStatusPagamento = true;
+                    else if (statusPagamentoFiltro === 'recorrente' && statusPagamentoInfo.classe === 'status-recorrente') matchStatusPagamento = true; // NOVO
                     else matchStatusPagamento = false;
                 }
-
                 return matchCliente && matchNumero && matchStatusEntrega && matchStatusPagamento;
             });
             renderizarTabelaPedidos(pedidosFiltrados);
         }
 
-        function renderizarTabelaPedidos(pedidosParaRenderizar) {
-              tabelaBody.innerHTML = ''; // Limpa tabela
-              if (pedidosParaRenderizar.length === 0) {
-                  emptyMessage.style.display = 'block';
-                  emptyMessage.textContent = "Nenhum pedido encontrado com os filtros selecionados.";
-              } else {
-                  emptyMessage.style.display = 'none';
-                  pedidosParaRenderizar.forEach(pedido => {
-                      const tr = document.createElement('tr');
-                      tr.dataset.pedidoId = pedido.id; // Armazena ID na linha
-
-                      // Usa nome do cliente do objeto pedido (que já foi enriquecido)
-                      const clienteNome = pedido.clienteNome || 'Cliente Desconhecido';
-                      const dataPedido = pedido.dataCriacao ? dataStringToDate(pedido.dataCriacao.substring(0, 10)) : null; // Assume dataCriacao como string yyyy-MM-dd
-                      const statusEntregaInfo = calcularStatusEntrega(pedido);
-                      const statusPagamentoInfo = calcularStatusPagamento(pedido);
-
-                      tr.innerHTML = `
-                          <td>${pedido.numeroPedido || pedido.id.substring(0, 6).toUpperCase()}</td>
-                          <td>${clienteNome}</td>
-                          <td>${formatarDataExibicao(dataPedido)}</td>
-                          <td class="col-valor">${formatarValorBRL(pedido.totalGeral)}</td>
-                          <td class="col-status"><span class="status-badge ${statusEntregaInfo.classe}">${statusEntregaInfo.texto}</span></td>
-                          <td class="col-status"><span class="status-badge ${statusPagamentoInfo.classe}">${statusPagamentoInfo.texto}</span></td>
-                          <td class="col-actions">
-                              <button class="btn-info btn-sm btn-gerenciar-pagamento" title="Configurar Pagamento/Entrega"><i class="fas fa-calendar-alt"></i> Pgt/Entr</button>
-                              ${!pedido.entregue ? `<button class="btn-success btn-sm btn-marcar-entregue" title="Marcar Entregue"><i class="fas fa-check-circle"></i> Entregue</button>` : ''}
-                              ${pedido.orcamentoId ? `<a href="telaorcamento.html?orcamentoId=${pedido.orcamentoId}" target="_blank" class="button-link btn-secondary btn-sm" title="Ver Orçamento"><i class="fas fa-file-alt"></i> Orçam.</a>` : ''}
-                          </td>
-                      `;
-                      tabelaBody.appendChild(tr);
-                  });
-                  addListenersBotoesAcao(); // Adiciona listeners aos botões da tabela
-              }
-          }
-
-        function addListenersBotoesAcao() {
-            // Botão Gerenciar Pagamento/Entrega
-            document.querySelectorAll('.btn-gerenciar-pagamento').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const pedidoId = e.currentTarget.closest('tr').dataset.pedidoId;
-                    abrirModalConfiguracaoPagamento(pedidoId); // Chama a função para abrir o modal
+        function renderizarTabelaPedidos(pedidosParaRenderizar) { /* ... (código igual ao anterior) ... */
+            tabelaBody.innerHTML = '';
+            if (pedidosParaRenderizar.length === 0) { emptyMessage.style.display = 'block'; emptyMessage.textContent = "Nenhum pedido encontrado com os filtros selecionados.";
+            } else {
+                emptyMessage.style.display = 'none';
+                pedidosParaRenderizar.forEach(pedido => {
+                    const tr = document.createElement('tr'); tr.dataset.pedidoId = pedido.id;
+                    const clienteNome = pedido.clienteNome || 'Cliente Desconhecido';
+                    const dataPedido = pedido.dataCriacao ? dataStringToDate(pedido.dataCriacao.substring(0, 10)) : null;
+                    const statusEntregaInfo = calcularStatusEntrega(pedido); const statusPagamentoInfo = calcularStatusPagamento(pedido);
+                    tr.innerHTML = `
+                        <td>${pedido.numeroPedido || pedido.id.substring(0, 6).toUpperCase()}</td> <td>${clienteNome}</td>
+                        <td>${formatarDataExibicao(dataPedido)}</td> <td class="col-valor">${formatarValorBRL(pedido.totalGeral)}</td>
+                        <td class="col-status"><span class="status-badge ${statusEntregaInfo.classe}">${statusEntregaInfo.texto}</span></td>
+                        <td class="col-status"><span class="status-badge ${statusPagamentoInfo.classe}">${statusPagamentoInfo.texto}</span></td>
+                        <td class="col-actions">
+                            <button class="btn-info btn-sm btn-gerenciar-pagamento" title="Configurar Pagamento/Entrega"><i class="fas fa-calendar-alt"></i> Pgt/Entr</button>
+                            ${!pedido.entregue ? `<button class="btn-success btn-sm btn-marcar-entregue" title="Marcar Entregue"><i class="fas fa-check-circle"></i> Entregue</button>` : ''}
+                            ${pedido.orcamentoId ? `<a href="telaorcamento.html?orcamentoId=${pedido.orcamentoId}" target="_blank" class="button-link btn-secondary btn-sm" title="Ver Orçamento"><i class="fas fa-file-alt"></i> Orçam.</a>` : ''}
+                        </td>`;
+                    tabelaBody.appendChild(tr);
                 });
-            });
+                addListenersBotoesAcao();
+            }
+        }
 
-            // Botão Marcar Entregue
+        function addListenersBotoesAcao() { /* ... (código igual ao anterior) ... */
+            document.querySelectorAll('.btn-gerenciar-pagamento').forEach(btn => { btn.addEventListener('click', (e) => { const pedidoId = e.currentTarget.closest('tr').dataset.pedidoId; abrirModalConfiguracaoPagamento(pedidoId); }); });
             document.querySelectorAll('.btn-marcar-entregue').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
-                    const tr = e.currentTarget.closest('tr');
-                    const pedidoId = tr.dataset.pedidoId;
-                    const pedidoNum = tr.cells[0].textContent; // Pega número da primeira célula
+                    const tr = e.currentTarget.closest('tr'); const pedidoId = tr.dataset.pedidoId; const pedidoNum = tr.cells[0].textContent;
                     if (!confirm(`Tem certeza que deseja marcar o Pedido #${pedidoNum} como ENTREGUE?`)) return;
-
-                    // Feedback visual e desabilita botão
-                    e.currentTarget.disabled = true;
-                    e.currentTarget.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
+                    e.currentTarget.disabled = true; e.currentTarget.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                     try {
                         const pedidoRef = doc(db, "pedidos", pedidoId);
-                        await updateDoc(pedidoRef, {
-                            entregue: true,
-                            dataEntregaReal: Timestamp.fromDate(new Date()) // Grava data real da entrega
-                        });
-                        // Atualiza a linha na tabela localmente para feedback imediato
+                        await updateDoc(pedidoRef, { entregue: true, dataEntregaReal: Timestamp.fromDate(new Date()) });
                         const pedidoIndex = todosPedidosArray.findIndex(p => p.id === pedidoId);
-                         if(pedidoIndex > -1) {
-                             todosPedidosArray[pedidoIndex].entregue = true;
-                             todosPedidosArray[pedidoIndex].dataEntregaReal = new Date(); // Atualiza localmente
-                         }
-                         aplicarFiltros(); // Re-renderiza a tabela com status atualizado
-                        alert(`Pedido #${pedidoNum} marcado como entregue com sucesso!`);
-                    } catch (err) {
-                        console.error("Erro ao marcar como entregue:", err);
-                        alert("Ocorreu um erro ao tentar marcar o pedido como entregue.");
-                        e.currentTarget.disabled = false; // Reabilita botão em caso de erro
-                        e.currentTarget.innerHTML = '<i class="fas fa-check-circle"></i> Entregue';
-                    }
+                        if(pedidoIndex > -1) { todosPedidosArray[pedidoIndex].entregue = true; todosPedidosArray[pedidoIndex].dataEntregaReal = new Date(); }
+                        aplicarFiltros(); alert(`Pedido #${pedidoNum} marcado como entregue com sucesso!`);
+                    } catch (err) { console.error("Erro ao marcar como entregue:", err); alert("Ocorreu um erro."); e.currentTarget.disabled = false; e.currentTarget.innerHTML = '<i class="fas fa-check-circle"></i> Entregue';}
                 });
             });
         }
 
-        // --- Funções do Modal de Configuração de Pagamento ---
-
+        // --- Funções do Modal de Configuração de Pagamento --- MODIFICADO
         async function abrirModalConfiguracaoPagamento(pedidoId) {
-              const pedido = todosPedidosArray.find(p => p.id === pedidoId);
-              if (!pedido) { alert("Erro: Pedido não encontrado localmente."); return; }
+            const pedido = todosPedidosArray.find(p => p.id === pedidoId);
+            if (!pedido) { alert("Erro: Pedido não encontrado localmente."); return; }
 
-              modalPedidoIdInput.value = pedidoId;
-              modalPedidoNumeroSpan.textContent = pedido.numeroPedido || pedidoId.substring(0,6).toUpperCase();
-              modalPedidoTotalInput.value = pedido.totalGeral || 0;
-              modalDataEntregaInput.value = pedido.dataEntregaOficial || '';
+            modalPedidoIdInput.value = pedidoId;
+            modalPedidoNumeroSpan.textContent = pedido.numeroPedido || pedidoId.substring(0,6).toUpperCase();
+            const pedidoTotalAtual = pedido.totalGeral || 0;
+            modalPedidoTotalInput.value = pedidoTotalAtual;
+            modalDataEntregaInput.value = pedido.dataEntregaOficial || '';
+            valorRecorrenciaDisplay.textContent = formatarValorBRL(pedidoTotalAtual); // Atualiza display do valor da recorrência
 
-              // --- Busca cliente para garantir dados atualizados (igual anterior) ---
-              let clienteNomeAtualizado = pedido.clienteNome || 'Cliente Desconhecido';
-              let clienteTelefoneAtualizado = pedido.clienteTelefone || null;
-              if (pedido.clienteId) {
-                  try {
-                      const clienteRef = doc(db, "clientes", pedido.clienteId);
-                      const clienteSnap = await getDoc(clienteRef);
-                      if (clienteSnap.exists()) {
-                          const clienteData = clienteSnap.data();
-                          clienteNomeAtualizado = `${clienteData.empresa || clienteData.nome || 'Cliente Sem Nome'} (${clienteData.codigo || 'S/C'})`;
-                          clienteTelefoneAtualizado = clienteData.telefone || null;
-                      } else { console.warn(`Cliente ${pedido.clienteId} não encontrado.`); }
-                  } catch (error) { console.error(`Erro ao buscar cliente ${pedido.clienteId}:`, error); }
-              }
-              modalClienteInfoInput.value = JSON.stringify({ id: pedido.clienteId || null, nome: clienteNomeAtualizado, telefone: clienteTelefoneAtualizado });
-               // --- Fim Busca Cliente ---
+            let clienteNomeAtualizado = pedido.clienteNome || 'Cliente Desconhecido';
+            let clienteTelefoneAtualizado = pedido.clienteTelefone || null;
+            if (pedido.clienteId) {
+                try {
+                    const clienteRef = doc(db, "clientes", pedido.clienteId);
+                    const clienteSnap = await getDoc(clienteRef);
+                    if (clienteSnap.exists()) {
+                        const clienteData = clienteSnap.data();
+                        clienteNomeAtualizado = `${clienteData.empresa || clienteData.nome || 'Cliente Sem Nome'} (${clienteData.codigo || 'S/C'})`;
+                        clienteTelefoneAtualizado = clienteData.telefone || null;
+                    } else { console.warn(`LOG: Cliente ${pedido.clienteId} não encontrado no Firestore ao abrir modal.`); }
+                } catch (error) { console.error(`Erro ao buscar cliente ${pedido.clienteId} no Firestore:`, error); }
+            }
+            modalClienteInfoInput.value = JSON.stringify({ id: pedido.clienteId || null, nome: clienteNomeAtualizado, telefone: clienteTelefoneAtualizado });
 
+            // Reseta estado visual do modal
+            manualDatesGrid.innerHTML = '';
+            detalhesUnicoDiv.classList.add('hidden');
+            detalhesParceladoDiv.classList.add('hidden');
+            detalhesRecorrenteDiv.classList.add('hidden');
+            intervalInputsDiv.classList.add('hidden'); // Para parcelado
+            manualDatesContainer.classList.add('hidden'); // Para parcelado
+            recorrenciaCustomDaysContainer.classList.add('hidden'); // Para recorrente
+            btnRemoverConfigPagamento.style.display = 'none';
 
-              // Reseta estado inicial do modal de pagamento
-              manualDatesGrid.innerHTML = '';
-              intervalInputsDiv.classList.add('hidden'); // Começa escondido
-              manualDatesContainer.classList.add('hidden');
-              detalhesUnicoDiv.classList.add('hidden'); // Começa escondido
-              detalhesParceladoDiv.classList.add('hidden'); // Começa escondido
-              btnRemoverConfigPagamento.style.display = 'none';
-
-              // Verifica configuração existente e preenche
-              if (pedido.parcelamentoInfo && pedido.parcelamentoInfo.numero > 0) { // Configuração de Parcelamento existe
-                  document.querySelector('input[name="tipoPagamento"][value="parcelado"]').checked = true;
-                  detalhesParceladoDiv.classList.remove('hidden');
-                  btnRemoverConfigPagamento.style.display = 'inline-block';
-
-                  modalNumParcelasInput.value = pedido.parcelamentoInfo.numero || 2;
-                  modalValorParcelaInput.value = pedido.parcelamentoInfo.valor ? pedido.parcelamentoInfo.valor.toFixed(2) : '';
-
-                  if (pedido.parcelamentoInfo.modo === 'manual' && Array.isArray(pedido.parcelamentoInfo.datas)) {
-                      document.querySelector('input[name="metodoParcela"][value="manual"]').checked = true;
-                      manualDatesContainer.classList.remove('hidden');
-                      gerarCamposDataManual(pedido.parcelamentoInfo.numero, pedido.parcelamentoInfo.datas);
-                  } else { // Intervalo (ou default)
-                      document.querySelector('input[name="metodoParcela"][value="intervalo"]').checked = true;
-                      intervalInputsDiv.classList.remove('hidden');
-                      modalDataPrimeiraParcelaInput.value = pedido.parcelamentoInfo.dataInicio || '';
-                      modalIntervaloParcelasInput.value = pedido.parcelamentoInfo.intervalo || 30;
-                  }
-              } else if (pedido.dataPagamentoOficial) { // Configuração de Pagamento Único existe
-                  document.querySelector('input[name="tipoPagamento"][value="unico"]').checked = true;
-                  detalhesUnicoDiv.classList.remove('hidden');
-                  modalDataPagamentoUnicoInput.value = pedido.dataPagamentoOficial;
-                  btnRemoverConfigPagamento.style.display = 'inline-block';
-              } else { // Nenhuma configuração encontrada, default para Pagamento Único
-                  document.querySelector('input[name="tipoPagamento"][value="unico"]').checked = true;
-                  detalhesUnicoDiv.classList.remove('hidden');
-                  modalDataPagamentoUnicoInput.value = '';
-              }
-
-              paymentConfigModal.style.display = 'block'; // Mostra o modal
-          }
-
-        function fecharModalConfiguracaoPagamento() {
-            paymentConfigModal.style.display = 'none';
+            // Preenche conforme configuração existente
+            if (pedido.recorrenciaInfo && pedido.recorrenciaInfo.tipoPagamento === 'recorrente') {
+                document.querySelector('input[name="tipoPagamento"][value="recorrente"]').checked = true;
+                detalhesRecorrenteDiv.classList.remove('hidden');
+                btnRemoverConfigPagamento.style.display = 'inline-block';
+                modalDataInicioRecorrenciaInput.value = pedido.recorrenciaInfo.dataInicio || '';
+                modalIntervaloRecorrenciaSelect.value = pedido.recorrenciaInfo.intervaloTipo || 'mensal';
+                modalNumeroRecorrenciasInput.value = pedido.recorrenciaInfo.numeroRecorrencias || 12;
+                if (pedido.recorrenciaInfo.intervaloTipo === 'custom_days') {
+                    recorrenciaCustomDaysContainer.classList.remove('hidden');
+                    modalIntervaloRecorrenciaDiasInput.value = pedido.recorrenciaInfo.intervaloValor || 30;
+                }
+            } else if (pedido.parcelamentoInfo && pedido.parcelamentoInfo.numero > 0) {
+                document.querySelector('input[name="tipoPagamento"][value="parcelado"]').checked = true;
+                detalhesParceladoDiv.classList.remove('hidden');
+                btnRemoverConfigPagamento.style.display = 'inline-block';
+                modalNumParcelasInput.value = pedido.parcelamentoInfo.numero || 2;
+                modalValorParcelaInput.value = pedido.parcelamentoInfo.valor ? pedido.parcelamentoInfo.valor.toFixed(2) : '';
+                if (pedido.parcelamentoInfo.modo === 'manual' && Array.isArray(pedido.parcelamentoInfo.datas)) {
+                    document.querySelector('input[name="metodoParcela"][value="manual"]').checked = true;
+                    manualDatesContainer.classList.remove('hidden');
+                    gerarCamposDataManual(pedido.parcelamentoInfo.numero, pedido.parcelamentoInfo.datas);
+                } else {
+                    document.querySelector('input[name="metodoParcela"][value="intervalo"]').checked = true;
+                    intervalInputsDiv.classList.remove('hidden');
+                    modalDataPrimeiraParcelaInput.value = pedido.parcelamentoInfo.dataInicio || '';
+                    modalIntervaloParcelasInput.value = pedido.parcelamentoInfo.intervalo || 30;
+                }
+            } else if (pedido.dataPagamentoOficial) {
+                document.querySelector('input[name="tipoPagamento"][value="unico"]').checked = true;
+                detalhesUnicoDiv.classList.remove('hidden');
+                modalDataPagamentoUnicoInput.value = pedido.dataPagamentoOficial;
+                btnRemoverConfigPagamento.style.display = 'inline-block';
+            } else { // Nenhuma configuração, default para Pagamento Único
+                document.querySelector('input[name="tipoPagamento"][value="unico"]').checked = true;
+                detalhesUnicoDiv.classList.remove('hidden');
+                modalDataPagamentoUnicoInput.value = '';
+                 // Resetar outros campos caso o usuário tenha mexido e não salvo
+                modalNumParcelasInput.value = "2";
+                modalValorParcelaInput.value = "";
+                modalDataPrimeiraParcelaInput.value = "";
+                modalIntervaloParcelasInput.value = "30";
+                modalDataInicioRecorrenciaInput.value = "";
+                modalIntervaloRecorrenciaSelect.value = "mensal";
+                modalNumeroRecorrenciasInput.value = "12";
+                modalIntervaloRecorrenciaDiasInput.value = "30";
+            }
+            paymentConfigModal.style.display = 'block';
         }
 
-        function gerarCamposDataManual(numParcelas, datasPreenchidas = []) {
-            manualDatesGrid.innerHTML = ''; // Limpa
-            if (isNaN(numParcelas) || numParcelas < 1) return;
+        function fecharModalConfiguracaoPagamento() { paymentConfigModal.style.display = 'none'; }
 
+        function gerarCamposDataManual(numParcelas, datasPreenchidas = []) { /* ... (código igual ao anterior) ... */
+            manualDatesGrid.innerHTML = ''; if (isNaN(numParcelas) || numParcelas < 1) return;
             for (let i = 0; i < numParcelas; i++) {
-                const div = document.createElement('div');
-                div.classList.add('manual-date-item');
-                const label = document.createElement('label');
-                label.textContent = `Data Parcela ${i + 1}:`;
-                label.htmlFor = `manual-date-${i}`;
-                const input = document.createElement('input');
-                input.type = 'date';
-                input.id = `manual-date-${i}`;
-                input.dataset.parcelaIndex = i;
-                input.required = true;
-                if (datasPreenchidas && datasPreenchidas[i]) {
-                    input.value = datasPreenchidas[i];
-                }
-                div.appendChild(label);
-                div.appendChild(input);
-                manualDatesGrid.appendChild(div);
+                const div = document.createElement('div'); div.classList.add('manual-date-item');
+                const label = document.createElement('label'); label.textContent = `Data Parcela ${i + 1}:`; label.htmlFor = `manual-date-${i}`;
+                const input = document.createElement('input'); input.type = 'date'; input.id = `manual-date-${i}`; input.dataset.parcelaIndex = i; input.required = true;
+                if (datasPreenchidas && datasPreenchidas[i]) { input.value = datasPreenchidas[i]; }
+                div.appendChild(label); div.appendChild(input); manualDatesGrid.appendChild(div);
             }
         }
 
-        // --- Lógica de Alternância no Modal ---
+        // Lógica de Alternância no Modal - MODIFICADO
         paymentTypeRadios.forEach(radio => {
-             radio.addEventListener('change', (e) => {
-                 const isUnico = e.target.value === 'unico';
-                 detalhesUnicoDiv.classList.toggle('hidden', !isUnico);
-                 detalhesParceladoDiv.classList.toggle('hidden', isUnico);
-                 if (!isUnico) { // Se mudou para parcelado, mostra a opção de método default
-                     const metodoSelecionado = document.querySelector('input[name="metodoParcela"]:checked').value;
-                     intervalInputsDiv.classList.toggle('hidden', metodoSelecionado !== 'intervalo');
-                     manualDatesContainer.classList.toggle('hidden', metodoSelecionado !== 'manual');
-                      if(metodoSelecionado === 'manual') gerarCamposDataManual(parseInt(modalNumParcelasInput.value) || 0); // Gera campos se manual
-                 }
-             });
-         });
-        installmentMethodRadios.forEach(radio => {
-             radio.addEventListener('change', (e) => {
-                 const isIntervalo = e.target.value === 'intervalo';
-                 intervalInputsDiv.classList.toggle('hidden', !isIntervalo);
-                 manualDatesContainer.classList.toggle('hidden', isIntervalo);
-                 if (!isIntervalo) gerarCamposDataManual(parseInt(modalNumParcelasInput.value) || 0); // Gera campos se manual
-             });
-         });
-        modalNumParcelasInput.addEventListener('input', () => {
-             const metodoSelecionado = document.querySelector('input[name="metodoParcela"]:checked').value;
-             if (metodoSelecionado === 'manual') { gerarCamposDataManual(parseInt(modalNumParcelasInput.value) || 0); }
-         });
+            radio.addEventListener('change', (e) => {
+                const tipoSelecionado = e.target.value;
+                console.log("LOG: Tipo de pagamento alterado para:", tipoSelecionado);
+                detalhesUnicoDiv.classList.toggle('hidden', tipoSelecionado !== 'unico');
+                detalhesParceladoDiv.classList.toggle('hidden', tipoSelecionado !== 'parcelado');
+                detalhesRecorrenteDiv.classList.toggle('hidden', tipoSelecionado !== 'recorrente');
+
+                if (tipoSelecionado === 'parcelado') {
+                    const metodoParcelaSelecionado = document.querySelector('input[name="metodoParcela"]:checked').value;
+                    intervalInputsDiv.classList.toggle('hidden', metodoParcelaSelecionado !== 'intervalo');
+                    manualDatesContainer.classList.toggle('hidden', metodoParcelaSelecionado !== 'manual');
+                    if (metodoParcelaSelecionado === 'manual') gerarCamposDataManual(parseInt(modalNumParcelasInput.value) || 0);
+                } else if (tipoSelecionado === 'recorrente') {
+                    const intervaloRecSelec = modalIntervaloRecorrenciaSelect.value;
+                    recorrenciaCustomDaysContainer.classList.toggle('hidden', intervaloRecSelec !== 'custom_days');
+                    const pedidoTotalVal = parseFloat(modalPedidoTotalInput.value) || 0; // Garante que pegue do input hidden
+                    valorRecorrenciaDisplay.textContent = formatarValorBRL(pedidoTotalVal);
+                }
+            });
+        });
+        installmentMethodRadios.forEach(radio => { /* ... (código igual ao anterior para parcelamento) ... */
+            radio.addEventListener('change', (e) => {
+                const isIntervalo = e.target.value === 'intervalo';
+                intervalInputsDiv.classList.toggle('hidden', !isIntervalo); manualDatesContainer.classList.toggle('hidden', isIntervalo);
+                if (!isIntervalo) gerarCamposDataManual(parseInt(modalNumParcelasInput.value) || 0);
+            });
+        });
+        modalNumParcelasInput.addEventListener('input', () => { /* ... (código igual ao anterior para parcelamento) ... */
+            const metodoSelecionado = document.querySelector('input[name="metodoParcela"]:checked').value;
+            if (metodoSelecionado === 'manual') { gerarCamposDataManual(parseInt(modalNumParcelasInput.value) || 0); }
+        });
+        // Listener para o select de intervalo da recorrência (NOVO)
+        modalIntervaloRecorrenciaSelect.addEventListener('change', (e) => {
+            const tipoPagamentoSelecionado = document.querySelector('input[name="tipoPagamento"]:checked').value;
+            if (tipoPagamentoSelecionado === 'recorrente') {
+                recorrenciaCustomDaysContainer.classList.toggle('hidden', e.target.value !== 'custom_days');
+            }
+        });
+
 
         // --- Funções de Cálculo e Persistência ---
-
-        function calcularDatasParcelas(dataInicioStr, numParcelas, intervaloDias) {
-            const datas = [];
-            let dataAtual = dataStringToDate(dataInicioStr);
+        function calcularDatasParcelas(dataInicioStr, numParcelas, intervaloDias) { /* ... (código igual ao anterior) ... */
+            const datas = []; let dataAtual = dataStringToDate(dataInicioStr);
             if (!dataAtual || numParcelas < 1 || intervaloDias < 1) return datas;
-            for (let i = 0; i < numParcelas; i++) {
-                datas.push(dateToYYYYMMDD(dataAtual));
-                dataAtual = addDays(dataAtual, intervaloDias);
-            }
+            for (let i = 0; i < numParcelas; i++) { datas.push(dateToYYYYMMDD(dataAtual)); dataAtual = addDays(dataAtual, intervaloDias); }
             return datas;
         }
 
-        async function limparRecebimentosAntigos(pedidoId) {
-            // ... (igual anterior, sem mudanças) ...
-             console.log(`Iniciando limpeza de recebimentos antigos para pedido ${pedidoId}`);
-             const recebimentosRef = collection(db, "recebimentos");
-             const q = query(recebimentosRef, where("pedidoId", "==", pedidoId));
-             try {
-                 const snapshot = await getDocs(q);
-                 if (!snapshot.empty) {
-                     console.log(`Encontrados ${snapshot.size} recebimentos antigos para excluir.`);
-                     const batch = writeBatch(db);
-                     snapshot.forEach(doc => {
-                         console.log(`Agendando exclusão de recebimento ${doc.id}`);
-                         batch.delete(doc.ref);
-                     });
-                     await batch.commit();
-                     console.log("Recebimentos antigos excluídos com sucesso.");
-                 } else {
-                     console.log("Nenhum recebimento antigo encontrado para este pedido.");
-                 }
-             } catch (error) {
-                 console.error(`Erro ao limpar recebimentos antigos para pedido ${pedidoId}:`, error);
-                 throw new Error("Falha ao limpar pagamentos anteriores.");
-             }
-         }
+        // NOVA função para calcular datas de recorrência
+        function calcularDatasRecorrencia(dataInicioStr, numRecorrencias, tipoIntervalo, diasCustom = 30) {
+            const datas = [];
+            let dataAtual = dataStringToDate(dataInicioStr);
+            if (!dataAtual || numRecorrencias < 1) {
+                console.error("LOG: Data de início da recorrência inválida ou número de recorrências < 1.");
+                return datas;
+            }
 
-        async function salvarConfiguracaoPagamento() {
-             // ... (igual anterior, usa clienteInfo atualizado) ...
-              const pedidoId = modalPedidoIdInput.value;
-              const pedidoTotal = parseFloat(modalPedidoTotalInput.value) || 0;
-              let clienteInfo = {}; try { clienteInfo = JSON.parse(modalClienteInfoInput.value || '{}'); } catch(e){console.error("Erro parse clienteInfo ao salvar",e);}
-              const dataEntrega = modalDataEntregaInput.value || null;
-              const tipoPagamento = document.querySelector('input[name="tipoPagamento"]:checked').value;
+            console.log(`LOG: Calculando ${numRecorrencias} datas recorrentes. Início: ${dataInicioStr}, Tipo: ${tipoIntervalo}, Dias Custom: ${diasCustom}`);
 
-              if (!pedidoId) { alert("Erro: ID do Pedido não encontrado no modal."); return; }
+            for (let i = 0; i < numRecorrencias; i++) {
+                if (i === 0) {
+                    datas.push(dateToYYYYMMDD(dataAtual));
+                } else {
+                    let dataAnteriorParaCalculo = dataStringToDate(datas[datas.length -1]); // Pega a última data adicionada para calcular a próxima
+                    if(!dataAnteriorParaCalculo) { console.error("Erro ao obter data anterior para cálculo da recorrência."); return [];}
 
-              const pedidoRef = doc(db, "pedidos", pedidoId);
-              let numeroDoPedidoParaDesc = pedidoId.substring(0,6).toUpperCase();
-              try { const pedidoSnap = await getDoc(pedidoRef); if (pedidoSnap.exists()) { numeroDoPedidoParaDesc = pedidoSnap.data().numeroPedido || numeroDoPedidoParaDesc; } } catch (e) {}
+                    switch (tipoIntervalo) {
+                        case 'diario': dataAtual = addDays(dataAnteriorParaCalculo, 1); break;
+                        case 'semanal': dataAtual = addDays(dataAnteriorParaCalculo, 7); break;
+                        case 'quinzenal': dataAtual = addDays(dataAnteriorParaCalculo, 15); break;
+                        case 'mensal': dataAtual = addMonths(dataAnteriorParaCalculo, 1); break;
+                        case 'bimestral': dataAtual = addMonths(dataAnteriorParaCalculo, 2); break;
+                        case 'trimestral': dataAtual = addMonths(dataAnteriorParaCalculo, 3); break;
+                        case 'semestral': dataAtual = addMonths(dataAnteriorParaCalculo, 6); break;
+                        case 'anual': dataAtual = addYears(dataAnteriorParaCalculo, 1); break;
+                        case 'custom_days': dataAtual = addDays(dataAnteriorParaCalculo, parseInt(diasCustom) || 30); break;
+                        default: console.error("LOG: Tipo de intervalo de recorrência desconhecido:", tipoIntervalo); return [];
+                    }
+                    if (!dataAtual) { console.error("LOG: Falha ao calcular a próxima data da recorrência."); return []; }
+                    datas.push(dateToYYYYMMDD(dataAtual));
+                }
+            }
+            console.log("LOG: Datas de recorrência calculadas:", datas);
+            return datas;
+        }
 
-              btnSalvarConfigPagamento.disabled = true; btnSalvarConfigPagamento.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
 
-              try {
-                  await limparRecebimentosAntigos(pedidoId);
+        async function limparRecebimentosAntigos(pedidoId) { /* ... (código igual ao anterior) ... */
+            console.log(`LOG: Iniciando limpeza de recebimentos antigos para pedido ${pedidoId}`);
+            const recebimentosRef = collection(db, "recebimentos"); const q = query(recebimentosRef, where("pedidoId", "==", pedidoId));
+            try {
+                const snapshot = await getDocs(q);
+                if (!snapshot.empty) {
+                    console.log(`LOG: Encontrados ${snapshot.size} recebimentos antigos para excluir do pedido ${pedidoId}.`);
+                    const batch = writeBatch(db); snapshot.forEach(doc => { batch.delete(doc.ref); });
+                    await batch.commit(); console.log(`LOG: Recebimentos antigos do pedido ${pedidoId} excluídos.`);
+                } else { console.log(`LOG: Nenhum recebimento antigo encontrado para o pedido ${pedidoId}.`);}
+            } catch (error) { console.error(`Erro ao limpar recebimentos antigos para pedido ${pedidoId}:`, error); throw new Error("Falha ao limpar pagamentos anteriores."); }
+        }
 
-                  const batch = writeBatch(db);
-                  const updateDataPedido = {};
-                   if (dataEntrega) updateDataPedido.dataEntregaOficial = dataEntrega; else updateDataPedido.dataEntregaOficial = deleteField();
+        async function salvarConfiguracaoPagamento() { // MODIFICADO
+            const pedidoId = modalPedidoIdInput.value;
+            const pedidoTotal = parseFloat(modalPedidoTotalInput.value) || 0;
+            let clienteInfo = {}; try { clienteInfo = JSON.parse(modalClienteInfoInput.value || '{}'); } catch(e){console.error("Erro parse clienteInfo ao salvar",e); clienteInfo = {id:null, nome: null, telefone: null};}
+            const dataEntrega = modalDataEntregaInput.value || null;
+            const tipoPagamento = document.querySelector('input[name="tipoPagamento"]:checked').value;
 
-                  let parcelamentoInfoSalvar = null;
+            if (!pedidoId) { alert("Erro: ID do Pedido não encontrado no modal."); return; }
+            console.log(`LOG: Salvando configuração. Pedido ID: ${pedidoId}, Tipo Pag.: ${tipoPagamento}, Total: ${pedidoTotal}`);
 
-                  if (tipoPagamento === 'unico') {
-                      const dataPagamentoUnico = modalDataPagamentoUnicoInput.value;
-                      if (!dataPagamentoUnico) throw new Error("Selecione a data para pagamento único.");
+            const pedidoRef = doc(db, "pedidos", pedidoId);
+            let numeroDoPedidoParaDesc = pedidoId.substring(0,6).toUpperCase(); // Default
+            try { const pedidoSnap = await getDoc(pedidoRef); if (pedidoSnap.exists() && pedidoSnap.data().numeroPedido) { numeroDoPedidoParaDesc = pedidoSnap.data().numeroPedido; } } catch (e) {console.warn("LOG: Não foi possível obter numeroPedido para descrição", e)}
 
-                      updateDataPedido.dataPagamentoOficial = dataPagamentoUnico;
-                      updateDataPedido.parcelamentoInfo = deleteField();
+            btnSalvarConfigPagamento.disabled = true; btnSalvarConfigPagamento.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
 
-                      const recebimentoRef = doc(collection(db, "recebimentos"));
-                      batch.set(recebimentoRef, {
-                          descricao: `Pagamento Pedido #${numeroDoPedidoParaDesc}`, valor: pedidoTotal, dataPagamento: dataPagamentoUnico, // Usar dataPagamento para vencimento
-                          pago: false, pedidoId: pedidoId, clienteId: clienteInfo.id || null, clienteNome: clienteInfo.nome || null,
-                          telefone: clienteInfo.telefone || null, createdAt: Timestamp.now()
-                      });
+            try {
+                await limparRecebimentosAntigos(pedidoId);
 
-                  } else { // Parcelado
-                      const numParcelas = parseInt(modalNumParcelasInput.value) || 0;
-                      let valorParcela = parseFloat(modalValorParcelaInput.value) || 0;
-                      const metodoParcela = document.querySelector('input[name="metodoParcela"]:checked').value;
+                const batch = writeBatch(db);
+                const updateDataPedido = {};
+                if (dataEntrega) updateDataPedido.dataEntregaOficial = dataEntrega; else updateDataPedido.dataEntregaOficial = deleteField();
 
-                      if (numParcelas < 1) throw new Error("Número de parcelas inválido.");
-                      if (valorParcela <= 0) { if (pedidoTotal > 0 && numParcelas > 0) valorParcela = parseFloat((pedidoTotal / numParcelas).toFixed(2)); else throw new Error("Não foi possível calcular valor da parcela."); }
-                      if (Math.abs((valorParcela * numParcelas) - pedidoTotal) > (numParcelas * 0.011)) { if(!confirm(`A soma das parcelas (${formatarValorBRL(valorParcela * numParcelas)}) difere do total (${formatarValorBRL(pedidoTotal)}). Continuar?`)) { throw new Error("Cálculo cancelado."); } }
+                // Limpar campos de outros tipos por padrão, serão preenchidos se necessário
+                updateDataPedido.dataPagamentoOficial = deleteField();
+                updateDataPedido.parcelamentoInfo = deleteField();
+                updateDataPedido.recorrenciaInfo = deleteField();
 
-                      let datasParcelas = [];
-                      updateDataPedido.dataPagamentoOficial = deleteField();
+                if (tipoPagamento === 'unico') {
+                    const dataPagamentoUnico = modalDataPagamentoUnicoInput.value;
+                    if (!dataPagamentoUnico) throw new Error("Selecione a data para pagamento único.");
+                    updateDataPedido.dataPagamentoOficial = dataPagamentoUnico;
+                    const recebimentoRef = doc(collection(db, "recebimentos"));
+                    batch.set(recebimentoRef, {
+                        descricao: `Pagamento Pedido #${numeroDoPedidoParaDesc}`, valor: pedidoTotal, dataPagamento: dataPagamentoUnico,
+                        pago: false, pedidoId: pedidoId, clienteId: clienteInfo.id || null, clienteNome: clienteInfo.nome || 'N/A',
+                        telefone: clienteInfo.telefone || null, tipoRecebimento: 'unico', createdAt: Timestamp.now()
+                    });
+                    console.log("LOG: Configuração de pagamento ÚNICO preparada.");
+                } else if (tipoPagamento === 'parcelado') {
+                    const numParcelas = parseInt(modalNumParcelasInput.value) || 0;
+                    let valorParcela = parseFloat(modalValorParcelaInput.value) || 0;
+                    const metodoParcela = document.querySelector('input[name="metodoParcela"]:checked').value;
 
-                      if (metodoParcela === 'intervalo') {
-                          const dataPrimeira = modalDataPrimeiraParcelaInput.value;
-                          const intervalo = parseInt(modalIntervaloParcelasInput.value) || 30;
-                          if (!dataPrimeira || intervalo < 1) throw new Error("Informe data inicial e intervalo válidos.");
-                          datasParcelas = calcularDatasParcelas(dataPrimeira, numParcelas, intervalo);
-                          parcelamentoInfoSalvar = { modo: 'intervalo', numero: numParcelas, valor: valorParcela, dataInicio: dataPrimeira, intervalo: intervalo };
-                      } else { // Manual
-                          const inputsDataManual = manualDatesGrid.querySelectorAll('input[type="date"]');
-                          if (inputsDataManual.length !== numParcelas) throw new Error(`Nº de campos (${inputsDataManual.length}) diferente do Nº de Parcelas (${numParcelas}).`);
-                          datasParcelas = Array.from(inputsDataManual).map((input, i) => { if (!input.value) throw new Error(`Preencha a data ${i + 1}.`); return input.value; });
-                          datasParcelas.sort();
-                          parcelamentoInfoSalvar = { modo: 'manual', numero: numParcelas, valor: valorParcela, datas: datasParcelas };
-                      }
+                    if (numParcelas < 1) throw new Error("Número de parcelas inválido.");
+                    if (valorParcela <= 0) { if (pedidoTotal > 0 && numParcelas > 0) valorParcela = parseFloat((pedidoTotal / numParcelas).toFixed(2)); else throw new Error("Não foi possível calcular valor da parcela."); }
+                    if (Math.abs((valorParcela * numParcelas) - pedidoTotal) > (numParcelas * 0.011)) { if(!confirm(`A soma das parcelas (${formatarValorBRL(valorParcela * numParcelas)}) difere do total (${formatarValorBRL(pedidoTotal)}). Continuar?`)) { throw new Error("Cálculo de parcelas cancelado pelo usuário."); } }
 
-                      if (datasParcelas.length !== numParcelas) throw new Error("Erro ao obter datas das parcelas.");
+                    let datasParcelas = []; let parcelamentoInfoSalvar = {};
+                    if (metodoParcela === 'intervalo') {
+                        const dataPrimeira = modalDataPrimeiraParcelaInput.value; const intervalo = parseInt(modalIntervaloParcelasInput.value) || 30;
+                        if (!dataPrimeira || intervalo < 1) throw new Error("Informe data inicial e intervalo válidos para parcelamento.");
+                        datasParcelas = calcularDatasParcelas(dataPrimeira, numParcelas, intervalo); // Usar função específica se necessário
+                        parcelamentoInfoSalvar = { modo: 'intervalo', numero: numParcelas, valor: valorParcela, dataInicio: dataPrimeira, intervalo: intervalo };
+                    } else { // Manual
+                        const inputsDataManual = manualDatesGrid.querySelectorAll('input[type="date"]');
+                        if (inputsDataManual.length !== numParcelas) throw new Error(`Nº de campos de data (${inputsDataManual.length}) diferente do Nº de Parcelas (${numParcelas}).`);
+                        datasParcelas = Array.from(inputsDataManual).map((input, i) => { if (!input.value) throw new Error(`Preencha a data da parcela ${i + 1}.`); return input.value; });
+                        datasParcelas.sort((a, b) => dataStringToDate(a) - dataStringToDate(b)); // Ordena as datas
+                        parcelamentoInfoSalvar = { modo: 'manual', numero: numParcelas, valor: valorParcela, datas: datasParcelas };
+                    }
+                    if (datasParcelas.length !== numParcelas) throw new Error("Erro ao obter datas das parcelas.");
+                    for (let i = 0; i < numParcelas; i++) {
+                        const recebimentoRef = doc(collection(db, "recebimentos"));
+                        batch.set(recebimentoRef, {
+                            descricao: `Parcela ${i + 1}/${numParcelas} Pedido #${numeroDoPedidoParaDesc}`, valor: valorParcela, dataPagamento: datasParcelas[i],
+                            pago: false, parcelaNum: i + 1, parcelaTotal: numParcelas, tipoRecebimento: 'parcela', pedidoId: pedidoId, clienteId: clienteInfo.id || null, clienteNome: clienteInfo.nome || 'N/A',
+                            telefone: clienteInfo.telefone || null, createdAt: Timestamp.now()
+                        });
+                    }
+                    updateDataPedido.parcelamentoInfo = parcelamentoInfoSalvar;
+                    console.log("LOG: Configuração de pagamento PARCELADO preparada.");
+                } else if (tipoPagamento === 'recorrente') {
+                    const dataInicioRec = modalDataInicioRecorrenciaInput.value;
+                    const intervaloTipoRec = modalIntervaloRecorrenciaSelect.value;
+                    const numRecorrencias = parseInt(modalNumeroRecorrenciasInput.value) || 0;
+                    let intervaloDiasCustomRec = null;
 
-                      for (let i = 0; i < numParcelas; i++) {
-                          const recebimentoRef = doc(collection(db, "recebimentos"));
-                          batch.set(recebimentoRef, {
-                              descricao: `Parcela ${i + 1}/${numParcelas} Pedido #${numeroDoPedidoParaDesc}`, valor: valorParcela, dataPagamento: datasParcelas[i], // Usar dataPagamento para vencimento
-                              pago: false, parcelaNum: i + 1, parcelaTotal: numParcelas, pedidoId: pedidoId, clienteId: clienteInfo.id || null, clienteNome: clienteInfo.nome || null,
-                              telefone: clienteInfo.telefone || null, createdAt: Timestamp.now()
-                          });
-                      }
-                      updateDataPedido.parcelamentoInfo = parcelamentoInfoSalvar;
-                  }
+                    if (!dataInicioRec) throw new Error("Informe a data de início para a recorrência.");
+                    if (numRecorrencias < 1) throw new Error("O número de ocorrências da recorrência deve ser ao menos 1.");
+                    if (pedidoTotal <= 0) throw new Error("O valor total do pedido deve ser maior que zero para recorrência.");
 
-                  batch.update(pedidoRef, updateDataPedido);
-                  await batch.commit();
+                    if (intervaloTipoRec === 'custom_days') {
+                        intervaloDiasCustomRec = parseInt(modalIntervaloRecorrenciaDiasInput.value) || 0;
+                        if (intervaloDiasCustomRec < 1) throw new Error("Intervalo de dias personalizado para recorrência é inválido.");
+                    }
 
-                  alert("Configuração de pagamento salva com sucesso!");
-                  fecharModalConfiguracaoPagamento();
-                  await carregarPedidos();
+                    const datasRecorrencias = calcularDatasRecorrencia(dataInicioRec, numRecorrencias, intervaloTipoRec, intervaloDiasCustomRec);
+                    if (datasRecorrencias.length !== numRecorrencias) throw new Error("Não foi possível calcular todas as datas da recorrência. Verifique os parâmetros.");
 
-              } catch (error) {
-                  console.error("Erro ao salvar configuração:", error);
-                  alert(`Erro ao salvar: ${error.message}`);
-              } finally {
-                  btnSalvarConfigPagamento.disabled = false; btnSalvarConfigPagamento.innerHTML = '<i class="fas fa-save"></i> Salvar Configuração';
-              }
-         }
+                    const valorDaRecorrencia = pedidoTotal; // Conforme solicitado
+                    for (let i = 0; i < numRecorrencias; i++) {
+                        const recebimentoRef = doc(collection(db, "recebimentos"));
+                        batch.set(recebimentoRef, {
+                            descricao: `Recorrência ${i + 1}/${numRecorrencias} Pedido #${numeroDoPedidoParaDesc}`, valor: valorDaRecorrencia, dataPagamento: datasRecorrencias[i],
+                            pago: false, tipoRecebimento: 'recorrencia', recorrenciaNum: i + 1, recorrenciaTotal: numRecorrencias,
+                            pedidoId: pedidoId, clienteId: clienteInfo.id || null, clienteNome: clienteInfo.nome || 'N/A',
+                            telefone: clienteInfo.telefone || null, createdAt: Timestamp.now()
+                        });
+                    }
+                    updateDataPedido.recorrenciaInfo = {
+                        tipoPagamento: 'recorrente', dataInicio: dataInicioRec, intervaloTipo: intervaloTipoRec,
+                        intervaloValor: intervaloTipoRec === 'custom_days' ? intervaloDiasCustomRec : null,
+                        numeroRecorrencias: numRecorrencias, valorPorRecorrencia: valorDaRecorrencia
+                    };
+                    console.log("LOG: Configuração de pagamento RECORRENTE preparada.");
+                }
 
-        async function removerConfiguracaoPagamento() {
-              // ... (igual anterior, sem mudanças) ...
-              const pedidoId = modalPedidoIdInput.value;
-              if (!pedidoId) { alert("Erro: ID do Pedido não encontrado."); return; }
-              if (!confirm("Tem certeza que deseja remover TODA a configuração de pagamento e os recebimentos associados a este pedido?")) return;
+                batch.update(pedidoRef, updateDataPedido);
+                await batch.commit();
+                alert("Configuração de pagamento salva com sucesso!");
+                fecharModalConfiguracaoPagamento();
+                await carregarPedidos();
+            } catch (error) {
+                console.error("Erro ao salvar configuração de pagamento:", error);
+                alert(`Erro ao salvar: ${error.message || 'Erro desconhecido.'}`);
+            } finally {
+                btnSalvarConfigPagamento.disabled = false; btnSalvarConfigPagamento.innerHTML = '<i class="fas fa-save"></i> Salvar Configuração';
+            }
+        }
 
-              btnRemoverConfigPagamento.disabled = true; btnRemoverConfigPagamento.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removendo...';
-
-              try {
-                  await limparRecebimentosAntigos(pedidoId);
-                  const pedidoRef = doc(db, "pedidos", pedidoId);
-                  await updateDoc(pedidoRef, {
-                      dataPagamentoOficial: deleteField(),
-                      parcelamentoInfo: deleteField()
-                  });
-                  alert("Configuração de pagamento removida com sucesso!");
-                  fecharModalConfiguracaoPagamento();
-                  await carregarPedidos();
-              } catch (error) {
-                  console.error("Erro ao remover configuração:", error);
-                  alert(`Erro ao remover: ${error.message}`);
-              } finally {
-                  btnRemoverConfigPagamento.disabled = false; btnRemoverConfigPagamento.innerHTML = '<i class="fas fa-times-circle"></i> Remover Config. Pagamento';
-              }
-          }
+        async function removerConfiguracaoPagamento() { // MODIFICADO
+            const pedidoId = modalPedidoIdInput.value;
+            if (!pedidoId) { alert("Erro: ID do Pedido não encontrado."); return; }
+            if (!confirm("Tem certeza que deseja remover TODA a configuração de pagamento e os recebimentos associados a este pedido?")) return;
+            btnRemoverConfigPagamento.disabled = true; btnRemoverConfigPagamento.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removendo...';
+            try {
+                await limparRecebimentosAntigos(pedidoId);
+                const pedidoRef = doc(db, "pedidos", pedidoId);
+                await updateDoc(pedidoRef, {
+                    dataPagamentoOficial: deleteField(),
+                    parcelamentoInfo: deleteField(),
+                    recorrenciaInfo: deleteField() // ADICIONADO
+                });
+                alert("Configuração de pagamento removida com sucesso!");
+                fecharModalConfiguracaoPagamento();
+                await carregarPedidos();
+            } catch (error) { console.error("Erro ao remover configuração:", error); alert(`Erro ao remover: ${error.message}`);
+            } finally { btnRemoverConfigPagamento.disabled = false; btnRemoverConfigPagamento.innerHTML = '<i class="fas fa-times-circle"></i> Remover Config. Pagamento'; }
+        }
 
         // --- Event Listeners ---
         filtroClienteSelect.addEventListener('change', aplicarFiltros);
         filtroStatusEntregaSelect.addEventListener('change', aplicarFiltros);
         filtroStatusPagamentoSelect.addEventListener('change', aplicarFiltros);
         buscaNumeroPedidoInput.addEventListener('input', aplicarFiltros);
-        btnLimparFiltros.addEventListener('click', () => {
-            filtroClienteSelect.value = '';
-            filtroStatusEntregaSelect.value = '';
-            filtroStatusPagamentoSelect.value = '';
-            buscaNumeroPedidoInput.value = '';
+        btnLimparFiltros.addEventListener('click', () => { /* ... (código igual ao anterior) ... */
+            filtroClienteSelect.value = ''; filtroStatusEntregaSelect.value = ''; filtroStatusPagamentoSelect.value = ''; buscaNumeroPedidoInput.value = '';
             aplicarFiltros();
         });
         closePaymentModalBtn.addEventListener('click', fecharModalConfiguracaoPagamento);
@@ -879,11 +832,11 @@
 
         // --- Inicialização ---
         window.addEventListener("load", async () => {
-            console.log("Página Gestão de Pedidos v4 (Responsiva) Inicializada.");
+            console.log("LOG: Página Gestão de Pedidos v5 (Recorrência) Inicializada.");
             await carregarClientesFiltro();
             await carregarPedidos();
+            console.log("LOG: Carregamento inicial concluído.");
         });
-
     </script>
 </body>
 </html>

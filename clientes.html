@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clientes e Orçamentos (v2 - Fix)</title>
+    <title>Clientes e Orçamentos (v2 - Fix com Logs)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
     <style>
         /* Estilos gerais */
@@ -48,7 +48,7 @@
         .btn-editar:hover { background-color: #2980b9; }
         .btn-visualizar { background-color: #95a5a6; color: white; }
         .btn-visualizar:hover { background-color: #7f8c8d; }
-        .btn-ver-pedido { background-color: #8e44ad; color: white; } /* Cor exemplo para Ver Pedido */
+        .btn-ver-pedido { background-color: #8e44ad; color: white; }
         .btn-ver-pedido:hover { background-color: #732d91; }
 
         /* Filtros e busca */
@@ -87,7 +87,7 @@
                 <label for="busca-cliente">Buscar Cliente:</label>
                 <input type="text" id="busca-cliente" placeholder="Nome ou código...">
             </div>
-            </div>
+        </div>
 
         <div>
             <ul id="lista-clientes">
@@ -97,7 +97,7 @@
 
         <div id="orcamentos-cliente" style="display: none;">
             <h2>Orçamentos de <span id="nome-cliente-selecionado"></span></h2>
-             <button id="novo-orcamento-btn"><i class="fas fa-plus"></i> Novo Orçamento para este Cliente</button>
+            <button id="novo-orcamento-btn"><i class="fas fa-plus"></i> Novo Orçamento para este Cliente</button>
             <table id="tabela-orcamentos" >
                 <thead>
                     <tr>
@@ -117,15 +117,15 @@
     <div id="modal-cadastro-cliente" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                 <h2>Cadastrar Novo Cliente</h2>
-                 <button class="close-modal-btn" id="fechar-modal-cliente">&times;</button>
-             </div>
+                <h2>Cadastrar Novo Cliente</h2>
+                <button class="close-modal-btn" id="fechar-modal-cliente">&times;</button>
+            </div>
             <form id="form-cliente-modal">
-                 <div> <label for="empresa-modal">Nome da Empresa</label> <input type="text" id="empresa-modal" required> </div>
-                 <div> <label for="email-modal">E-mail</label> <input type="email" id="email-modal" required> </div>
-                 <div> <label for="telefone-modal">Telefone</label> <input type="tel" id="telefone-modal" pattern="^\+55\s\(\d{2}\)\s9\d{4}-\d{4}$" required> </div>
-                 <div> <label for="comprador-modal">Nome do Comprador</label> <input type="text" id="comprador-modal" required> </div>
-                 <button type="submit">Cadastrar Cliente</button>
+                <div> <label for="empresa-modal">Nome da Empresa</label> <input type="text" id="empresa-modal" required> </div>
+                <div> <label for="email-modal">E-mail</label> <input type="email" id="email-modal" required> </div>
+                <div> <label for="telefone-modal">Telefone</label> <input type="tel" id="telefone-modal" pattern="^\+55\s\(\d{2}\)\s9\d{4}-\d{4}$" required> </div>
+                <div> <label for="comprador-modal">Nome do Comprador</label> <input type="text" id="comprador-modal" required> </div>
+                <button type="submit">Cadastrar Cliente</button>
             </form>
         </div>
     </div>
@@ -134,15 +134,18 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getFirestore, collection, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, runTransaction, orderBy } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-           const firebaseConfig = {
-             apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc", authDomain: "testebosspro.firebaseapp.com", projectId: "testebosspro",
-             storageBucket: "testebosspro.appspot.com", messagingSenderId: "73684788134", appId: "1:73684788134:web:7c8250c83f10a2df59e567",
-             measurementId: "G-1H29L5B830"
-           };
+        const firebaseConfig = { // SUBSTITUA PELAS SUAS CONFIGURAÇÕES REAIS DO FIREBASE
+            apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc", authDomain: "testebosspro.firebaseapp.com", projectId: "testebosspro",
+            storageBucket: "testebosspro.appspot.com", messagingSenderId: "73684788134", appId: "1:73684788134:web:7c8250c83f10a2df59e567",
+            measurementId: "G-1H29L5B830"
+        };
+        console.log("LOG: Script principal inicializado. Config do Firebase:", firebaseConfig.projectId);
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        console.log("LOG: Firebase App e Firestore inicializados.");
 
-        // Elementos DOM (iguais)
+
+        // Elementos DOM
         const listaClientesElement = document.getElementById("lista-clientes");
         const orcamentosDiv = document.getElementById("orcamentos-cliente");
         const tabelaOrcamentos = document.getElementById("tabela-orcamentos");
@@ -156,133 +159,332 @@
         const formClienteModal = document.getElementById("form-cliente-modal");
         const telefoneModalInput = document.getElementById("telefone-modal");
 
-        // Variáveis globais (iguais)
+        // Variáveis globais
         let clientesData = [];
         let clienteSelecionadoId = null;
 
-        // --- Funções de Cliente (iguais à versão anterior) ---
-        async function carregarClientes(termoBusca = '') { /* ...código igual... */
-            listaClientesElement.innerHTML = "<li>Carregando...</li>";
+        // --- Funções de Cliente ---
+        async function carregarClientes(termoBusca = '') {
+            console.log("LOG: carregarClientes chamado com termo:", termoBusca);
+            listaClientesElement.innerHTML = "<li>Carregando clientes...</li>";
             try {
-                const q = query(collection(db, "clientes"), orderBy("codigo"));
+                const q = query(collection(db, "clientes"), orderBy("codigo")); // Supondo que você tenha um campo 'codigo' ou 'createdAt' para ordenar
                 const querySnapshot = await getDocs(q);
                 clientesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log("LOG: Clientes carregados do Firestore:", clientesData.length);
                 filtrarEExibirClientes(termoBusca);
-            } catch (error) { console.error("Erro carregar clientes:", error); listaClientesElement.innerHTML = "<li>Erro ao carregar.</li>"; }
-        }
-        function filtrarEExibirClientes(termoBusca = '') { /* ...código igual... */
-            listaClientesElement.innerHTML = ""; const termo = termoBusca.toLowerCase();
-            const clientesFiltrados = clientesData.filter(c => (c.empresa?.toLowerCase() || '').includes(termo) || (c.codigo?.toLowerCase() || '').includes(termo) || (c.comprador?.toLowerCase() || '').includes(termo));
-            if (clientesFiltrados.length === 0) { listaClientesElement.innerHTML = "<li>Nenhum cliente encontrado.</li>"; orcamentosDiv.style.display = 'none'; return; }
-            clientesFiltrados.forEach(cliente => { const li = document.createElement("li"); li.dataset.clienteId = cliente.id; li.innerHTML = `<button class="delete-cliente-btn" title="Excluir Cliente"><i class="fas fa-trash-alt"></i></button><div class="cliente-info"><div class="cliente-codigo">Código: ${cliente.codigo || 'N/A'}</div><div class="cliente-nome">${cliente.empresa}</div><div class="cliente-contato">Contato: ${cliente.comprador || 'N/A'}</div><div class="cliente-contato">Tel: ${cliente.telefone || 'N/A'}</div><div class="cliente-email">Email: ${cliente.email || 'N/A'}</div></div>`; li.addEventListener("click", (event) => { if (event.target.closest('.delete-cliente-btn')) return; document.querySelectorAll("#lista-clientes li").forEach(item => item.style.border = "1px solid #ddd"); li.style.border = "2px solid #3498db"; clienteSelecionadoId = cliente.id; carregarOrcamentos(cliente.id, cliente.empresa); }); const deleteBtn = li.querySelector('.delete-cliente-btn'); deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); excluirCliente(cliente.id, cliente.empresa); }); listaClientesElement.appendChild(li); });
-             if (clienteSelecionadoId) { const itemSel = listaClientesElement.querySelector(`li[data-cliente-id="${clienteSelecionadoId}"]`); if (itemSel) itemSel.style.border = "2px solid #3498db"; else { clienteSelecionadoId = null; orcamentosDiv.style.display = 'none'; } } else orcamentosDiv.style.display = 'none';
-        }
-        async function excluirCliente(clienteId, clienteNome) { /* ...código igual... */
-            if (confirm(`Excluir cliente "${clienteNome}"?`)) { try { await deleteDoc(doc(db, "clientes", clienteId)); alert(`Cliente "${clienteNome}" excluído.`); if (clienteSelecionadoId === clienteId) { clienteSelecionadoId = null; orcamentosDiv.style.display = 'none'; } carregarClientes(buscaClienteInput.value); } catch (error) { console.error("Erro excluir cliente:", error); alert("Erro ao excluir."); } }
+            } catch (error) {
+                console.error("Erro ao carregar clientes:", error);
+                listaClientesElement.innerHTML = "<li>Erro ao carregar clientes. Verifique o console.</li>";
+            }
         }
 
-        // --- Funções de Orçamento (MODIFICADA A CONSULTA E ADICIONADA ORDENAÇÃO JS) ---
+        function filtrarEExibirClientes(termoBusca = '') {
+            console.log("LOG: filtrarEExibirClientes chamado com termo:", termoBusca);
+            listaClientesElement.innerHTML = "";
+            const termo = termoBusca.toLowerCase().trim();
+            const clientesFiltrados = clientesData.filter(c =>
+                (c.empresa?.toLowerCase() || '').includes(termo) ||
+                (c.codigo?.toLowerCase() || '').includes(termo) ||
+                (c.comprador?.toLowerCase() || '').includes(termo)
+            );
+
+            if (clientesFiltrados.length === 0) {
+                listaClientesElement.innerHTML = "<li>Nenhum cliente encontrado com o termo: \""+termoBusca+"\"</li>";
+                orcamentosDiv.style.display = 'none';
+                return;
+            }
+
+            clientesFiltrados.forEach(cliente => {
+                const li = document.createElement("li");
+                li.dataset.clienteId = cliente.id;
+                li.innerHTML = `
+                    <button class="delete-cliente-btn" title="Excluir Cliente"><i class="fas fa-trash-alt"></i></button>
+                    <div class="cliente-info">
+                        <div class="cliente-codigo">Código: ${cliente.codigo || 'N/A'}</div>
+                        <div class="cliente-nome">${cliente.empresa}</div>
+                        <div class="cliente-contato">Contato: ${cliente.comprador || 'N/A'}</div>
+                        <div class="cliente-contato">Tel: ${cliente.telefone || 'N/A'}</div>
+                        <div class="cliente-email">Email: ${cliente.email || 'N/A'}</div>
+                    </div>`;
+                li.addEventListener("click", (event) => {
+                    if (event.target.closest('.delete-cliente-btn')) return; // Não faz nada se clicou no botão de excluir
+                    document.querySelectorAll("#lista-clientes li").forEach(item => item.style.border = "1px solid #ddd"); // Reseta bordas
+                    li.style.border = "2px solid #3498db"; // Destaca o selecionado
+                    clienteSelecionadoId = cliente.id;
+                    carregarOrcamentos(cliente.id, cliente.empresa);
+                });
+
+                const deleteBtn = li.querySelector('.delete-cliente-btn');
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Impede que o clique no botão de excluir também selecione o cliente
+                    excluirCliente(cliente.id, cliente.empresa);
+                });
+                listaClientesElement.appendChild(li);
+            });
+
+            // Re-selecionar cliente se ele ainda existir na lista filtrada
+            if (clienteSelecionadoId) {
+                const itemSelecionadoNaLista = listaClientesElement.querySelector(`li[data-cliente-id="${clienteSelecionadoId}"]`);
+                if (itemSelecionadoNaLista) {
+                    itemSelecionadoNaLista.style.border = "2px solid #3498db";
+                } else {
+                    // Se o cliente selecionado não estiver mais na lista (devido a filtro), esconde orçamentos
+                    // clienteSelecionadoId = null; // Opcional: resetar se não estiver visível
+                    // orcamentosDiv.style.display = 'none';
+                }
+            } else {
+                 orcamentosDiv.style.display = 'none';
+            }
+            console.log("LOG: Clientes filtrados e exibidos:", clientesFiltrados.length);
+        }
+
+        async function excluirCliente(clienteId, clienteNome) {
+            console.log(`LOG: Tentativa de excluir cliente ID: ${clienteId}, Nome: ${clienteNome}`);
+            if (confirm(`Tem certeza que deseja excluir o cliente "${clienteNome}" e todos os seus orçamentos associados (se houver)? Esta ação não pode ser desfeita.`)) {
+                try {
+                    // Aqui você também precisaria excluir os orçamentos associados a este cliente, se essa for a lógica de negócio.
+                    // Por enquanto, apenas exclui o cliente.
+                    await deleteDoc(doc(db, "clientes", clienteId));
+                    alert(`Cliente "${clienteNome}" excluído com sucesso.`);
+                    console.log(`LOG: Cliente ${clienteId} excluído.`);
+                    if (clienteSelecionadoId === clienteId) {
+                        clienteSelecionadoId = null;
+                        orcamentosDiv.style.display = 'none';
+                    }
+                    await carregarClientes(buscaClienteInput.value); // Recarrega e filtra
+                } catch (error) {
+                    console.error("Erro ao excluir cliente:", error);
+                    alert("Erro ao excluir o cliente. Verifique o console.");
+                }
+            } else {
+                console.log("LOG: Exclusão do cliente cancelada.");
+            }
+        }
+
+        // --- Funções de Orçamento ---
         async function carregarOrcamentos(clienteId, clienteNome) {
+            console.log(`LOG: carregarOrcamentos para cliente ID: ${clienteId}, Nome: ${clienteNome}`);
             tbodyOrcamentos.innerHTML = "<tr><td colspan='5'>Carregando orçamentos...</td></tr>";
             orcamentosDiv.style.display = "block";
             nomeClienteSelecionadoSpan.textContent = clienteNome;
-            novoOrcamentoBtn.onclick = () => { window.location.href = `telaorcamento.html?clienteId=${clienteId}`; };
+            novoOrcamentoBtn.onclick = () => {
+                console.log(`LOG: Botão Novo Orçamento clicado para cliente ID: ${clienteId}`);
+                window.location.href = `telaorcamento.html?clienteId=${clienteId}`; // Verifique se esta página existe
+            };
 
             try {
-                // *** MODIFICAÇÃO AQUI: Remove o orderBy da consulta ***
-                const q = query(collection(db, "orcamentos"), where("clienteId", "==", clienteId));
-                console.log("Executando query de orçamentos SEM orderBy..."); // Log para debug
+                const q = query(collection(db, "orcamentos"), where("clienteId", "==", clienteId)); // Removido orderBy se causar problema de índice
+                console.log("LOG: Executando query de orçamentos para clienteId:", clienteId);
                 const querySnapshot = await getDocs(q);
-
-                tbodyOrcamentos.innerHTML = ""; // Limpa a tabela
+                tbodyOrcamentos.innerHTML = "";
 
                 if (querySnapshot.empty) {
-                    console.log("Nenhum orçamento encontrado para clienteId:", clienteId); // Log para debug
+                    console.log("LOG: Nenhum orçamento encontrado para clienteId:", clienteId);
                     tbodyOrcamentos.innerHTML = "<tr><td colspan='5'>Nenhum orçamento encontrado para este cliente.</td></tr>";
                     return;
                 }
 
-                // *** ADIÇÃO AQUI: Ordena os resultados no JavaScript ***
                 let orcamentosArray = [];
                 querySnapshot.forEach(doc => {
                     orcamentosArray.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Ordena pelo campo dataCriacao (string ISO) em ordem decrescente (mais recente primeiro)
-                 orcamentosArray.sort((a, b) => {
-                     const dateA = a.dataCriacao ? new Date(a.dataCriacao) : 0; // Trata casos sem data
-                     const dateB = b.dataCriacao ? new Date(b.dataCriacao) : 0;
-                     return dateB - dateA; // Ordena decrescente
-                 });
-                 console.log(`${orcamentosArray.length} orçamentos encontrados e ordenados.`); // Log para debug
+                // Ordenar pelo campo dataCriacao (string ISO) em ordem decrescente (mais recente primeiro)
+                orcamentosArray.sort((a, b) => {
+                    const dateA = a.dataCriacao ? new Date(a.dataCriacao) : new Date(0); // Trata casos sem data ou com data inválida
+                    const dateB = b.dataCriacao ? new Date(b.dataCriacao) : new Date(0);
+                    return dateB - dateA; // Ordena decrescente
+                });
+                console.log(`LOG: ${orcamentosArray.length} orçamentos encontrados e ordenados.`);
 
-                // Itera sobre o array ordenado para exibir
                 orcamentosArray.forEach((orcamentoData) => {
-                    const docId = orcamentoData.id; // Pega o ID do documento
-                    const orcamento = orcamentoData; // Dados já estão aqui
+                    const docId = orcamentoData.id;
+                    const orcamento = orcamentoData;
 
-                    const dataFormatada = orcamento.dataCriacao ? new Date(orcamento.dataCriacao).toLocaleDateString() : 'N/A';
+                    const dataFormatada = orcamento.dataCriacao ? new Date(orcamento.dataCriacao).toLocaleDateString('pt-BR') : 'N/A';
                     const numeroOrcamento = orcamento.numeroOrcamento || docId.substring(0,6).toUpperCase();
-
                     let status = 'Pendente'; let statusClass = 'status-pendente';
-                    if (orcamento.aprovado) { status = 'Aprovado'; statusClass = 'status-aprovado'; }
+                    if (orcamento.status === 'Aprovado') { status = 'Aprovado'; statusClass = 'status-aprovado';} // Ajuste para usar campo 'status' se existir
+                    else if (orcamento.aprovado) { status = 'Aprovado (Legado)'; statusClass = 'status-aprovado'; } // Compatibilidade
+                    // Adicionar mais status se necessário (ex: Finalizado, Cancelado)
 
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
                         <td>${numeroOrcamento}</td>
                         <td>${dataFormatada}</td>
-                        <td>R$ ${orcamento.totalGeral ? orcamento.totalGeral.toFixed(2) : '0.00'}</td>
+                        <td>R$ ${orcamento.totalGeral ? Number(orcamento.totalGeral).toFixed(2) : '0.00'}</td>
                         <td class="${statusClass}">${status}</td>
                         <td>
                             <button class="btn-editar" data-orcamento-id="${docId}"><i class="fas fa-edit"></i> Editar</button>
                             <button class="btn-visualizar" data-orcamento-id="${docId}"><i class="fas fa-eye"></i> Visualizar</button>
-                            ${orcamento.aprovado && orcamento.pedidoId ? `<button class="btn-ver-pedido" data-pedido-id="${orcamento.pedidoId}"><i class="fas fa-receipt"></i> Ver Pedido</button>` : ''}
+                            ${(orcamento.aprovado || orcamento.status === 'Aprovado') && orcamento.pedidoId ? `<button class="btn-ver-pedido" data-pedido-id="${orcamento.pedidoId}"><i class="fas fa-receipt"></i> Ver Pedido</button>` : ''}
                         </td>
                     `;
                     tbodyOrcamentos.appendChild(tr);
                 });
-
                 adicionarListenersBotoesOrcamento();
-
             } catch (error) {
                 console.error("Erro ao carregar orçamentos:", error);
                 tbodyOrcamentos.innerHTML = "<tr><td colspan='5'>Erro ao carregar orçamentos. Verifique o console.</td></tr>";
-                 // Verifica se o erro é de permissão ou índice (útil para diagnóstico)
-                 if (error.code === 'permission-denied') {
-                     alert('Erro: Permissão negada para ler os orçamentos. Verifique as regras de segurança do Firestore.');
-                 } else if (error.code === 'failed-precondition') {
-                      // Mesmo sem orderBy, pode haver erro se where exigir índice (menos comum)
-                      alert('Erro: A consulta pode requerer um índice. Verifique o console do navegador para mais detalhes.');
-                 }
+                if (error.code === 'permission-denied') {
+                    alert('Erro: Permissão negada para ler os orçamentos. Verifique as regras de segurança do Firestore.');
+                } else if (error.code === 'failed-precondition' && error.message.includes('index')) {
+                    alert('Erro: A consulta de orçamentos requer um índice no Firestore. Verifique o console do navegador para o link de criação do índice.');
+                }
             }
         }
 
-        // Adiciona listeners aos botões de ação dos orçamentos (igual)
-        function adicionarListenersBotoesOrcamento() { /* ...código igual... */
-             document.querySelectorAll(".btn-editar").forEach(btn => { btn.onclick = (e) => { const oId = e.currentTarget.dataset.orcamentoId; window.location.href = `telaorcamento.html?orcamentoId=${oId}`; }; });
-             document.querySelectorAll(".btn-visualizar").forEach(btn => { btn.onclick = async (e) => { const oId = e.currentTarget.dataset.orcamentoId; alert(`Visualizar ID: ${oId} (impl modal)`); }; });
-             document.querySelectorAll(".btn-ver-pedido").forEach(btn => { btn.onclick = (e) => { const pId = e.currentTarget.dataset.pedidoId; window.open('pedidos.html', '_blank'); alert(`Redirect pedidos (Pedido ID: ${pId})`); }; });
+        function adicionarListenersBotoesOrcamento() {
+            console.log("LOG: Adicionando listeners aos botões de orçamento.");
+            document.querySelectorAll("#tabela-orcamentos .btn-editar").forEach(btn => {
+                btn.onclick = (e) => {
+                    const oId = e.currentTarget.dataset.orcamentoId;
+                    console.log(`LOG: Botão Editar Orçamento clicado. ID: ${oId}`);
+                    window.location.href = `telaorcamento.html?orcamentoId=${oId}`; // Verifique se esta página existe
+                };
+            });
+            document.querySelectorAll("#tabela-orcamentos .btn-visualizar").forEach(btn => {
+                btn.onclick = async (e) => {
+                    const oId = e.currentTarget.dataset.orcamentoId;
+                    console.log(`LOG: Botão Visualizar Orçamento clicado. ID: ${oId}`);
+                    alert(`Funcionalidade Visualizar Orçamento ID: ${oId} (implementar modal ou outra visualização)`);
+                };
+            });
+            document.querySelectorAll("#tabela-orcamentos .btn-ver-pedido").forEach(btn => {
+                btn.onclick = (e) => {
+                    const pId = e.currentTarget.dataset.pedidoId;
+                    console.log(`LOG: Botão Ver Pedido clicado. ID do Pedido: ${pId}`);
+                    // window.open('pedidos.html', '_blank'); // Se você tiver uma página de pedidos
+                    alert(`Redirecionar para visualização do Pedido ID: ${pId} (implementar)`);
+                };
+            });
         }
 
-        // --- Funções do Modal de Cadastro (iguais) ---
-        abrirModalBtn.onclick = () => { modalCadastro.style.display = "block"; formClienteModal.reset(); };
-        fecharModalBtn.onclick = () => { modalCadastro.style.display = "none"; };
-        window.onclick = (event) => { if (event.target == modalCadastro) modalCadastro.style.display = "none"; };
-        formClienteModal.addEventListener("submit", async (event) => { /* ...código igual... */
-            event.preventDefault(); const emp = document.getElementById("empresa-modal").value.trim(); const eml = document.getElementById("email-modal").value.trim(); const tel = telefoneModalInput.value.trim(); const cmp = document.getElementById("comprador-modal").value.trim(); if (!emp || !eml || !tel || !cmp) { alert("Preencha todos os campos."); return; } try { const nCod = await runTransaction(db, async (t) => { const cRef = doc(db, "metadata", "clienteCounter"); const cSnp = await t.get(cRef); let cNum = cSnp.exists() ? cSnp.data().lastClienteNumber || 0 : 0; const nNum = cNum + 1; const codF = String(nNum).padStart(2, '0'); const nCliRef = doc(collection(db, "clientes")); t.set(nCliRef, { codigo: codF, empresa: emp, email: eml, telefone: tel, comprador: cmp, createdAt: new Date() }); t.set(cRef, { lastClienteNumber: nNum }, { merge: true }); return codF; }); alert(`Cliente "${emp}" cadastrado! Código: ${nCod}`); modalCadastro.style.display = "none"; formClienteModal.reset(); carregarClientes(buscaClienteInput.value); } catch (error) { console.error("Erro cadastrar cliente:", error); alert("Erro ao cadastrar."); }
-        });
-        telefoneModalInput.addEventListener("input", function (e) { /* ...código igual... */
-            let input = e.target.value.replace(/\D/g, ""); if (input.startsWith("55")) input = input.slice(2); if (input.length > 11) input = input.slice(0, 11); let formatted = "+55 "; if (input.length > 0) formatted += "(" + input.slice(0, 2); if (input.length >= 2) formatted += ") "; if (input.length >= 3) formatted += input.slice(2, 7); if (input.length >= 7) formatted += "-" + input.slice(7); e.target.value = formatted;
+        // --- Funções do Modal de Cadastro (COM LOGS E PROTEÇÃO NO SUBMIT) ---
+        console.log("LOG: Adicionando listeners para o modal de cadastro de cliente.");
+        abrirModalBtn.onclick = () => {
+            console.log("LOG: Botão Abrir Modal Cliente clicado.");
+            modalCadastro.style.display = "block";
+            formClienteModal.reset();
+        };
+        fecharModalBtn.onclick = () => {
+            console.log("LOG: Botão Fechar Modal Cliente clicado.");
+            modalCadastro.style.display = "none";
+        };
+        window.onclick = (event) => {
+            if (event.target == modalCadastro) {
+                console.log("LOG: Clique fora do conteúdo do modal detectado, fechando modal.");
+                modalCadastro.style.display = "none";
+            }
+        };
+
+        formClienteModal.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const emp = document.getElementById("empresa-modal").value.trim();
+            const eml = document.getElementById("email-modal").value.trim();
+            const tel = telefoneModalInput.value.trim();
+            const cmp = document.getElementById("comprador-modal").value.trim();
+
+            if (!emp || !eml || !tel || !cmp) {
+                alert("Preencha todos os campos obrigatórios.");
+                return;
+            }
+
+            const submitButtonModal = formClienteModal.querySelector('button[type="submit"]');
+
+            console.log("LOG: Evento de submit do formulário MODAL detectado."); // Log 1
+
+            if (submitButtonModal.disabled) {
+                console.log("LOG: Cadastro MODAL já em progresso, ignorando novo clique."); // Log 2
+                return;
+            }
+
+            submitButtonModal.disabled = true;
+            submitButtonModal.textContent = "Cadastrando...";
+
+            try {
+                console.log("LOG: Iniciando transação para novo cliente.", { empresa: emp, email: eml, telefone: tel, comprador: cmp }); // Log 3
+                const nCod = await runTransaction(db, async (t) => {
+                    console.log("LOG: Dentro da função de transação."); // Log 4
+
+                    const cRef = doc(db, "metadata", "clienteCounter");
+                    const cSnp = await t.get(cRef);
+                    console.log("LOG: Snapshot do contador obtido.", cSnp.exists() ? cSnp.data() : "Documento do contador não existe"); // Log 5
+
+                    let cNum = cSnp.exists() ? cSnp.data().lastClienteNumber || 0 : 0;
+                    const nNum = cNum + 1;
+                    const codF = String(nNum).padStart(2, '0'); // Garante pelo menos 2 dígitos para o código
+                    console.log(`LOG: Novo número de cliente: ${nNum}, Código formatado: ${codF}`); // Log 6
+
+                    const nCliRef = doc(collection(db, "clientes")); // Gera um ID automático para o novo cliente
+                    console.log(`LOG: Referência do novo cliente criada com ID: ${nCliRef.id}`); // Log 7
+
+                    t.set(nCliRef, {
+                        codigo: codF,
+                        empresa: emp,
+                        email: eml,
+                        telefone: tel,
+                        comprador: cmp,
+                        createdAt: new Date().toISOString() // Salvar como string ISO para melhor ordenação/consulta
+                    });
+                    console.log("LOG: t.set para novo cliente preparado."); // Log 8
+
+                    t.set(cRef, { lastClienteNumber: nNum }, { merge: true });
+                    console.log("LOG: t.set para contador preparado."); // Log 9
+
+                    return codF;
+                });
+                console.log(`LOG: Transação concluída com sucesso. Código do cliente retornado: ${nCod}`); // Log 10
+
+                alert(`Cliente "${emp}" (Código: ${nCod}) cadastrado com sucesso!`);
+                modalCadastro.style.display = "none";
+                formClienteModal.reset();
+                await carregarClientes(buscaClienteInput.value); // Recarrega a lista de clientes
+            } catch (error) {
+                console.error("Erro ao cadastrar cliente via modal:", error);
+                alert("Ocorreu um erro ao cadastrar o cliente. Verifique o console para mais detalhes.");
+            } finally {
+                submitButtonModal.disabled = false;
+                submitButtonModal.textContent = "Cadastrar Cliente";
+                console.log("LOG: Botão de submit do modal reabilitado."); // Log 11
+            }
         });
 
-        // --- Inicialização (igual) ---
+        telefoneModalInput.addEventListener("input", function (e) {
+            // Máscara de telefone (mantida como no seu código)
+            let input = e.target.value.replace(/\D/g, "");
+            if (input.startsWith("55")) input = input.slice(2);
+            if (input.length > 11) input = input.slice(0, 11);
+            let formatted = "+55 ";
+            if (input.length > 0) formatted += "(" + input.slice(0, 2);
+            if (input.length >= 2) formatted += ") ";
+            if (input.length >= 7) { // Celular com 9 dígitos ou fixo com 8
+                 if (input.length >= 7 && input.length <= 10 ) { // Fixo ou celular com 8 digitos (sem o 9 na frente)
+                     formatted += input.slice(2, input.length -4) + "-" + input.slice(input.length -4);
+                 } else { // celular com 9 digitos
+                     formatted += input.slice(2, 7) + "-" + input.slice(7);
+                 }
+            } else if (input.length >=3) {
+                 formatted += input.slice(2);
+            }
+            e.target.value = formatted.trim();
+        });
+
+        // --- Inicialização ---
+        console.log("LOG: Adicionando listener para busca de cliente.");
         buscaClienteInput.addEventListener("input", (e) => {
-            // Não recarrega do DB a cada letra, apenas filtra o array local
+            // Filtra a lista local de clientes, não faz nova consulta ao DB a cada letra
             filtrarEExibirClientes(e.target.value);
         });
-        window.addEventListener("load", () => {
-            carregarClientes(); // Carrega todos os clientes inicialmente
+
+        window.addEventListener("load", async () => {
+            console.log("LOG: Evento 'load' da janela disparado. Carregando clientes iniciais...");
+            await carregarClientes(); // Carrega todos os clientes inicialmente
+            console.log("LOG: Carregamento inicial de clientes concluído (ou em progresso).");
         });
+
+        console.log("LOG: Script principal totalmente carregado e inicializado.");
     </script>
 </body>
 </html>

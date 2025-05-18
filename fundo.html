@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imagem de Fundo</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* Para evitar barras de rolagem caso a imagem seja ligeiramente maior */
+        }
+
+        .background-image {
+            background-image: url('fundo.png'); /* Certifique-se de que 'fundo.png' está no mesmo diretório ou forneça o caminho correto */
+            background-position: center center; /* Centraliza a imagem */
+            background-repeat: no-repeat;    /* Evita que a imagem se repita */
+            background-size: cover;          /* Faz a imagem cobrir toda a área do contêiner, cortando se necessário */
+            background-attachment: fixed;    /* Mantém a imagem de fundo fixa durante o scroll (útil se houvesse conteúdo) */
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-image"></div>
+</body>
+</html>

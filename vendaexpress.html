@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Venda Rápida v1.2 - Sem Menu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #007bff; --secondary-color: #6c757d; --success-color: #28a745;
+            --danger-color: #dc3545; --warning-color: #ffc107; --info-color: #17a2b8;
+            --light-color: #f8f9fa; --dark-color: #343a40; --border-color: #dee2e6;
+            --background-color: #f0f2f5; --card-background: #ffffff; --text-color: #333;
+            --text-muted: #6c757d; --shadow-sm: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+            --shadow-md: 0 0.5rem 1rem rgba(0,0,0,0.1); --border-radius: 0.5rem;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color); color: var(--text-color);
+            line-height: 1.5; font-size: 16px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .main-content { /* Agora é o container principal da página */
+            width: 100%;
+            max-width: 600px; /* Para manter foco mobile, mas centralizado em telas maiores */
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--card-background); /* Fundo branco para o conteúdo principal */
+        }
+
+        .top-header {
+            background-color: var(--primary-color); /* Alterado para cor primária */
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Para alinhar título e botões */
+            box-shadow: var(--shadow-sm);
+            /* position: sticky; top: 0; z-index: 1000; Retirado para layout mais simples sem menu */
+        }
+        .top-header h1 { font-size: 1.3em; margin: 0; font-weight: 500; }
+        .top-header .header-actions-venda button {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 6px 10px;
+            font-size: 0.85em;
+            border-radius: var(--border-radius);
+        }
+        .top-header .header-actions-venda button i { margin-right: 5px; }
+
+
+        .venda-rapida-content {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            overflow: hidden;
+            background-color: var(--background-color); /* Fundo mais claro para a área de produtos e carrinho */
+        }
+
+        #product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); /* Cards um pouco menores */
+            gap: 10px; padding: 15px; overflow-y: auto; flex-grow: 1;
+        }
+        .product-card {
+            background-color: var(--card-background); border: 1px solid var(--border-color);
+            border-radius: var(--border-radius); padding: 10px; text-align: center; cursor: pointer;
+            transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+            display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-sm);
+        }
+        .product-card.out-of-stock { background-color: #e9ecef; cursor: not-allowed; opacity: 0.6; }
+        .product-card:not(.out-of-stock):active { transform: scale(0.95); box-shadow: 0 0 5px rgba(0,0,0,0.2); }
+        .product-card .product-name { font-weight: 500; font-size: 0.85em; margin-bottom: 5px; word-break: break-word; min-height: 34px; /* Para alinhar cards com nomes de tamanhos diferentes */}
+        .product-card .product-price { font-size: 0.9em; color: var(--success-color); font-weight: bold; }
+        .product-card .product-stock-bolsa { font-size: 0.7em; color: var(--text-muted); margin-top: auto; padding-top: 5px;}
+
+        #cart-area {
+            background-color: var(--card-background); padding: 15px; border-top: 2px solid var(--primary-color);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        #cart-items-list { list-style: none; padding: 0; margin: 0 0 15px 0; max-height: 120px; overflow-y: auto; }
+        #cart-items-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 0.9em; border-bottom: 1px dotted var(--border-color); }
+        #cart-items-list li:last-child { border-bottom: none; }
+        .cart-item-details { flex-grow: 1; } .cart-item-name { font-weight: 500; font-size: 0.95em;}
+        .cart-item-price { color: var(--text-muted); font-size: 0.85em;}
+        .cart-item-controls { display: flex; align-items: center; gap: 8px; }
+        .cart-item-controls button { background-color: var(--secondary-color); color: white; border: none; width: 26px; height: 26px; border-radius: 50%; font-size: 0.9em; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .cart-item-controls button.remove-item-btn { background-color: var(--danger-color); }
+        .cart-item-quantity { font-weight: bold; min-width: 18px; text-align: center; font-size: 0.95em;}
+        #cart-total { text-align: right; font-size: 1.2em; font-weight: bold; margin-bottom: 15px; color: var(--dark-color); }
+        #finalize-sale-button { background-color: var(--success-color); color: white; width: 100%; padding: 12px; font-size: 1.1em; border: none; border-radius: var(--border-radius); cursor: pointer; text-transform: uppercase; font-weight: bold; }
+        #finalize-sale-button:disabled { background-color: #ccc; cursor: not-allowed;}
+
+        .modal { display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: #fff; margin: 8% auto; padding: 20px; border-radius: var(--border-radius); width: 90%; max-width: 400px; text-align: center; box-shadow: var(--shadow-md); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .modal-header h2 { font-size: 1.3em; margin: 0 auto; color: var(--dark-color); }
+        .modal .close-modal-btn { font-size: 1.6em; color: #888; background: none; border: none; cursor: pointer; padding: 0 5px; line-height: 1; position: absolute; top: 10px; right: 15px; }
+
+        #qrcode-canvas { margin: 20px auto; display: block; border: 5px solid var(--primary-color); border-radius: var(--border-radius); }
+        #pix-copia-cola { width: 100%; padding: 10px; margin-top: 15px; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.8em; word-break: break-all; background-color: var(--light-color); text-align: left; }
+        #copy-pix-code-button { background-color: var(--primary-color); color: white; padding: 10px 15px; margin-top: 15px; border: none; border-radius: var(--border-radius); cursor: pointer; font-size: 0.9em; }
+        #pix-payment-status { margin-top:10px; font-weight:bold; }
+
+        #montar-bolsa-modal .modal-content {max-width: 500px; text-align: left;}
+        #lista-materiais-bolsa { max-height: calc(80vh - 150px); overflow-y: auto; margin-bottom: 20px; } /* Ajuste de altura */
+        .material-bolsa-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .material-bolsa-item:last-child { border-bottom: none; }
+        .material-bolsa-item label { flex-grow: 1; font-size: 0.95em; margin-right: 10px; }
+        .material-bolsa-item input[type="number"] { width: 70px; padding: 8px; text-align: center; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.95em; }
+        #confirmar-bolsa-btn { width: 100%; padding: 12px; font-size: 1.1em; }
+
+        #loading-indicator-products, #error-message-products, #empty-bolsa-message { margin: 20px; text-align:center; font-size: 0.9em;}
+        #loading-indicator-products { color: var(--info-color); }
+        #error-message-products { color: var(--danger-color); }
+        #empty-bolsa-message {color: var(--text-muted);}
+
+        @media (max-width: 480px) { /* Ajustes para telas bem pequenas */
+            #product-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; padding: 10px;}
+            .product-card .product-name { font-size: 0.8em; min-height: 30px;}
+            .product-card .product-price { font-size: 0.85em; }
+            #cart-items-list li {font-size: 0.85em;}
+            #cart-total {font-size: 1.1em;}
+            #finalize-sale-button {font-size: 1em; padding: 10px;}
+            .modal-content { padding: 15px;}
+            .modal-header h2 { font-size: 1.1em;}
+            #qrcode-canvas {width: 200px !important; height: 200px !important;} /* Forçar tamanho menor */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="main-content" id="main-content">
+        <header class="top-header">
+            <h1>Venda Rápida</h1>
+            <div class="header-actions-venda">
+                <button id="btn-reconfigurar-bolsa" class="btn-sm"><i class="fas fa-shopping-bag"></i> Montar Bolsa</button>
+            </div>
+        </header>
+
+        <div class="venda-rapida-content">
+            <div id="product-grid">
+                <p id="loading-indicator-products">Carregando produtos da bolsa...</p>
+                <p id="error-message-products" style="display:none;">Erro ao carregar produtos.</p>
+                <p id="empty-bolsa-message" style="display:none; text-align:center; padding:20px;">Sua bolsa está vazia. Clique em "Montar Bolsa" para adicionar itens.</p>
+            </div>
+
+            <div id="cart-area">
+                <ul id="cart-items-list">
+                    <li style="text-align: center; color: var(--text-muted);">Carrinho vazio</li>
+                </ul>
+                <div id="cart-total">Total: R$ 0,00</div>
+                <button id="finalize-sale-button" disabled><i class="fas fa-check-circle"></i> Finalizar Venda</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="montar-bolsa-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Montar Bolsa de Venda</h2>
+                <button id="close-montar-bolsa-modal-btn" class="close-modal-btn">&times;</button>
+            </div>
+            <p style="font-size:0.9em; color:var(--text-muted); margin-bottom:15px;">Selecione os itens e quantidades que você está levando para vender hoje.</p>
+            <div id="lista-materiais-bolsa">
+                <p>Carregando materiais...</p>
+            </div>
+            <button id="confirmar-bolsa-btn" class="btn-primary" style="width:100%; padding:12px; margin-top:10px;">Confirmar Bolsa</button>
+        </div>
+    </div>
+
+    <div id="pix-qrcode-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Pagar com PIX</h2>
+                <button id="close-pix-modal-button" class="close-modal-btn">&times;</button>
+            </div>
+            <p>Escaneie o QR Code ou use o "Copia e Cola":</p>
+            <div id="qrcode-canvas" style="width: 256px; height: 256px; margin: 20px auto;"></div>
+            <textarea id="pix-copia-cola" rows="5" readonly title="PIX Copia e Cola"></textarea>
+            <button id="copy-pix-code-button"><i class="fas fa-copy"></i> Copiar Código</button>
+            <p style="font-size:0.8em; margin-top:15px;">Chave CPF: 431.525.138-01</p>
+            <p id="pix-payment-status" style="margin-top:10px; font-weight:bold;"></p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, addDoc, Timestamp, orderBy } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVkb1-tdd5SL8jA2Cw2B0aeugu8SaCUBc",
+            authDomain: "testebosspro.firebaseapp.com",
+            projectId: "testebosspro",
+            storageBucket: "testebosspro.appspot.com",
+            messagingSenderId: "73684788134",
+            appId: "1:73684788134:web:7c8250c83f10a2df59e567",
+            measurementId: "G-1H29L5B830"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const productGrid = document.getElementById("product-grid");
+        const loadingIndicatorProducts = document.getElementById("loading-indicator-products");
+        const errorMessageProducts = document.getElementById("error-message-products");
+        const emptyBolsaMessage = document.getElementById("empty-bolsa-message");
+        const cartItemsList = document.getElementById("cart-items-list");
+        const cartTotalDiv = document.getElementById("cart-total");
+        const finalizeSaleButton = document.getElementById("finalize-sale-button");
+        const pixModal = document.getElementById("pix-qrcode-modal");
+        const closePixModalButton = document.getElementById("close-pix-modal-button");
+        const qrcodeCanvas = document.getElementById("qrcode-canvas");
+        const pixCopiaColaTextarea = document.getElementById("pix-copia-cola");
+        const copyPixCodeButton = document.getElementById("copy-pix-code-button");
+        const pixPaymentStatus = document.getElementById("pix-payment-status");
+        const montarBolsaModal = document.getElementById("montar-bolsa-modal");
+        const listaMateriaisBolsaDiv = document.getElementById("lista-materiais-bolsa");
+        const confirmarBolsaBtn = document.getElementById("confirmar-bolsa-btn");
+        const closeMontarBolsaModalBtn = document.getElementById("close-montar-bolsa-modal-btn");
+        const btnReconfigurarBolsa = document.getElementById("btn-reconfigurar-bolsa");
+
+        let todosMateriaisCadastrados = [];
+        let bolsaDoVendedor = [];
+        let cart = [];
+
+        async function carregarTodosMateriaisParaBolsa() {
+            listaMateriaisBolsaDiv.innerHTML = "<p>Carregando materiais...</p>";
+            try {
+                const q = query(collection(db, "materiais"), where("tipo", "==", "material"), orderBy("nome"));
+                const querySnapshot = await getDocs(q);
+                todosMateriaisCadastrados = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.nome && typeof data.preco === 'number') {
+                        todosMateriaisCadastrados.push({ id: doc.id, ...data });
+                    }
+                });
+                renderizarOpcoesMontarBolsa();
+            } catch (error) {
+                console.error("Erro ao carregar materiais para montar bolsa:", error);
+                listaMateriaisBolsaDiv.innerHTML = "<p style='color:var(--danger-color);'>Erro ao carregar materiais. Verifique o console (pode ser um índice ausente no Firestore).</p>";
+            }
+        }
+
+        function renderizarOpcoesMontarBolsa() {
+            listaMateriaisBolsaDiv.innerHTML = "";
+            if (todosMateriaisCadastrados.length === 0) {
+                listaMateriaisBolsaDiv.innerHTML = "<p>Nenhum material cadastrado no sistema ou do tipo 'material'.</p>";
+                return;
+            }
+            const bolsaAtualMap = new Map(bolsaDoVendedor.map(item => [item.produtoId, item.quantidadeNaBolsa]));
+            todosMateriaisCadastrados.forEach(material => {
+                const itemDiv = document.createElement("div"); itemDiv.className = "material-bolsa-item";
+                const quantidadeAtual = bolsaAtualMap.get(material.id) || 0;
+                itemDiv.innerHTML = `
+                    <label for="bolsa-${material.id}">${material.nome} (R$ ${material.preco.toFixed(2).replace('.',',')})</label>
+                    <input type="number" id="bolsa-${material.id}" data-id="${material.id}" data-nome="${material.nome}" data-preco="${material.preco}" data-unidade="${material.medida || 'UN'}" min="0" value="${quantidadeAtual}" placeholder="Qtde">
+                `;
+                listaMateriaisBolsaDiv.appendChild(itemDiv);
+            });
+        }
+
+        confirmarBolsaBtn.addEventListener("click", () => {
+            bolsaDoVendedor = [];
+            const inputs = listaMateriaisBolsaDiv.querySelectorAll('input[type="number"]');
+            inputs.forEach(input => {
+                const quantidade = parseInt(input.value) || 0;
+                if (quantidade > 0) {
+                    bolsaDoVendedor.push({
+                        produtoId: input.dataset.id, nome: input.dataset.nome,
+                        preco: parseFloat(input.dataset.preco), unidade: input.dataset.unidade,
+                        quantidadeNaBolsa: quantidade
+                    });
+                }
+            });
+            localStorage.setItem("bolsaVendedor", JSON.stringify(bolsaDoVendedor));
+            console.log("LOG: Bolsa confirmada e salva no localStorage:", bolsaDoVendedor);
+            montarBolsaModal.style.display = "none";
+            renderizarProdutosDaBolsa();
+            cart = []; atualizarCarrinho();
+        });
+
+        function carregarBolsaDoLocalStorage() {
+            const bolsaSalva = localStorage.getItem("bolsaVendedor");
+            if (bolsaSalva) {
+                bolsaDoVendedor = JSON.parse(bolsaSalva);
+                console.log("LOG: Bolsa carregada do localStorage:", bolsaDoVendedor);
+                return true;
+            }
+            return false;
+        }
+
+        function abrirModalMontarBolsa() { carregarTodosMateriaisParaBolsa(); montarBolsaModal.style.display = "block"; }
+
+        function renderizarProdutosDaBolsa() {
+            productGrid.innerHTML = ""; loadingIndicatorProducts.style.display = "none"; errorMessageProducts.style.display = "none";
+            if (!bolsaDoVendedor || bolsaDoVendedor.length === 0) { emptyBolsaMessage.style.display = "block"; return; }
+            emptyBolsaMessage.style.display = "none"; let itensDisponiveis = false;
+            bolsaDoVendedor.forEach(product => {
+                if (product.quantidadeNaBolsa > 0) {
+                    itensDisponiveis = true; const card = document.createElement("div"); card.className = "product-card";
+                    card.dataset.productId = product.produtoId;
+                    card.innerHTML = `<div class="product-name">${product.nome}</div> <div class="product-price">R$ ${product.preco.toFixed(2).replace('.', ',')}</div> <div class="product-stock-bolsa">Disp: ${product.quantidadeNaBolsa} ${product.unidade || ''}</div>`;
+                    card.addEventListener("click", () => adicionarAoCarrinho(product.produtoId)); productGrid.appendChild(card);
+                } else {
+                    const card = document.createElement("div"); card.className = "product-card out-of-stock";
+                    card.dataset.productId = product.produtoId;
+                    card.innerHTML = `<div class="product-name">${product.nome}</div> <div class="product-price">R$ ${product.preco.toFixed(2).replace('.', ',')}</div> <div class="product-stock-bolsa" style="color:var(--danger-color); font-weight:bold;">ESGOTADO</div>`;
+                    productGrid.appendChild(card);
+                }
+            });
+            if (!itensDisponiveis && bolsaDoVendedor.length > 0) { emptyBolsaMessage.textContent = "Todos os itens da sua bolsa foram vendidos!"; emptyBolsaMessage.style.display = "block"; }
+        }
+
+        function adicionarAoCarrinho(productId) {
+            const produtoNaBolsa = bolsaDoVendedor.find(p => p.produtoId === productId);
+            if (!produtoNaBolsa || produtoNaBolsa.quantidadeNaBolsa <= 0) { alert("Este item está esgotado na sua bolsa!"); return; }
+            const cartItem = cart.find(item => item.id === productId);
+            if (cartItem) {
+                if (cartItem.quantidadeNoCarrinho < produtoNaBolsa.quantidadeNaBolsa) { cartItem.quantidadeNoCarrinho++; }
+                else { alert(`Você só tem ${produtoNaBolsa.quantidadeNaBolsa} unidade(s) de ${produtoNaBolsa.nome} na bolsa.`); return; }
+            } else { cart.push({ id: produtoNaBolsa.produtoId, nome: produtoNaBolsa.nome, preco: produtoNaBolsa.preco, quantidadeNoCarrinho: 1 }); }
+            atualizarCarrinho();
+        }
+
+        function atualizarCarrinho() {
+            cartItemsList.innerHTML = ""; let total = 0;
+            if (cart.length === 0) { const li = document.createElement("li"); li.textContent = "Carrinho vazio"; li.style.textAlign = "center"; li.style.color = "var(--text-muted)"; cartItemsList.appendChild(li); }
+            else {
+                cart.forEach(item => {
+                    const produtoNaBolsa = bolsaDoVendedor.find(p => p.produtoId === item.id); const maxQuantity = produtoNaBolsa ? produtoNaBolsa.quantidadeNaBolsa : 0;
+                    const li = document.createElement("li");
+                    li.innerHTML = `<div class="cart-item-details"><span class="cart-item-name">${item.nome}</span> <span class="cart-item-price">(${item.quantidadeNoCarrinho} x R$ ${item.preco.toFixed(2).replace('.', ',')})</span></div> <div class="cart-item-controls"><button class="decrease-qty-btn" data-id="${item.id}"><i class="fas fa-minus"></i></button> <span class="cart-item-quantity">${item.quantidadeNoCarrinho}</span> <button class="increase-qty-btn" data-id="${item.id}" ${item.quantidadeNoCarrinho >= maxQuantity ? 'disabled' : ''}><i class="fas fa-plus"></i></button> <button class="remove-item-btn" data-id="${item.id}" title="Remover Item"><i class="fas fa-times"></i></button></div>`;
+                    cartItemsList.appendChild(li); total += item.preco * item.quantidadeNoCarrinho;
+                });
+            }
+            cartTotalDiv.textContent = `Total: R$ ${total.toFixed(2).replace('.', ',')}`;
+            finalizeSaleButton.disabled = cart.length === 0;
+        }
+
+        cartItemsList.addEventListener('click', (event) => {
+            const target = event.target.closest('button'); if (!target) return;
+            const itemId = target.dataset.id; const itemNoCarrinho = cart.find(i => i.id === itemId); if (!itemNoCarrinho) return;
+            const produtoNaBolsa = bolsaDoVendedor.find(p => p.produtoId === itemId); const maxQuantity = produtoNaBolsa ? produtoNaBolsa.quantidadeNaBolsa : 0;
+            if (target.classList.contains('increase-qty-btn')) { if (itemNoCarrinho.quantidadeNoCarrinho < maxQuantity) { itemNoCarrinho.quantidadeNoCarrinho++; } else { alert(`Quantidade máxima de ${produtoNaBolsa.nome} na bolsa atingida.`); } }
+            else if (target.classList.contains('decrease-qty-btn')) { if (itemNoCarrinho.quantidadeNoCarrinho > 1) { itemNoCarrinho.quantidadeNoCarrinho--; } else { cart = cart.filter(i => i.id !== itemId); } }
+            else if (target.classList.contains('remove-item-btn')) { cart = cart.filter(i => i.id !== itemId); }
+            atualizarCarrinho();
+        });
+
+        function formatPixValue(value) { return value.toFixed(2).toString(); }
+        function generatePixPayload(chavePix, nomeBeneficiario, cidadeBeneficiario, valor, identificadorTx = '***') {
+            const payloadFormatIndicator = "000201"; const pointOfInitiationMethod = "010211"; const gui = "0014br.gov.bcb.pix";
+            const chave = `01${String(chavePix.length).padStart(2, '0')}${chavePix}`; const merchantAccountInfoVal = gui + chave;
+            const merchantAccountInfo = `26${String(merchantAccountInfoVal.length).padStart(2, '0')}${merchantAccountInfoVal}`;
+            const merchantCategoryCode = "52040000"; const transactionCurrency = "5303986";
+            const valorFormatado = formatPixValue(parseFloat(valor)); const transactionAmount = `54${String(valorFormatado.length).padStart(2, '0')}${valorFormatado}`;
+            const countryCode = "5802BR";
+            const nomeBenefNorm = nomeBeneficiario.normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 25).toUpperCase(); const merchantName = `59${String(nomeBenefNorm.length).padStart(2, '0')}${nomeBenefNorm}`;
+            const cidadeBenefNorm = cidadeBeneficiario.normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 15).toUpperCase(); const merchantCity = `60${String(cidadeBenefNorm.length).padStart(2, '0')}${cidadeBenefNorm}`;
+            const txIdVal = `05${String(identificadorTx.length).padStart(2, '0')}${identificadorTx}`; const additionalDataField = `62${String(txIdVal.length).padStart(2, '0')}${txIdVal}`;
+            let payload = payloadFormatIndicator + pointOfInitiationMethod + merchantAccountInfo + merchantCategoryCode + transactionCurrency + transactionAmount + countryCode + merchantName + merchantCity + additionalDataField;
+            payload += "6304"; const crc16 = calculateCRC16(payload); payload += crc16; return payload;
+        }
+        function calculateCRC16(payload) {
+            let crc = 0xFFFF; const polinomio = 0x1021;
+            for (let i = 0; i < payload.length; i++) { crc ^= (payload.charCodeAt(i) << 8); for (let j = 0; j < 8; j++) { crc = (crc & 0x8000) ? (crc << 1) ^ polinomio : crc << 1; } }
+            return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+        }
+
+        finalizeSaleButton.addEventListener("click", () => {
+            if (cart.length === 0) { alert("Carrinho está vazio!"); return; }
+            const totalVenda = cart.reduce((sum, item) => sum + (item.preco * item.quantidadeNoCarrinho), 0);
+            const chaveCpf = "43152513801";
+            // !!! ATENÇÃO: SUBSTITUA OS PLACEHOLDERS ABAIXO PELOS SEUS DADOS REAIS !!!
+            const nomeBeneficiario = "Lucas Modesto da Silva"; // Ex: "Maria Aparecida da Silva"
+            const cidadeBeneficiario = "ITU";         // Ex: "SAOPAULO" (sem acentos, até 15 chars)
+            // !!! ----------------------------------------------------------------- !!!
+            const identificadorTransacao = "VENDA" + Date.now().toString().slice(-7);
+
+            if (nomeBeneficiario === "SEU NOME COMPLETO AQUI" || cidadeBeneficiario === "SUACIDADE") {
+                alert("IMPORTANTE: Para o PIX funcionar corretamente, edite o código JavaScript e substitua 'SEU NOME COMPLETO AQUI' e 'SUACIDADE' pelos dados corretos do beneficiário do PIX.");
+                // return; // Descomente esta linha para impedir a geração do PIX se os dados não forem alterados.
+            }
+
+            const pixPayload = generatePixPayload(chaveCpf, nomeBeneficiario, cidadeBeneficiario, totalVenda, identificadorTransacao);
+            qrcodeCanvas.innerHTML = "";
+            try { new QRCode(qrcodeCanvas, { text: pixPayload, width: 240, height: 240, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.M }); }
+            catch (e) { console.error("Erro ao gerar QRCode:", e); qrcodeCanvas.innerHTML = "Erro ao gerar QR Code."; }
+            pixCopiaColaTextarea.value = pixPayload;
+            pixPaymentStatus.textContent = `Total a pagar: R$ ${totalVenda.toFixed(2).replace('.', ',')}`;
+            pixModal.style.display = "block";
+            registrarVendaFirestore(cart, totalVenda, pixPayload, identificadorTransacao);
+        });
+
+        async function registrarVendaFirestore(itensVendidos, valorTotal, payloadPixGerado, idTxPix) {
+            console.log("LOG: Registrando venda no Firestore...");
+            try {
+                const vendaData = {
+                    itens: itensVendidos.map(item => ({ produtoId: item.id, nome: item.nome, precoUnitario: item.preco, quantidade: item.quantidadeNoCarrinho, subtotal: item.preco * item.quantidadeNoCarrinho })),
+                    valorTotal: valorTotal, dataVenda: Timestamp.now(), metodoPagamento: "PIX QR Code",
+                    chavePixDestino: "43152513801", payloadPix: payloadPixGerado, idTxPix: idTxPix, statusPagamento: "pendente"
+                };
+                const docRef = await addDoc(collection(db, "vendas_rapidas"), vendaData);
+                console.log("LOG: Venda registrada com ID: ", docRef.id);
+                pixPaymentStatus.textContent += ` (Pedido ${idTxPix} registrado, aguardando pagamento)`;
+                itensVendidos.forEach(itemVendido => {
+                    const itemNaBolsa = bolsaDoVendedor.find(p => p.produtoId === itemVendido.id);
+                    if (itemNaBolsa) { itemNaBolsa.quantidadeNaBolsa -= itemVendido.quantidadeNoCarrinho; if (itemNaBolsa.quantidadeNaBolsa < 0) itemNaBolsa.quantidadeNaBolsa = 0; }
+                });
+                localStorage.setItem("bolsaVendedor", JSON.stringify(bolsaDoVendedor));
+                renderizarProdutosDaBolsa();
+                cart = []; atualizarCarrinho();
+            } catch (error) { console.error("Erro ao registrar venda no Firestore: ", error); pixPaymentStatus.textContent = "Erro ao registrar o pedido."; }
+        }
+
+        closePixModalButton.addEventListener("click", () => { pixModal.style.display = "none"; });
+        copyPixCodeButton.addEventListener("click", () => { pixCopiaColaTextarea.select(); try { document.execCommand("copy"); alert("Código PIX Copiado!"); } catch(e) { alert("Falha ao copiar. Selecione e copie manualmente.");} });
+        window.addEventListener("click", (event) => { if (event.target == pixModal) { pixModal.style.display = "none"; } if (event.target == montarBolsaModal) { montarBolsaModal.style.display = "none";} });
+        closeMontarBolsaModalBtn.addEventListener("click", () => { montarBolsaModal.style.display = "none"; });
+        btnReconfigurarBolsa.addEventListener("click", abrirModalMontarBolsa);
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            console.log("LOG: Venda Rápida - DOM Carregado, inicializando...");
+            if (!db) {
+                errorMessageProducts.textContent = "Erro de conexão com o banco de dados."; errorMessageProducts.style.display = "block";
+                loadingIndicatorProducts.style.display = "none"; console.warn("LOG: Inicialização adiada: Firestore não conectado."); return;
+            }
+            if (!carregarBolsaDoLocalStorage() || bolsaDoVendedor.length === 0) { abrirModalMontarBolsa(); }
+            else { renderizarProdutosDaBolsa(); }
+            atualizarCarrinho(); console.log("LOG: Venda Rápida - Pronta.");
+        });
+    </script>
+</body>
+</html>

@@ -586,7 +586,7 @@
              console.log("Gerando PDF..."); if (!clienteSelect.value) { alert("Selecione cliente."); return; } if (tabelaOrcamentoBody.rows.length === 0) { alert("Adicione itens."); return; }
              const { jsPDF } = window.jspdf; if (typeof jsPDF.API.autoTable !== 'function') { alert("Erro jsPDF-AutoTable."); return; } const doc = new jsPDF();
              // Empresa e Cliente (igual)
-             const companyName = "JS FER FERRAMENTARIA"; const companyAddress1 = "Rua Argentina, 1300 galpão 3"; const companyAddress2 = "Bairro Guarau - Salto - SP CEP: 13324-200"; const companyCNPJ = "CNPJ: 31.886.382/0001-26"; const companyIE = "I.E. 600.248.772.115"; const companyPhone = "Fone: (11) 97501-8042";
+             const companyName = "LumoDev - Soluções em Tecnologia"; const companyAddress1 = "Rua Carlos Cassani"; const companyAddress2 = "Jardim Santa Laura - Itu - SP CEP: 133306-670"; const companyCNPJ = "CNPJ: 31.886.382/0001-26"; const companyIE = "I.E. 600.248.772.115"; const companyPhone = "Fone: (11) 99925-9752";
              let clienteData = {}; let clienteNomeExibicao = "Cliente"; try { clienteData = JSON.parse(clienteSelect.value); clienteNomeExibicao = clienteData.nome || "Cliente"; } catch(e) {}
              const marginLeft = 15; const marginRight = doc.internal.pageSize.getWidth() - marginLeft; let currentY = 20;
              // Cabeçalho, Título, Data, Cliente (igual)
@@ -604,9 +604,9 @@
         enviarWhatsappBtn.addEventListener("click", () => { /* ...lógica igual, lendo das células corretas no tbody... */
             console.log("WhatsApp..."); if (!clienteSelect.value) { alert("Selecione cliente."); return; } if (tabelaOrcamentoBody.rows.length === 0) { alert("Orçamento vazio."); return; }
             let cData = {}; let cNome = "Cliente"; let cTel = ""; try { cData = JSON.parse(clienteSelect.value); cNome = cData.nome || "Cliente"; cTel = cData.telefone ? cData.telefone.replace(/\D/g, '') : ''; } catch(e) { alert("Erro cliente WhatsApp."); return; }
-            const numMsg = numeroOrcamentoAtual || 'Novo'; let msg = `*ORÇAMENTO JS FER #${numMsg}*\n\n*Cliente:* ${cNome}\n*Data:* ${new Date().toLocaleDateString('pt-BR')}\n\n*ITENS:*\n`; const linhas = tabelaOrcamentoBody.querySelectorAll("tr");
+            const numMsg = numeroOrcamentoAtual || 'Novo'; let msg = `*Orçamento LumoDev #${numMsg}*\n\n*Cliente:* ${cNome}\n*Data:* ${new Date().toLocaleDateString('pt-BR')}\n\n*ITENS:*\n`; const linhas = tabelaOrcamentoBody.querySelectorAll("tr");
             linhas.forEach((l) => { const cod = l.cells[0].textContent.trim(); const desc = l.cells[1].textContent.trim(); const und = l.cells[2].textContent.trim(); const qtd = l.cells[3].querySelector('input')?.value || 0; const pu = parseFloat(l.cells[4].querySelector('input')?.value || 0).toFixed(2); const sub = l.cells[5].textContent.trim(); msg += `- ${cod !== 'Manual' ? '['+cod+'] ' : ''}${desc} (${und}): ${qtd} x R$${pu} = ${sub}\n`; });
-            msg += `\n*TOTAL GERAL: R$ ${totalGeralElement.textContent}*\n\n`; const pE = prazoEntregaInput.value.trim(); const pP = prazoPagamentoInput.value.trim(); if (pE) msg += `*Prazo Entrega:* ${pE}\n`; if (pP) msg += `*Cond. Pagamento:* ${pP}\n`; msg += "\nAtt,\nJS Fer Ferramentaria";
+            msg += `\n*TOTAL GERAL: R$ ${totalGeralElement.textContent}*\n\n`; const pE = prazoEntregaInput.value.trim(); const pP = prazoPagamentoInput.value.trim(); if (pE) msg += `*Prazo Entrega:* ${pE}\n`; if (pP) msg += `*Cond. Pagamento:* ${pP}\n`; msg += "\nAtt,\nLumoDev";
             const encMsg = encodeURIComponent(msg); let wUrl = `https://wa.me/`;
             if (cTel) { if (!cTel.startsWith('55') && (cTel.length === 10 || cTel.length === 11)) wUrl += `55${cTel}`; else wUrl += cTel; wUrl += `?text=${encMsg}`; }
             else { wUrl += `?text=${encMsg}`; alert("Telefone não encontrado."); } window.open(wUrl, '_blank');
